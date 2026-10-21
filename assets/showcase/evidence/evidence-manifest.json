@@ -3,7 +3,7 @@
   "GeneratorId": "showcase-evidence-manifest-v3",
   "ProfileId": "showcase-v1",
   "BaseCommit": "43f393b6b419eb95afb0a485756649d4a280a372",
-  "ImplementationContentSha256": "a7535bcf1a0e4341283c383eecd2e57de97b3ce7c222f349ac51a4edcec3595d",
+  "ImplementationContentSha256": "de2245b2b6b22a3fd37bdb24d8e61645d6c10d398c174444904e1568077d82f1",
   "SourceLockSha256": "5794c7d2a32eec2804e56ce927f944c2eaa389e11bc35a6dc83c5c21c073f0a8",
   "GeneratorVersions": {
     "acquisition": "showcase-acquisition-evidence-v3",

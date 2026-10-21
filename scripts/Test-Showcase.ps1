@@ -51,6 +51,23 @@ $evidenceRoot = Join-Path $repoRoot $evidenceLeaf
 $runtimeMarker = Join-Path $dataRoot ".showcase-runtime-owner.json"
 $expectedRecommendationFloor = 0.38
 
+function Set-ContainerUserForCurrentHost {
+    if ($IsWindows) {
+        return
+    }
+
+    $uid = (& id -u).Trim()
+    if ($LASTEXITCODE -ne 0 -or $uid -notmatch '^\d+$') {
+        throw "Could not determine the host user ID for showcase containers."
+    }
+    $gid = (& id -g).Trim()
+    if ($LASTEXITCODE -ne 0 -or $gid -notmatch '^\d+$') {
+        throw "Could not determine the host group ID for showcase containers."
+    }
+
+    $env:SEMANTIC_DISCOVERY_CONTAINER_USER = "${uid}:${gid}"
+}
+
 function Invoke-Aspire {
     param([Parameter(ValueFromRemainingArguments)] [string[]] $Arguments)
     $output = & dotnet tool run aspire -- @Arguments 2>&1 | Out-String
@@ -347,6 +364,7 @@ function Copy-CanonicalEvidence {
 Push-Location $repoRoot
 $primaryFailure = $null
 try {
+    Set-ContainerUserForCurrentHost
     dotnet tool restore --configfile NuGet.Config
     if ($LASTEXITCODE -ne 0) { throw "Pinned Aspire CLI restore failed." }
     dotnet restore Jellyfin.SemanticDiscovery.slnx `
@@ -673,6 +691,7 @@ try {
     Remove-Item Env:SEMANTIC_DISCOVERY_DATA -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_PROFILE -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_SHOWCASE_ROOT -ErrorAction SilentlyContinue
+    Remove-Item Env:SEMANTIC_DISCOVERY_CONTAINER_USER -ErrorAction SilentlyContinue
     try {
         Stop-Showcase
     } catch {

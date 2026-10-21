@@ -29,6 +29,9 @@ string fixtureOutput = useShowcase
 string mediaDirectory = Path.Combine(fixtureOutput, "library");
 string jellyfinConfigDirectory = Path.Combine(dataRoot, "jellyfin", "config");
 string jellyfinCacheDirectory = Path.Combine(dataRoot, "jellyfin", "cache");
+string jellyfinPluginsDirectory = Path.Combine(
+    jellyfinConfigDirectory,
+    "plugins");
 string buildConfiguration =
     Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_CONFIGURATION")
     ?? "Debug";
@@ -37,10 +40,37 @@ if (buildConfiguration is not ("Debug" or "Release"))
     throw new InvalidOperationException(
         "SEMANTIC_DISCOVERY_CONFIGURATION must be Debug or Release.");
 }
+string? containerUser = Environment.GetEnvironmentVariable(
+    "SEMANTIC_DISCOVERY_CONTAINER_USER");
+if (!string.IsNullOrWhiteSpace(containerUser))
+{
+    containerUser = containerUser.Trim();
+    string[] userParts = containerUser.Split(':');
+    if (userParts.Length != 2 ||
+        !uint.TryParse(
+            userParts[0],
+            NumberStyles.None,
+            CultureInfo.InvariantCulture,
+            out _) ||
+        !uint.TryParse(
+            userParts[1],
+            NumberStyles.None,
+            CultureInfo.InvariantCulture,
+            out _))
+    {
+        throw new InvalidOperationException(
+            "SEMANTIC_DISCOVERY_CONTAINER_USER must be a numeric uid:gid pair.");
+    }
+}
+else
+{
+    containerUser = null;
+}
 
 Directory.CreateDirectory(fixtureOutput);
 Directory.CreateDirectory(jellyfinConfigDirectory);
 Directory.CreateDirectory(jellyfinCacheDirectory);
+Directory.CreateDirectory(jellyfinPluginsDirectory);
 string pluginOutput = Path.Combine(
     repositoryRoot,
     "src",
@@ -109,6 +139,12 @@ else
             "-Mode",
             "Generate")
         .ExcludeFromManifest();
+    if (containerUser is not null)
+    {
+        fixtureSetup
+            .WithContainerRuntimeArgs("--user", containerUser)
+            .WithEnvironment("HOME", "/tmp");
+    }
 }
 
 IResourceBuilder<ProjectResource> pluginSetup = builder
@@ -201,6 +237,12 @@ IResourceBuilder<ContainerResource> jellyfin = builder
     .WaitFor(markItDown)
     .WaitForCompletion(modelSetup)
     .WaitForCompletion(pluginSetup);
+if (containerUser is not null)
+{
+    jellyfin
+        .WithContainerRuntimeArgs("--user", containerUser)
+        .WithEnvironment("HOME", "/tmp");
+}
 if (useShowcase)
 {
     jellyfin.WaitForCompletion(showcaseSetup!);

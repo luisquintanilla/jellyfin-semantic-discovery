@@ -18,6 +18,23 @@ $testProject = Join-Path `
     $repoRoot `
     "tests\Jellyfin.SemanticDiscovery.EndToEndTests\Jellyfin.SemanticDiscovery.EndToEndTests.csproj"
 
+function Set-ContainerUserForCurrentHost {
+    if ($IsWindows) {
+        return
+    }
+
+    $uid = (& id -u).Trim()
+    if ($LASTEXITCODE -ne 0 -or $uid -notmatch '^\d+$') {
+        throw "Could not determine the host user ID for E2E containers."
+    }
+    $gid = (& id -g).Trim()
+    if ($LASTEXITCODE -ne 0 -or $gid -notmatch '^\d+$') {
+        throw "Could not determine the host group ID for E2E containers."
+    }
+
+    $env:SEMANTIC_DISCOVERY_CONTAINER_USER = "${uid}:${gid}"
+}
+
 function Invoke-Aspire {
     param([Parameter(ValueFromRemainingArguments)] [string[]] $Arguments)
 
@@ -376,6 +393,7 @@ function Invoke-E2ETests {
 Push-Location $repoRoot
 $primaryFailure = $null
 try {
+    Set-ContainerUserForCurrentHost
     dotnet tool restore --configfile NuGet.Config
     if ($LASTEXITCODE -ne 0) {
         throw "Pinned Aspire CLI restore failed."
@@ -487,6 +505,7 @@ try {
     Remove-Item Env:JELLYFIN_E2E_EVIDENCE_PATH -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_DATA -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_CONFIGURATION -ErrorAction SilentlyContinue
+    Remove-Item Env:SEMANTIC_DISCOVERY_CONTAINER_USER -ErrorAction SilentlyContinue
     $stopConfirmed = $false
     try {
         Stop-Demo
