@@ -122,10 +122,14 @@ and the same exact MiniLM chunker and mapper enforce the final model budget.
 Image-bearing Markdown uses the same fallback so mixed text and multiple image
 alternative texts remain in source order. Markdown image destinations, HTML
 `img`/`source` locations, and data-URI payloads are removed before chunking;
-only alternative text and surrounding semantic content are embedded. Any
-residual unsupported-structure exception is translated to a permanent
-per-source ingestion error, so `SemanticIndexBuilder` records that source and
-continues with later sources instead of aborting the complete rebuild.
+only alternative text and surrounding semantic content are embedded. Sanitizer
+discovery recurses through nested lists, blockquotes, and other containers, then
+applies sorted non-overlapping replacements in one cancellable pass. Quoted and
+unquoted alternative text, including slash characters, is retained while true
+self-closing tag syntax is removed. Any residual unsupported-structure
+exception is translated to a permanent per-source ingestion error, so
+`SemanticIndexBuilder` records that source and continues with later sources
+instead of aborting the complete rebuild.
 
 `MediMigrationFixtureComparisonTests` records the pre-migration and MEDI
 results:

@@ -343,6 +343,172 @@ public sealed class HeadingAwareChunkerTests
     }
 
     [Fact]
+    public async Task ChunkSanitizesNestedListHtmlImagesAndSources()
+    {
+        string markdown =
+            """
+            # Nested list images
+
+            - list item
+
+              <img src="https://private.example/list.png" srcset="data:image/png;base64,AAAA 1x, https://private.example/list-2x.png 2x" alt=before/after />
+              <source src="https://private.example/list-source.webp" srcset="https://private.example/list.webp 1x, data:image/webp;base64,BBBB 2x">
+
+            After the list.
+            """;
+
+        IReadOnlyList<ContentChunk> chunks = await ChunkAsync(
+            markdown,
+            maxTokens: 200);
+
+        string projected = string.Join(
+            '\n',
+            chunks.Select(static chunk => chunk.Text));
+        Assert.Contains(
+            "list item",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "before/after",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "After the list.",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "private.example",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "data:image",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "srcset",
+            projected,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ChunkSanitizesBlockquoteHtmlImagesWithQuotedAndSelfClosingAltText()
+    {
+        string slashHeavyAlt = string.Join(
+            '/',
+            Enumerable.Range(0, 512).Select(index =>
+                $"segment{index:D3}"));
+        string markdown =
+            $"""
+             # Blockquote images
+
+             > quoted context
+             >
+             > <img src='data:image/png;base64,AAAA' alt="quoted/value">
+             > <img src=https://private.example/self.png alt=self/closing/>
+             > <img src=https://private.example/slashes.png alt={slashHeavyAlt}/>
+             > <source srcset='data:image/webp;base64,BBBB'>
+
+             After the quote.
+             """;
+
+        IReadOnlyList<ContentChunk> chunks = await ChunkAsync(
+            markdown,
+            maxTokens: 200);
+
+        string projected = string.Join(
+            '\n',
+            chunks.Select(static chunk => chunk.Text));
+        Assert.Contains(
+            "quoted/value",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "self/closing",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            slashHeavyAlt,
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "After the quote.",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "private.example",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "data:image",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "srcset",
+            projected,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task DocumentAdapterSanitizesManyImagesInOrderWithoutLosingMultiplicity()
+    {
+        ContentSourceDescriptor source = new()
+        {
+            OwnerId = Guid.NewGuid(),
+            Kind = ContentSourceKind.Pdf,
+            Path = "many-images.pdf",
+        };
+        string markdown = string.Join(
+            '\n',
+            Enumerable.Range(0, 2_048).Select(index =>
+                index == 0
+                    ? $"![image-{index:D4}](data:image/png;base64,AAAA) surrounding-{index:D4}."
+                    : $"![image-{index:D4}](https://private.example/{index:D4}.png) surrounding-{index:D4}."));
+        Assert.InRange(markdown.Length, 1, 1024 * 1024);
+
+        IngestionDocument document =
+            await new MarkdownIngestionDocumentAdapter().ReadAsync(
+                source,
+                markdown,
+                CancellationToken.None);
+
+        string projected = string.Join(
+            '\n',
+            document.Sections.SelectMany(static section =>
+                section.Elements.Select(static element =>
+                    element.GetMarkdown())));
+        Assert.DoesNotContain(
+            "data:image",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "base64",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "private.example",
+            projected,
+            StringComparison.Ordinal);
+        string[] tokens = projected.Split(
+            (char[]?)null,
+            StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(
+            Enumerable.Range(0, 2_048)
+                .Select(index => $"image-{index:D4}"),
+            tokens.Where(static token =>
+                token.StartsWith(
+                    "image-",
+                    StringComparison.Ordinal)));
+        Assert.Equal(
+            Enumerable.Range(0, 2_048)
+                .Select(index => $"surrounding-{index:D4}"),
+            tokens.Where(static token =>
+                    token.StartsWith(
+                        "surrounding-",
+                        StringComparison.Ordinal))
+                .Select(static token => token.TrimEnd('.')));
+    }
+
+    [Fact]
     public async Task ChunkRespectsTokenBudgetIncludingHeadingContext()
     {
         IReadOnlyList<ContentChunk> chunks = await ChunkAsync(

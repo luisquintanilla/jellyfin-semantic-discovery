@@ -50,6 +50,18 @@ internal sealed class MarkdownIngestionDocumentAdapter
             normalizedMarkdown,
             MarkdownPipeline);
         cancellationToken.ThrowIfCancellationRequested();
+        if (RequiresImageSanitization(
+                parsed,
+                normalizedMarkdown,
+                cancellationToken))
+        {
+            return CreateLosslessFallback(
+                identifier,
+                parsed,
+                normalizedMarkdown,
+                cancellationToken);
+        }
+
         await using MemoryStream stream = new(
             Encoding.UTF8.GetBytes(normalizedMarkdown),
             writable: false);
@@ -63,12 +75,13 @@ internal sealed class MarkdownIngestionDocumentAdapter
             if (TryRestoreDroppedLeafBlocks(
                     document,
                     parsed,
-                    normalizedMarkdown) &&
-                !RequiresImageSanitization(parsed, normalizedMarkdown) &&
+                    normalizedMarkdown,
+                    cancellationToken) &&
                 HasCompleteSemanticCoverage(
                     document,
                     parsed,
-                    normalizedMarkdown))
+                    normalizedMarkdown,
+                    cancellationToken))
             {
                 return document;
             }
@@ -82,13 +95,15 @@ internal sealed class MarkdownIngestionDocumentAdapter
         return CreateLosslessFallback(
             identifier,
             parsed,
-            normalizedMarkdown);
+            normalizedMarkdown,
+            cancellationToken);
     }
 
     private static bool TryRestoreDroppedLeafBlocks(
         IngestionDocument document,
         MarkdownDocument parsed,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         if (document.Sections.Count != 1)
         {
@@ -102,6 +117,7 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
         foreach (Block block in parsed)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (block is ThematicBreakBlock or LinkReferenceDefinitionGroup)
             {
                 continue;
@@ -112,7 +128,8 @@ internal sealed class MarkdownIngestionDocumentAdapter
             {
                 string rawMarkdown = GetSanitizedBlockMarkdown(
                     block,
-                    markdown);
+                    markdown,
+                    cancellationToken);
                 if (!string.IsNullOrWhiteSpace(rawMarkdown))
                 {
                     root.Elements.Add(
@@ -140,16 +157,20 @@ internal sealed class MarkdownIngestionDocumentAdapter
     private static bool HasCompleteSemanticCoverage(
         IngestionDocument document,
         MarkdownDocument parsed,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         string sourceProjection = CreateSemanticProjection(
             parsed,
-            markdown);
+            markdown,
+            cancellationToken);
         StringBuilder mapped = new();
         foreach (IngestionDocumentSection section in document.Sections)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             foreach (IngestionDocumentElement element in section.Elements)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (element is IngestionDocumentImage image)
                 {
                     AppendSemanticSegment(
@@ -170,7 +191,8 @@ internal sealed class MarkdownIngestionDocumentAdapter
                 AppendSemanticBlocks(
                     mapped,
                     elementDocument,
-                    elementMarkdown);
+                    elementMarkdown,
+                    cancellationToken);
             }
         }
 
@@ -183,13 +205,15 @@ internal sealed class MarkdownIngestionDocumentAdapter
     private static IngestionDocument CreateLosslessFallback(
         string identifier,
         MarkdownDocument parsed,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         IngestionDocument document = new(identifier);
         IngestionDocumentSection root = new();
         document.Sections.Add(root);
         foreach (Block block in parsed)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (block is ThematicBreakBlock or LinkReferenceDefinitionGroup)
             {
                 continue;
@@ -197,12 +221,14 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
             string blockMarkdown = GetSanitizedBlockMarkdown(
                 block,
-                markdown);
+                markdown,
+                cancellationToken);
             if (block is HeadingBlock heading)
             {
                 string headingText = CreateSemanticProjection(
                     block,
-                    markdown);
+                    markdown,
+                    cancellationToken);
                 if (!string.IsNullOrWhiteSpace(headingText))
                 {
                     root.Elements.Add(
@@ -218,7 +244,10 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
             if (string.IsNullOrWhiteSpace(blockMarkdown))
             {
-                blockMarkdown = CreateSemanticProjection(block, markdown);
+                blockMarkdown = CreateSemanticProjection(
+                    block,
+                    markdown,
+                    cancellationToken);
             }
 
             if (!string.IsNullOrWhiteSpace(blockMarkdown))
@@ -233,7 +262,10 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
         if (root.Elements.Count == 0)
         {
-            string semanticText = CreateSemanticProjection(parsed, markdown);
+            string semanticText = CreateSemanticProjection(
+                parsed,
+                markdown,
+                cancellationToken);
             if (!string.IsNullOrWhiteSpace(semanticText))
             {
                 root.Elements.Add(
@@ -249,13 +281,20 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
     private static bool RequiresImageSanitization(
         MarkdownDocument parsed,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         foreach (Block block in parsed)
         {
-            if (CollectImageReplacements(block, markdown).Count > 0 ||
+            cancellationToken.ThrowIfCancellationRequested();
+            if (CollectImageReplacements(
+                    block,
+                    markdown,
+                    cancellationToken).Count > 0 ||
                 block is HtmlBlock &&
-                ContainsHtmlImageTag(GetBlockMarkdown(block, markdown)))
+                ContainsHtmlImageTag(
+                    GetBlockMarkdown(block, markdown),
+                    cancellationToken))
             {
                 return true;
             }
@@ -266,33 +305,53 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
     private static string GetSanitizedBlockMarkdown(
         Block block,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         string rawMarkdown = GetBlockMarkdown(block, markdown);
         List<MarkdownReplacement> replacements =
-            CollectImageReplacements(block, markdown);
-        foreach (MarkdownReplacement replacement in replacements
-                     .OrderByDescending(static replacement =>
-                         replacement.Start))
+            CollectImageReplacements(
+                block,
+                markdown,
+                cancellationToken);
+        if (replacements.Count == 0)
         {
-            int relativeStart = replacement.Start - block.Span.Start;
-            if (relativeStart < 0 ||
-                relativeStart + replacement.Length > rawMarkdown.Length)
-            {
-                return CreateSemanticProjection(block, markdown);
-            }
-
-            rawMarkdown = rawMarkdown.Remove(
-                relativeStart,
-                replacement.Length);
-            rawMarkdown = rawMarkdown.Insert(
-                relativeStart,
-                replacement.Text);
+            return rawMarkdown;
         }
 
-        return block is HtmlBlock
-            ? SanitizeHtmlImageTags(rawMarkdown)
-            : rawMarkdown;
+        cancellationToken.ThrowIfCancellationRequested();
+        replacements.Sort(static (left, right) =>
+            left.Start.CompareTo(right.Start));
+        cancellationToken.ThrowIfCancellationRequested();
+        StringBuilder sanitized = new(rawMarkdown.Length);
+        int cursor = 0;
+        foreach (MarkdownReplacement replacement in replacements)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            int relativeStart = replacement.Start - block.Span.Start;
+            if (relativeStart < 0 ||
+                relativeStart < cursor ||
+                relativeStart + replacement.Length > rawMarkdown.Length)
+            {
+                return CreateSemanticProjection(
+                    block,
+                    markdown,
+                    cancellationToken);
+            }
+
+            sanitized.Append(
+                rawMarkdown,
+                cursor,
+                relativeStart - cursor);
+            sanitized.Append(replacement.Text);
+            cursor = relativeStart + replacement.Length;
+        }
+
+        sanitized.Append(
+            rawMarkdown,
+            cursor,
+            rawMarkdown.Length - cursor);
+        return sanitized.ToString();
     }
 
     private static string GetBlockMarkdown(
@@ -311,25 +370,51 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
     private static List<MarkdownReplacement> CollectImageReplacements(
         Block block,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         List<MarkdownReplacement> replacements = [];
-        CollectImageReplacements(block, markdown, replacements);
+        CollectImageReplacements(
+            block,
+            markdown,
+            replacements,
+            cancellationToken);
         return replacements;
     }
 
     private static void CollectImageReplacements(
         Block block,
         string markdown,
-        List<MarkdownReplacement> replacements)
+        List<MarkdownReplacement> replacements,
+        CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (block is HtmlBlock)
+        {
+            string rawHtml = GetBlockMarkdown(block, markdown);
+            string sanitizedHtml = SanitizeHtmlImageTags(
+                rawHtml,
+                cancellationToken);
+            if (!string.Equals(
+                    rawHtml,
+                    sanitizedHtml,
+                    StringComparison.Ordinal))
+            {
+                AddReplacement(
+                    replacements,
+                    block,
+                    sanitizedHtml);
+            }
+        }
+
         if (block is LeafBlock leaf &&
             leaf.Inline?.FirstChild is not null)
         {
             CollectImageReplacements(
                 leaf.Inline,
                 markdown,
-                replacements);
+                replacements,
+                cancellationToken);
         }
 
         if (block is ContainerBlock container)
@@ -339,7 +424,8 @@ internal sealed class MarkdownIngestionDocumentAdapter
                 CollectImageReplacements(
                     child,
                     markdown,
-                    replacements);
+                    replacements,
+                    cancellationToken);
             }
         }
     }
@@ -347,28 +433,37 @@ internal sealed class MarkdownIngestionDocumentAdapter
     private static void CollectImageReplacements(
         ContainerInline container,
         string markdown,
-        List<MarkdownReplacement> replacements)
+        List<MarkdownReplacement> replacements,
+        CancellationToken cancellationToken)
     {
         for (Inline? inline = container.FirstChild;
              inline is not null;
              inline = inline.NextSibling)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (inline is LinkInline { IsImage: true } image)
             {
                 AddReplacement(
                     replacements,
                     image,
-                    CreateInlineSemanticProjection(image, markdown));
+                    CreateInlineSemanticProjection(
+                        image,
+                        markdown,
+                        cancellationToken));
                 continue;
             }
 
             if (inline is HtmlInline html &&
-                ContainsHtmlImageTag(html.Tag))
+                ContainsHtmlImageTag(
+                    html.Tag,
+                    cancellationToken))
             {
                 AddReplacement(
                     replacements,
                     html,
-                    SanitizeHtmlImageTags(html.Tag));
+                    SanitizeHtmlImageTags(
+                        html.Tag,
+                        cancellationToken));
                 continue;
             }
 
@@ -377,7 +472,8 @@ internal sealed class MarkdownIngestionDocumentAdapter
                 CollectImageReplacements(
                     child,
                     markdown,
-                    replacements);
+                    replacements,
+                    cancellationToken);
             }
         }
     }
@@ -400,16 +496,25 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
     private static string CreateSemanticProjection(
         MarkdownObject markdownObject,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         StringBuilder builder = new();
         switch (markdownObject)
         {
             case Block block:
-                AppendSemanticBlock(builder, block, markdown);
+                AppendSemanticBlock(
+                    builder,
+                    block,
+                    markdown,
+                    cancellationToken);
                 break;
             case ContainerInline inline:
-                AppendSemanticInlines(builder, inline, markdown);
+                AppendSemanticInlines(
+                    builder,
+                    inline,
+                    markdown,
+                    cancellationToken);
                 break;
         }
 
@@ -418,38 +523,56 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
     private static string CreateSemanticProjection(
         MarkdownDocument document,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         StringBuilder builder = new();
-        AppendSemanticBlocks(builder, document, markdown);
+        AppendSemanticBlocks(
+            builder,
+            document,
+            markdown,
+            cancellationToken);
         return NormalizeSemanticProjection(builder);
     }
 
     private static string CreateInlineSemanticProjection(
         ContainerInline container,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         StringBuilder builder = new();
-        AppendSemanticInlines(builder, container, markdown);
+        AppendSemanticInlines(
+            builder,
+            container,
+            markdown,
+            cancellationToken);
         return NormalizeSemanticProjection(builder);
     }
 
     private static void AppendSemanticBlocks(
         StringBuilder builder,
         ContainerBlock container,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         foreach (Block block in container)
         {
-            AppendSemanticBlock(builder, block, markdown);
+            cancellationToken.ThrowIfCancellationRequested();
+            AppendSemanticBlock(
+                builder,
+                block,
+                markdown,
+                cancellationToken);
         }
     }
 
     private static void AppendSemanticBlock(
         StringBuilder builder,
         Block block,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (block is ThematicBreakBlock or LinkReferenceDefinitionGroup)
         {
             return;
@@ -459,7 +582,11 @@ internal sealed class MarkdownIngestionDocumentAdapter
         {
             if (leaf.Inline?.FirstChild is not null)
             {
-                AppendSemanticInlines(builder, leaf.Inline, markdown);
+                AppendSemanticInlines(
+                    builder,
+                    leaf.Inline,
+                    markdown,
+                    cancellationToken);
             }
             else
             {
@@ -467,7 +594,8 @@ internal sealed class MarkdownIngestionDocumentAdapter
                     builder,
                     block is HtmlBlock
                         ? SanitizeHtmlImageTags(
-                            GetBlockMarkdown(block, markdown))
+                            GetBlockMarkdown(block, markdown),
+                            cancellationToken)
                         : GetBlockMarkdown(block, markdown));
             }
 
@@ -477,7 +605,11 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
         if (block is ContainerBlock container)
         {
-            AppendSemanticBlocks(builder, container, markdown);
+            AppendSemanticBlocks(
+                builder,
+                container,
+                markdown,
+                cancellationToken);
             return;
         }
 
@@ -489,12 +621,14 @@ internal sealed class MarkdownIngestionDocumentAdapter
     private static void AppendSemanticInlines(
         StringBuilder builder,
         ContainerInline container,
-        string markdown)
+        string markdown,
+        CancellationToken cancellationToken)
     {
         for (Inline? inline = container.FirstChild;
              inline is not null;
              inline = inline.NextSibling)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             switch (inline)
             {
                 case LiteralInline literal:
@@ -504,19 +638,34 @@ internal sealed class MarkdownIngestionDocumentAdapter
                     builder.Append(code.Content);
                     break;
                 case LinkInline image when image.IsImage:
-                    AppendSemanticInlines(builder, image, markdown);
+                    AppendSemanticInlines(
+                        builder,
+                        image,
+                        markdown,
+                        cancellationToken);
                     break;
                 case LinkInline link:
-                    AppendSemanticInlines(builder, link, markdown);
+                    AppendSemanticInlines(
+                        builder,
+                        link,
+                        markdown,
+                        cancellationToken);
                     break;
                 case HtmlInline html:
-                    builder.Append(SanitizeHtmlImageTags(html.Tag));
+                    builder.Append(
+                        SanitizeHtmlImageTags(
+                            html.Tag,
+                            cancellationToken));
                     break;
                 case LineBreakInline:
                     builder.Append(' ');
                     break;
                 case ContainerInline child:
-                    AppendSemanticInlines(builder, child, markdown);
+                    AppendSemanticInlines(
+                        builder,
+                        child,
+                        markdown,
+                        cancellationToken);
                     break;
                 default:
                     AppendSemanticSegment(
@@ -558,12 +707,20 @@ internal sealed class MarkdownIngestionDocumentAdapter
         StringBuilder builder) =>
         TextNormalization.NormalizeWhitespace(builder.ToString());
 
-    private static bool ContainsHtmlImageTag(string text) =>
-        IndexOfHtmlImageTag(text, 0) >= 0;
+    private static bool ContainsHtmlImageTag(
+        string text,
+        CancellationToken cancellationToken) =>
+        IndexOfHtmlImageTag(text, 0, cancellationToken) >= 0;
 
-    private static string SanitizeHtmlImageTags(string text)
+    private static string SanitizeHtmlImageTags(
+        string text,
+        CancellationToken cancellationToken)
     {
-        int imageStart = IndexOfHtmlImageTag(text, 0);
+        cancellationToken.ThrowIfCancellationRequested();
+        int imageStart = IndexOfHtmlImageTag(
+            text,
+            0,
+            cancellationToken);
         if (imageStart < 0)
         {
             return text;
@@ -573,8 +730,12 @@ internal sealed class MarkdownIngestionDocumentAdapter
         int position = 0;
         while (imageStart >= 0)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             sanitized.Append(text, position, imageStart - position);
-            int tagEnd = FindHtmlTagEnd(text, imageStart);
+            int tagEnd = FindHtmlTagEnd(
+                text,
+                imageStart,
+                cancellationToken);
             if (tagEnd < 0)
             {
                 position = text.Length;
@@ -589,11 +750,15 @@ internal sealed class MarkdownIngestionDocumentAdapter
                         text.AsSpan(
                             imageStart,
                             tagEnd - imageStart + 1),
-                        "alt"));
+                        "alt",
+                        cancellationToken));
             }
 
             position = tagEnd + 1;
-            imageStart = IndexOfHtmlImageTag(text, position);
+            imageStart = IndexOfHtmlImageTag(
+                text,
+                position,
+                cancellationToken);
         }
 
         sanitized.Append(text, position, text.Length - position);
@@ -602,12 +767,18 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
     private static int IndexOfHtmlImageTag(
         string text,
-        int startIndex)
+        int startIndex,
+        CancellationToken cancellationToken)
     {
         for (int index = Math.Max(0, startIndex);
              index < text.Length;
              index++)
         {
+            if ((index & 255) == 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
             if (text[index] != '<')
             {
                 continue;
@@ -644,13 +815,19 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
     private static int FindHtmlTagEnd(
         string text,
-        int startIndex)
+        int startIndex,
+        CancellationToken cancellationToken)
     {
         char quote = '\0';
         for (int index = startIndex + 1;
              index < text.Length;
              index++)
         {
+            if ((index & 255) == 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
             char current = text[index];
             if (quote != '\0')
             {
@@ -677,15 +854,25 @@ internal sealed class MarkdownIngestionDocumentAdapter
 
     private static string GetHtmlAttribute(
         ReadOnlySpan<char> tag,
-        string attributeName)
+        string attributeName,
+        CancellationToken cancellationToken)
     {
+        int selfClosingSlashIndex = GetSelfClosingSlashIndex(
+            tag,
+            cancellationToken);
         int position = 1;
         while (position < tag.Length)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             while (position < tag.Length &&
                    (char.IsWhiteSpace(tag[position]) ||
                     tag[position] is '<' or '/' or '>'))
             {
+                if ((position & 255) == 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
                 position++;
             }
 
@@ -694,6 +881,11 @@ internal sealed class MarkdownIngestionDocumentAdapter
                    !char.IsWhiteSpace(tag[position]) &&
                    tag[position] is not '=' and not '>' and not '/')
             {
+                if ((position & 255) == 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
                 position++;
             }
 
@@ -701,6 +893,11 @@ internal sealed class MarkdownIngestionDocumentAdapter
             while (position < tag.Length &&
                    char.IsWhiteSpace(tag[position]))
             {
+                if ((position & 255) == 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
                 position++;
             }
 
@@ -713,6 +910,11 @@ internal sealed class MarkdownIngestionDocumentAdapter
             while (position < tag.Length &&
                    char.IsWhiteSpace(tag[position]))
             {
+                if ((position & 255) == 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
                 position++;
             }
 
@@ -724,9 +926,15 @@ internal sealed class MarkdownIngestionDocumentAdapter
             while (position < tag.Length &&
                    (quote == '\0'
                        ? !char.IsWhiteSpace(tag[position]) &&
-                         tag[position] is not '>' and not '/'
+                         tag[position] != '>' &&
+                         position != selfClosingSlashIndex
                        : tag[position] != quote))
             {
+                if ((position & 255) == 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
                 position++;
             }
 
@@ -745,6 +953,41 @@ internal sealed class MarkdownIngestionDocumentAdapter
         }
 
         return string.Empty;
+    }
+
+    private static int GetSelfClosingSlashIndex(
+        ReadOnlySpan<char> tag,
+        CancellationToken cancellationToken)
+    {
+        int position = tag.Length - 1;
+        while (position >= 0 && char.IsWhiteSpace(tag[position]))
+        {
+            if ((position & 255) == 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            position--;
+        }
+
+        if (position >= 0 && tag[position] == '>')
+        {
+            position--;
+        }
+
+        while (position >= 0 && char.IsWhiteSpace(tag[position]))
+        {
+            if ((position & 255) == 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            position--;
+        }
+
+        return position >= 0 && tag[position] == '/'
+            ? position
+            : -1;
     }
 
     private readonly record struct MarkdownReplacement(
