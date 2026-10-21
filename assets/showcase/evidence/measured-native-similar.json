@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 2,
+  "generatorId": "showcase-native-similar-evidence-v3",
+  "evidenceKind": "native-jellyfin-similar",
+  "profileId": "showcase-v1",
+  "source": "jellyfin-native-similar-items-api",
+  "strictFloorComparison": "\u003E",
+  "providerAttributionExposedByApi": false,
+  "knownJellyfinBoundary": "Jellyfin 12 invokes every local similar-items provider; an empty Semantic Discovery Movie result can fall through to Local Genre/Tag.",
+  "directions": [
+    {
+      "sourceTitle": "Spring",
+      "sourceId": "a78e7d3f9f723592b7dd764cee7777c9",
+      "semanticExpectedTitle": "Coffee Run",
+      "nativeExpectedTitle": "Coffee Run",
+      "providerBoundary": "semantic",
+      "semanticRuntimeEffectiveFloor": 0.38,
+      "semanticRuntimeResults": [
+        {
+          "itemId": "a5f3882d66317f3748c3e2ff5d9cc3a4",
+          "score": 0.40228748
+        }
+      ],
+      "results": [
+        {
+          "id": "a5f3882d66317f3748c3e2ff5d9cc3a4",
+          "name": "Coffee Run",
+          "type": "Movie"
+        }
+      ]
+    },
+    {
+      "sourceTitle": "Coffee Run",
+      "sourceId": "a5f3882d66317f3748c3e2ff5d9cc3a4",
+      "semanticExpectedTitle": "Spring",
+      "nativeExpectedTitle": "Spring",
+      "providerBoundary": "semantic",
+      "semanticRuntimeEffectiveFloor": 0.38,
+      "semanticRuntimeResults": [
+        {
+          "itemId": "a78e7d3f9f723592b7dd764cee7777c9",
+          "score": 0.40228748
+        }
+      ],
+      "results": [
+        {
+          "id": "a78e7d3f9f723592b7dd764cee7777c9",
+          "name": "Spring",
+          "type": "Movie"
+        }
+      ]
+    },
+    {
+      "sourceTitle": "AI for Teachers: an Open Textbook",
+      "sourceId": "cf3df950dd23f804822cc49060dbbfc4",
+      "semanticExpectedTitle": "Introduction to Digital Humanism: A Textbook",
+      "nativeExpectedTitle": "Introduction to Digital Humanism: A Textbook",
+      "providerBoundary": "semantic",
+      "semanticRuntimeEffectiveFloor": 0.38,
+      "semanticRuntimeResults": [
+        {
+          "itemId": "2a6aa11e872b69396c4f1e71188cb65d",
+          "score": 0.49748546
+        }
+      ],
+      "results": [
+        {
+          "id": "2a6aa11e872b69396c4f1e71188cb65d",
+          "name": "Introduction to Digital Humanism: A Textbook",
+          "type": "Book"
+        }
+      ]
+    },
+    {
+      "sourceTitle": "Introduction to Digital Humanism: A Textbook",
+      "sourceId": "2a6aa11e872b69396c4f1e71188cb65d",
+      "semanticExpectedTitle": "AI for Teachers: an Open Textbook",
+      "nativeExpectedTitle": "AI for Teachers: an Open Textbook",
+      "providerBoundary": "semantic",
+      "semanticRuntimeEffectiveFloor": 0.38,
+      "semanticRuntimeResults": [
+        {
+          "itemId": "cf3df950dd23f804822cc49060dbbfc4",
+          "score": 0.49748546
+        }
+      ],
+      "results": [
+        {
+          "id": "cf3df950dd23f804822cc49060dbbfc4",
+          "name": "AI for Teachers: an Open Textbook",
+          "type": "Book"
+        }
+      ]
+    },
+    {
+      "sourceTitle": "Sintel",
+      "sourceId": "8abb00881d1cf44cda4357f3c253c369",
+      "semanticExpectedTitle": null,
+      "nativeExpectedTitle": "Spring",
+      "providerBoundary": "Jellyfin 12 always invokes the built-in Local Genre/Tag provider after an empty local semantic provider result.",
+      "semanticRuntimeEffectiveFloor": 0.38,
+      "semanticRuntimeResults": [],
+      "results": [
+        {
+          "id": "a78e7d3f9f723592b7dd764cee7777c9",
+          "name": "Spring",
+          "type": "Movie"
+        }
+      ]
+    },
+    {
+      "sourceTitle": "The Adventures of Sherlock Holmes",
+      "sourceId": "c8602429f5f0bd7460c1d2cf932b65a8",
+      "semanticExpectedTitle": null,
+      "nativeExpectedTitle": null,
+      "providerBoundary": "semantic-floor-zero",
+      "semanticRuntimeEffectiveFloor": 0.38,
+      "semanticRuntimeResults": [],
+      "results": []
+    }
+  ]
+}

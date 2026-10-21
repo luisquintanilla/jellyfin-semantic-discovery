@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<movie>
+  <title>Orbit Almanac</title>
+  <sorttitle>Orbit Almanac</sorttitle>
+  <year>2024</year>
+  <premiered>2024-01-02</premiered>
+  <plot>A polar radio keeper charts aurora transmissions between silent orbital stations and preserves each signal in a hand-drawn almanac.</plot>
+  <outline>A polar radio keeper prepares a quiet orbital almanac.</outline>
+  <genre>Documentary</genre>
+  <studio>Northern Almanac Workshop</studio>
+  <mpaa>G</mpaa>
+  <uniqueid type="fixture" default="true">fixture-movie-orbit-almanac</uniqueid>
+</movie>

@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Jellyfin.SemanticDiscovery.AppHost/Jellyfin.SemanticDiscovery.AppHost.csproj" />
+    <Project Path="src/Jellyfin.SemanticDiscovery.Core/Jellyfin.SemanticDiscovery.Core.csproj" />
+    <Project Path="src/Jellyfin.SemanticDiscovery.Plugin/Jellyfin.SemanticDiscovery.Plugin.csproj" />
+    <Project Path="src/Jellyfin.SemanticDiscovery.Setup/Jellyfin.SemanticDiscovery.Setup.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Jellyfin.SemanticDiscovery.Core.Tests/Jellyfin.SemanticDiscovery.Core.Tests.csproj" />
+    <Project Path="tests/Jellyfin.SemanticDiscovery.EndToEndTests/Jellyfin.SemanticDiscovery.EndToEndTests.csproj" />
+    <Project Path="tests/Jellyfin.SemanticDiscovery.IntegrationTests/Jellyfin.SemanticDiscovery.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,21 @@
+**/bin/
+**/obj/
+.vs/
+.vscode/
+.idea/
+artifacts/
+coverage/
+TestResults/
+*.user
+*.suo
+*.nupkg
+*.snupkg
+__pycache__/
+*.pyc
+
+# Runtime state and downloaded reproducible assets.
+.aspire/
+.data/
+.testagent/
+assets/model/
+assets/media/generated/

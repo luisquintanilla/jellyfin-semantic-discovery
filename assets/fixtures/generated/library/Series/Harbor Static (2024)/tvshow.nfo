@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tvshow>
+  <title>Harbor Static</title>
+  <year>2024</year>
+  <premiered>2024-02-01</premiered>
+  <plot>A quiet coastal town goes about its ordinary business near the harbor.</plot>
+  <genre>Drama</genre>
+  <studio>Silver Engine Fixtures</studio>
+  <uniqueid type="fixture" default="true">fixture-series-harbor-static</uniqueid>
+</tvshow>

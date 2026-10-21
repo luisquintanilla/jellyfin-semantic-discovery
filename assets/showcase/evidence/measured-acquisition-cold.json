@@ -1,0 +1,241 @@
+{
+  "SchemaVersion": 3,
+  "GeneratorId": "showcase-acquisition-evidence-v3",
+  "EvidenceKind": "cold-acquisition",
+  "ProfileId": "showcase-v1",
+  "Phase": "cold-initial",
+  "DownloaderIdentity": "showcase-downloader-v3-observed-transport-provenance",
+  "SourceLockSha256": "5794c7d2a32eec2804e56ce927f944c2eaa389e11bc35a6dc83c5c21c073f0a8",
+  "SelectedDownloadBytes": 432489421,
+  "DownloadedArtifactCount": 7,
+  "ReusedArtifactCount": 0,
+  "Artifacts": [
+    {
+      "Id": "ai-for-teachers-epub",
+      "RelativePath": "library/Books/AI for Teachers - an Open Textbook (2024)/AI for Teachers - an Open Textbook (2024).epub",
+      "Size": 12635708,
+      "Sha256": "3e309209c3cef66ca4fad0de19849947232f7515d75b0ae2e2becbe29e8ea25a",
+      "Reused": false,
+      "PermittedTransports": [
+        "dotnet-http-pinned-dns",
+        "curl-pinned-single-host"
+      ],
+      "PermittedHosts": [
+        "pressbooks.pub"
+      ]
+    },
+    {
+      "Id": "coffee-run-video",
+      "RelativePath": "library/Movies/Coffee Run (2020)/Coffee Run (2020).webm",
+      "Size": 29260881,
+      "Sha256": "cd58fc73847d22e64fe7c1a3e5fb9de0c427282b11a79f83d121d8acbd9390c4",
+      "UpstreamSha1": "80327755a3c4fe9f61aa636fb36afb14a4b9df25",
+      "Reused": false,
+      "PermittedTransports": [
+        "dotnet-http-pinned-dns",
+        "curl-pinned-single-host"
+      ],
+      "PermittedHosts": [
+        "upload.wikimedia.org"
+      ]
+    },
+    {
+      "Id": "digital-humanism-pdf",
+      "RelativePath": "library/Books/Introduction to Digital Humanism - A Textbook (2024)/Introduction to Digital Humanism - A Textbook (2024).pdf",
+      "Size": 25808724,
+      "Sha256": "9b68858e1b2b7b30f77eb74dd48e9b26e78419e9c8a7f08adfe01876ac7ee2b8",
+      "Reused": false,
+      "PermittedTransports": [
+        "dotnet-http-pinned-dns",
+        "curl-pinned-springer"
+      ],
+      "PermittedHosts": [
+        "link.springer.com",
+        "idp.springer.com"
+      ]
+    },
+    {
+      "Id": "sherlock-epub",
+      "RelativePath": "library/Books/The Adventures of Sherlock Holmes (1999)/The Adventures of Sherlock Holmes (1999).epub",
+      "Size": 311344,
+      "Sha256": "209a8fd827fa88a11f04253d5af10d47967eaa1df3a5c74120ba9aa5e855bba6",
+      "Reused": false,
+      "PermittedTransports": [
+        "dotnet-http-pinned-dns"
+      ],
+      "PermittedHosts": [
+        "www.gutenberg.org"
+      ]
+    },
+    {
+      "Id": "sintel-srt",
+      "RelativePath": "library/Movies/Sintel (2010)/Sintel (2010).en.srt",
+      "Size": 1514,
+      "Sha256": "4ed7e1f1bc5ff69fe33606960e4c048ba6766237bf33b132fef76e1a92cb64b2",
+      "Reused": false,
+      "PermittedTransports": [
+        "dotnet-http-pinned-dns"
+      ],
+      "PermittedHosts": [
+        "durian.blender.org"
+      ]
+    },
+    {
+      "Id": "sintel-video",
+      "RelativePath": "library/Movies/Sintel (2010)/Sintel (2010).mp4",
+      "Size": 282690045,
+      "Sha256": "24820089e5882c604eec07d6a2382ab28d28a951909aea29b0ab63fb63d80299",
+      "UpstreamSha1": "3d228eed0cbcb817cf9b712010eb730d01f3d173",
+      "Reused": false,
+      "PermittedTransports": [
+        "dotnet-http-pinned-dns"
+      ],
+      "PermittedHosts": [
+        "archive.org",
+        ".archive.org"
+      ]
+    },
+    {
+      "Id": "spring-video",
+      "RelativePath": "library/Movies/Spring (2019)/Spring (2019).webm",
+      "Size": 81781205,
+      "Sha256": "d691a199035cc7d295210b286f8f6734893c7d4358d228081af6f0da98a56343",
+      "UpstreamSha1": "1019c65769c155771bc178a10372e958ce4ee1fc",
+      "Reused": false,
+      "PermittedTransports": [
+        "dotnet-http-pinned-dns",
+        "curl-pinned-single-host"
+      ],
+      "PermittedHosts": [
+        "upload.wikimedia.org"
+      ]
+    }
+  ],
+  "GeneratedFiles": [
+    {
+      "RelativePath": "jellyfin-library.json",
+      "Sha256": "9f0db9165542dfb4f2dc8a1b4ed04718d0885fe383b8df34f7728d15d7db582b"
+    },
+    {
+      "RelativePath": "library/Books/AI for Teachers - an Open Textbook (2024)/metadata.opf",
+      "Sha256": "4c77eb22332b251cdae61bf87db30e46db4381fc10b03326aebb4468225711c8"
+    },
+    {
+      "RelativePath": "library/Books/AI for Teachers - an Open Textbook (2024)/semantic-discovery.metadata.json",
+      "Sha256": "1b61d701b518016dfa177823db5db8732872e3cfd1af1852162627a8a977ebf3"
+    },
+    {
+      "RelativePath": "library/Books/Introduction to Digital Humanism - A Textbook (2024)/metadata.opf",
+      "Sha256": "ffde8e6b47607e8ffd2cb3df65b2291028c394354af77cfd948a96f7e27b7549"
+    },
+    {
+      "RelativePath": "library/Books/Introduction to Digital Humanism - A Textbook (2024)/semantic-discovery.metadata.json",
+      "Sha256": "d57c188cb71622b6ee2340c60dadd376d5e03443b9a3c492c60361fd17151241"
+    },
+    {
+      "RelativePath": "library/Books/The Adventures of Sherlock Holmes (1999)/metadata.opf",
+      "Sha256": "cca1372705cd45360f8770e2ad38537d8f2e5488056f0b60dc30f908e544007d"
+    },
+    {
+      "RelativePath": "library/Books/The Adventures of Sherlock Holmes (1999)/semantic-discovery.metadata.json",
+      "Sha256": "969f01c3f979b2c7954fb3e645a7752eda3e9b6f954e1701a87841c5fc30f88b"
+    },
+    {
+      "RelativePath": "library/Movies/Coffee Run (2020)/movie.nfo",
+      "Sha256": "09cf4d3ba53f0464d4009204b9e3997a34f3f3eae7b13e991b455ed4c572dcb6"
+    },
+    {
+      "RelativePath": "library/Movies/Coffee Run (2020)/semantic-discovery.metadata.json",
+      "Sha256": "6b47f433bcbe9cbf4b1f77111a843594a5f631a8ae06be5a1599a601341fd2cf"
+    },
+    {
+      "RelativePath": "library/Movies/Sintel (2010)/movie.nfo",
+      "Sha256": "daa875f52c866c42e7b5ead2e0cd4fc240f103169b107271514a3d9790c45932"
+    },
+    {
+      "RelativePath": "library/Movies/Sintel (2010)/semantic-discovery.metadata.json",
+      "Sha256": "03fdb231384e7eb384eaedcadc8581e4d8d9394cbf84c8d5d0f5f16d5b1630f1"
+    },
+    {
+      "RelativePath": "library/Movies/Spring (2019)/movie.nfo",
+      "Sha256": "6f851b32e00a8d9725d3c511fc89848c774c4a9a214c4255d8d89e52fb1665bb"
+    },
+    {
+      "RelativePath": "library/Movies/Spring (2019)/semantic-discovery.metadata.json",
+      "Sha256": "da32bc170072dfc24bed0989a908d66b347a8d930301bf27082693b645d46495"
+    }
+  ],
+  "NetworkObservations": [
+    {
+      "Id": "ai-for-teachers-epub",
+      "Transport": "curl-pinned-single-host",
+      "FinalEffectiveHostRule": "pressbooks.pub",
+      "FinalTransferRedirectCount": 0,
+      "ObservedManagedHostCount": 1,
+      "ObservedManagedHostRules": [
+        "pressbooks.pub"
+      ]
+    },
+    {
+      "Id": "coffee-run-video",
+      "Transport": "dotnet-http-pinned-dns",
+      "FinalEffectiveHostRule": "upload.wikimedia.org",
+      "FinalTransferRedirectCount": 0,
+      "ObservedManagedHostCount": 1,
+      "ObservedManagedHostRules": [
+        "upload.wikimedia.org"
+      ]
+    },
+    {
+      "Id": "digital-humanism-pdf",
+      "Transport": "curl-pinned-springer",
+      "FinalEffectiveHostRule": "link.springer.com",
+      "FinalTransferRedirectCount": 2,
+      "ObservedManagedHostCount": 1,
+      "ObservedManagedHostRules": [
+        "link.springer.com"
+      ]
+    },
+    {
+      "Id": "sherlock-epub",
+      "Transport": "dotnet-http-pinned-dns",
+      "FinalEffectiveHostRule": "www.gutenberg.org",
+      "FinalTransferRedirectCount": 1,
+      "ObservedManagedHostCount": 1,
+      "ObservedManagedHostRules": [
+        "www.gutenberg.org"
+      ]
+    },
+    {
+      "Id": "sintel-srt",
+      "Transport": "dotnet-http-pinned-dns",
+      "FinalEffectiveHostRule": "durian.blender.org",
+      "FinalTransferRedirectCount": 0,
+      "ObservedManagedHostCount": 1,
+      "ObservedManagedHostRules": [
+        "durian.blender.org"
+      ]
+    },
+    {
+      "Id": "sintel-video",
+      "Transport": "dotnet-http-pinned-dns",
+      "FinalEffectiveHostRule": ".archive.org",
+      "FinalTransferRedirectCount": 1,
+      "ObservedManagedHostCount": 2,
+      "ObservedManagedHostRules": [
+        "archive.org",
+        ".archive.org"
+      ]
+    },
+    {
+      "Id": "spring-video",
+      "Transport": "dotnet-http-pinned-dns",
+      "FinalEffectiveHostRule": "upload.wikimedia.org",
+      "FinalTransferRedirectCount": 0,
+      "ObservedManagedHostCount": 1,
+      "ObservedManagedHostRules": [
+        "upload.wikimedia.org"
+      ]
+    }
+  ]
+}

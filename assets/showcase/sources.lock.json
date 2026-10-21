@@ -1,0 +1,498 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": 2,
+  "profileId": "showcase-v1",
+  "downloaderIdentity": "showcase-downloader-v3-observed-transport-provenance",
+  "projectionHashContract": "metadata-projector-v1;unicode-form-kc;unicode-whitespace-ascii-space;full-canonical-text-sha256-v1",
+  "selectedDownloadBytes": 432489421,
+  "defaultEnabled": false,
+  "requestPolicy": {
+    "method": "GET",
+    "userAgent": "jellyfin-semantic-discovery-showcase/1.0 (+https://github.com/luisquintanilla/jellyfin-semantic-discovery)",
+    "acceptEncoding": "identity",
+    "ambientProxy": false,
+    "automaticDecompression": false,
+    "maximumRedirects": 5,
+    "artifactTimeoutSeconds": 1800
+  },
+  "publicationAnchorPolicy": {
+    "allowOnlyListedAnchors": true,
+    "requiresExactArtifactSha256": true,
+    "requiresExactExtractorIdentity": true,
+    "bookScreenshotsAllowed": false,
+    "extractedTextOrVectorsRedistributed": false
+  },
+  "items": [
+    {
+      "id": "sintel-2010",
+      "jellyfinType": "Movie",
+      "title": "Sintel",
+      "year": 2010,
+      "demoGenerated": {
+        "library": "Showcase Movies",
+        "uniqueId": "showcase-sintel-2010",
+        "folderName": "Sintel (2010)",
+        "metadataFileSha256": "daa875f52c866c42e7b5ead2e0cd4fc240f103169b107271514a3d9790c45932",
+        "semanticSidecarSha256": "03fdb231384e7eb384eaedcadc8581e4d8d9394cbf84c8d5d0f5f16d5b1630f1",
+        "projectedMetadataSha256": "c9ea173aba663e7041c70542daccd190e1e5931c1f8a05cdcc3ab4225633d9ad"
+      },
+      "metadata": {
+        "overview": "Sintel tells the story of a friendship between a girl named Sintel, a baby dragon and the desperate lengths she will go to when that friendship is taken from her.",
+        "genres": [],
+        "studios": ["Blender Foundation"],
+        "people": []
+      },
+      "rights": {
+        "authoritativeMetadataUrl": "https://studio.blender.org/projects/sintel/",
+        "authoritativeRightsUrl": "https://durian.blender.org/sharing/",
+        "primaryLicense": "CC-BY-3.0",
+        "licenseScope": "uniform-project-work",
+        "attribution": "© copyright Blender Foundation | durian.blender.org",
+        "evidenceRetrievedUtc": "2026-09-09T00:00:00Z",
+        "evidenceQuote": "The results of the Durian Open Movie project are being licensed under the Creative Commons Attribution 3.0 license.",
+        "reviewerState": "human-reviewed",
+        "evidenceRecordSha256": "ad1fe53182a7e0a05da581647b355c655b16e44a7df87f3aff4f9da41eb03e27",
+        "exclusions": [
+          "The complete embedded film credits must remain intact.",
+          "Project logos, trademarks, and clearly non-project material are excluded."
+        ],
+        "mirrorIsRightsAuthority": false
+      },
+      "artifacts": [
+        {
+          "id": "sintel-video",
+          "role": "media",
+          "url": "https://archive.org/download/Sintel/sintel-2048-stereo.mp4",
+          "retrievedUtc": "2026-09-09T00:00:00Z",
+          "size": 282690045,
+          "sha256": "24820089e5882c604eec07d6a2382ab28d28a951909aea29b0ab63fb63d80299",
+          "upstreamSha1": "3d228eed0cbcb817cf9b712010eb730d01f3d173",
+          "contentTypes": ["video/mp4"],
+          "fileName": "Sintel (2010).mp4",
+          "allowedRedirectHosts": ["archive.org", ".archive.org"],
+          "allowedTransports": ["dotnet-http-pinned-dns"]
+        },
+        {
+          "id": "sintel-srt",
+          "role": "subtitle",
+          "url": "https://durian.blender.org/wp-content/content/subtitles/sintel_en.srt",
+          "retrievedUtc": "2026-09-09T00:00:00Z",
+          "size": 1514,
+          "sha256": "4ed7e1f1bc5ff69fe33606960e4c048ba6766237bf33b132fef76e1a92cb64b2",
+          "contentTypes": ["application/x-subrip", "text/plain", "application/octet-stream"],
+          "fileName": "Sintel (2010).en.srt",
+          "allowedRedirectHosts": ["durian.blender.org"],
+          "allowedTransports": ["dotnet-http-pinned-dns"]
+        }
+      ],
+      "anchors": [
+        {
+          "artifactId": "sintel-srt",
+          "artifactSha256": "4ed7e1f1bc5ff69fe33606960e4c048ba6766237bf33b132fef76e1a92cb64b2",
+          "extractorIdentity": "srt-cue-text-v1",
+          "normalization": "unicode-nfc;join-cue-payload-lines;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+          "location": "cue 7, 00:02:09.400-00:02:13.800",
+          "text": "What brings you to the land of the gatekeepers?",
+          "cueIndex": 7,
+          "cueStartTicks": 1294000000,
+          "cueEndTicks": 1338000000,
+          "queryToMeasure": "a dangerous journey to find a dragon"
+        },
+        {
+          "artifactId": "sintel-srt",
+          "artifactSha256": "4ed7e1f1bc5ff69fe33606960e4c048ba6766237bf33b132fef76e1a92cb64b2",
+          "extractorIdentity": "srt-cue-text-v1",
+          "normalization": "unicode-nfc;join-cue-payload-lines;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+          "location": "cue 8, 00:02:15.000-00:02:17.500",
+          "text": "I'm searching for someone.",
+          "cueIndex": 8,
+          "cueStartTicks": 1350000000,
+          "cueEndTicks": 1375000000
+        },
+        {
+          "artifactId": "sintel-srt",
+          "artifactSha256": "4ed7e1f1bc5ff69fe33606960e4c048ba6766237bf33b132fef76e1a92cb64b2",
+          "extractorIdentity": "srt-cue-text-v1",
+          "normalization": "unicode-nfc;join-cue-payload-lines;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+          "location": "cue 10, 00:02:23.400-00:02:25.000",
+          "text": "A dragon.",
+          "cueIndex": 10,
+          "cueStartTicks": 1434000000,
+          "cueEndTicks": 1450000000
+        }
+      ]
+    },
+    {
+      "id": "spring-2019",
+      "jellyfinType": "Movie",
+      "title": "Spring",
+      "year": 2019,
+      "demoGenerated": {
+        "library": "Showcase Movies",
+        "uniqueId": "showcase-spring-2019",
+        "folderName": "Spring (2019)",
+        "metadataFileSha256": "6f851b32e00a8d9725d3c511fc89848c774c4a9a214c4255d8d89e52fb1665bb",
+        "semanticSidecarSha256": "da32bc170072dfc24bed0989a908d66b347a8d930301bf27082693b645d46495",
+        "projectedMetadataSha256": "2310dd414f4dd8d87a47643507c149d70522ad1af4069b957474b845b997f3b6"
+      },
+      "metadata": {
+        "overview": "Spring is the story of a shepherd girl and her dog, who face ancient spirits in order to continue the cycle of life.",
+        "genres": [],
+        "studios": ["Blender Foundation"],
+        "people": ["Andy Goralczyk"],
+        "queryToMeasure": "a shepherd girl and her dog confront ancient spirits"
+      },
+      "rights": {
+        "authoritativeMetadataUrl": "https://studio.blender.org/projects/spring/pages/about/",
+        "authoritativeRightsUrl": "https://studio.blender.org/projects/spring/pages/about/",
+        "mirrorEvidenceUrl": "https://commons.wikimedia.org/wiki/File:Spring_-_Blender_Open_Movie.webm",
+        "primaryLicense": "CC-BY-4.0",
+        "licenseScope": "uniform-project-work",
+        "attribution": "© Blender Foundation | cloud.blender.org/spring",
+        "evidenceRetrievedUtc": "2026-09-09T00:00:00Z",
+        "evidenceQuote": "The Spring Open Movie is released un the Creative Commons Attribution 4.0 license.",
+        "evidenceNote": "The authoritative page contains the word 'un' verbatim; this appears to be an upstream typo for 'under' and is preserved rather than silently corrected.",
+        "reviewerState": "human-reviewed",
+        "evidenceRecordSha256": "c870796dfc81a957a100c3276a65566817f092699352bc270a932aa6a5a57d72",
+        "exclusions": [
+          "Blender, Spring, and Creative Commons logos and associated trademarks are excluded.",
+          "No community VTT is selected or ingested."
+        ],
+        "mirrorIsRightsAuthority": false
+      },
+      "artifacts": [
+        {
+          "id": "spring-video",
+          "role": "media",
+          "url": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Spring_-_Blender_Open_Movie.webm",
+          "retrievedUtc": "2026-09-09T00:00:00Z",
+          "size": 81781205,
+          "sha256": "d691a199035cc7d295210b286f8f6734893c7d4358d228081af6f0da98a56343",
+          "upstreamSha1": "1019c65769c155771bc178a10372e958ce4ee1fc",
+          "contentTypes": ["video/webm", "application/octet-stream"],
+          "fileName": "Spring (2019).webm",
+          "allowedRedirectHosts": ["upload.wikimedia.org"],
+          "allowedTransports": [
+            "dotnet-http-pinned-dns",
+            "curl-pinned-single-host"
+          ]
+        }
+      ],
+      "anchors": []
+    },
+    {
+      "id": "coffee-run-2020",
+      "jellyfinType": "Movie",
+      "title": "Coffee Run",
+      "year": 2020,
+      "demoGenerated": {
+        "library": "Showcase Movies",
+        "uniqueId": "showcase-coffee-run-2020",
+        "folderName": "Coffee Run (2020)",
+        "metadataFileSha256": "09cf4d3ba53f0464d4009204b9e3997a34f3f3eae7b13e991b455ed4c572dcb6",
+        "semanticSidecarSha256": "6b47f433bcbe9cbf4b1f77111a843594a5f631a8ae06be5a1599a601341fd2cf",
+        "projectedMetadataSha256": "8292eb9347356e4bc52c263dc6e4ccca8fa22ffc07e8cf85e3ca45b3bebde312"
+      },
+      "metadata": {
+        "overview": "Fueled by caffeine, a young woman runs through the bittersweet memories of her past relationship.",
+        "genres": [],
+        "studios": ["Blender Studio"],
+        "people": ["Hjalti Hjalmarsson"],
+        "queryToMeasure": "caffeine and bittersweet memories of a past relationship"
+      },
+      "rights": {
+        "authoritativeMetadataUrl": "https://studio.blender.org/projects/coffee-run/",
+        "authoritativeRightsUrl": "https://studio.blender.org/projects/coffee-run/pages/licensing/",
+        "mirrorEvidenceUrl": "https://commons.wikimedia.org/wiki/File:Coffee_Run_-_Blender_Open_Movie-full_movie.webm",
+        "primaryLicense": "CC-BY-4.0",
+        "licenseScope": "uniform-project-work",
+        "attribution": "(CC) Blender Foundation | studio.blender.org",
+        "evidenceRetrievedUtc": "2026-09-09T00:00:00Z",
+        "evidenceQuote": "The content of the Coffee Run project is released under the Creative Commons Attribution 4.0 license.",
+        "reviewerState": "human-reviewed",
+        "evidenceRecordSha256": "66898ace5c7784f94251e85598a6083d0c4bbf4a487cf7dc72223145c8136b90",
+        "exclusions": [
+          "Blender, Coffee Run, and Creative Commons logos and associated trademarks are excluded.",
+          "No source-verified subtitle is selected."
+        ],
+        "mirrorIsRightsAuthority": false
+      },
+      "artifacts": [
+        {
+          "id": "coffee-run-video",
+          "role": "media",
+          "url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Coffee_Run_-_Blender_Open_Movie-full_movie.webm",
+          "retrievedUtc": "2026-09-09T00:00:00Z",
+          "size": 29260881,
+          "sha256": "cd58fc73847d22e64fe7c1a3e5fb9de0c427282b11a79f83d121d8acbd9390c4",
+          "upstreamSha1": "80327755a3c4fe9f61aa636fb36afb14a4b9df25",
+          "contentTypes": ["video/webm", "application/octet-stream"],
+          "fileName": "Coffee Run (2020).webm",
+          "allowedRedirectHosts": ["upload.wikimedia.org"],
+          "allowedTransports": [
+            "dotnet-http-pinned-dns",
+            "curl-pinned-single-host"
+          ]
+        }
+      ],
+      "anchors": []
+    },
+    {
+      "id": "ai-for-teachers-2024",
+      "jellyfinType": "Book",
+      "title": "AI for Teachers: an Open Textbook",
+      "year": 2024,
+      "demoGenerated": {
+        "library": "Showcase Books",
+        "uniqueId": "showcase-ai-for-teachers-2024",
+        "folderName": "AI for Teachers - an Open Textbook (2024)",
+        "metadataFileSha256": "4c77eb22332b251cdae61bf87db30e46db4381fc10b03326aebb4468225711c8",
+        "semanticSidecarSha256": "1b61d701b518016dfa177823db5db8732872e3cfd1af1852162627a8a977ebf3",
+        "projectedMetadataSha256": "1be363e13d0e2d342618b293e28669f95a712e7be06b04065638a8d88b0edcc8"
+      },
+      "metadata": {
+        "overview": "An open textbook about artificial intelligence for educators, including search, meaning, ethics, privacy, bias, and classroom practice.",
+        "genres": [],
+        "people": ["Colin de la Higuera", "Jotsna Iyer"],
+        "publicationDate": "2024-01-18"
+      },
+      "rights": {
+        "authoritativeMetadataUrl": "https://pressbooks.pub/aiforteachers/wp-json/pressbooks/v2/metadata",
+        "authoritativeRightsUrl": "https://pressbooks.pub/aiforteachers/",
+        "primaryLicense": "CC-BY-4.0",
+        "licenseScope": "mixed",
+        "attribution": "AI for Teachers: an Open Textbook, Colin de la Higuera and Jotsna Iyer",
+        "evidenceRetrievedUtc": "2026-09-09T00:00:00Z",
+        "evidenceQuote": "AI for Teachers: an Open Textbook Copyright © 2024 by Colin de la Higuera and Jotsna Iyer is licensed under a Creative Commons Attribution 4.0 International License, except where otherwise noted.",
+        "reviewerState": "human-reviewed",
+        "evidenceRecordSha256": "4585761a3d6a80b2732d1932ed7cd2201078953abf5db5953d9d318d25040cd5",
+        "localProcessingBoundary": "The publisher original is downloaded and processed locally at the user's direction. The demo does not determine per-element rights or claim that all extracted captions or text are uniformly CC-BY. Checked-in evidence and screenshots are limited to source-verified main-work prose and exclude exception-marked figures, captions, media, logos, trademarks, and permission-only material.",
+        "exclusions": [
+          "Exception-marked images or activities in XHTML chapters 001, 002, 004, 008, 010, 021, 027, 036, 043, 053, and 056.",
+          "The selected publisher EPUB is cached unchanged and is not rehosted, repackaged, or used for screenshots of exception-marked material.",
+          "Embedded exceptions include BY-NC, BY-ND, BY-NC-SA, BY-NC-ND, and BY-SA material."
+        ],
+        "mirrorIsRightsAuthority": true
+      },
+      "artifacts": [
+        {
+          "id": "ai-for-teachers-epub",
+          "role": "book",
+          "url": "https://pressbooks.pub/aiforteachers/open/download?type=epub",
+          "retrievedUtc": "2026-09-09T00:00:00Z",
+          "size": 12635708,
+          "sha256": "3e309209c3cef66ca4fad0de19849947232f7515d75b0ae2e2becbe29e8ea25a",
+          "contentTypes": ["application/epub+zip", "application/octet-stream"],
+          "fileName": "AI for Teachers - an Open Textbook (2024).epub",
+          "allowedRedirectHosts": ["pressbooks.pub"],
+          "allowedTransports": [
+            "dotnet-http-pinned-dns",
+            "curl-pinned-single-host"
+          ]
+        }
+      ],
+      "anchors": [
+        {
+          "artifactId": "ai-for-teachers-epub",
+          "artifactSha256": "3e309209c3cef66ca4fad0de19849947232f7515d75b0ae2e2becbe29e8ea25a",
+          "extractorIdentity": "markitdown-0.1.7-epub-html-v1",
+          "normalization": "unicode-nfc;html-entity-decode;strip-markup;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+          "location": "EPUB XHTML chapter 010",
+          "text": "Nowadays, many search engines use a language-based model generated by deep neural networks.",
+          "queryToMeasure": "How do search engines understand meaning rather than exact words?"
+        },
+        {
+          "artifactId": "ai-for-teachers-epub",
+          "artifactSha256": "3e309209c3cef66ca4fad0de19849947232f7515d75b0ae2e2becbe29e8ea25a",
+          "extractorIdentity": "markitdown-0.1.7-epub-html-v1",
+          "normalization": "unicode-nfc;html-entity-decode;strip-markup;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+          "location": "EPUB main text",
+          "text": "all search engines transform the text in a way that makes it easier to match with the meaning of the query text."
+        }
+      ]
+    },
+    {
+      "id": "digital-humanism-2024",
+      "jellyfinType": "Book",
+      "title": "Introduction to Digital Humanism: A Textbook",
+      "year": 2024,
+      "demoGenerated": {
+        "library": "Showcase Books",
+        "uniqueId": "showcase-digital-humanism-2024",
+        "folderName": "Introduction to Digital Humanism - A Textbook (2024)",
+        "metadataFileSha256": "ffde8e6b47607e8ffd2cb3df65b2291028c394354af77cfd948a96f7e27b7549",
+        "semanticSidecarSha256": "d57c188cb71622b6ee2340c60dadd376d5e03443b9a3c492c60361fd17151241",
+        "projectedMetadataSha256": "cc5dd14abdf655f42a69c6177be805ce36f9e733a39380e84e7474eb351da160"
+      },
+      "metadata": {
+        "overview": "An open textbook about shaping digital technology through human agency, ethics, governance, privacy, and social responsibility.",
+        "genres": [],
+        "people": [
+          "Hannes Werthner",
+          "Carlo Ghezzi",
+          "Jeff Kramer",
+          "Julian Nida-Rümelin",
+          "Bashar Nuseibeh",
+          "Erich Prem",
+          "Allison Stanger"
+        ],
+        "publisher": "Springer Nature Switzerland",
+        "electronicIsbn": "9783031453045",
+        "doi": "10.1007/978-3-031-45304-5"
+      },
+      "rights": {
+        "authoritativeMetadataUrl": "https://api.crossref.org/works/10.1007/978-3-031-45304-5",
+        "authoritativeRightsUrl": "https://doi.org/10.1007/978-3-031-45304-5",
+        "primaryLicense": "CC-BY-4.0",
+        "licenseScope": "mixed",
+        "attribution": "Introduction to Digital Humanism: A Textbook, Springer Nature Switzerland, edited by Hannes Werthner et al.",
+        "evidenceRetrievedUtc": "2026-09-09T00:00:00Z",
+        "evidenceQuote": "\"content-version\":\"vor\",\"delay-in-days\":0,\"URL\":\"https:\\/\\/creativecommons.org\\/licenses\\/by\\/4.0\"",
+        "reviewerState": "human-reviewed",
+        "evidenceRecordSha256": "deaa06a7853a8e8c5d8da3bdeb1402bf3897c37e2a8e82712e65472f35246520",
+        "localProcessingBoundary": "The publisher original is processed locally. Checked-in evidence and screenshots exclude permission-only figures/tables and do not represent the runtime as a per-element rights classifier.",
+        "exclusions": [
+          "Permission-only Fig. 2 and Tables 1-3 in Governance for Digital Humanism: The Role of Regulation, Standardization, and Certification.",
+          "Do not extract, commit, screenshot, or quote exception-marked figures or tables.",
+          "One separately credited Fig. 1 is CC-BY-3.0."
+        ],
+        "mirrorIsRightsAuthority": true
+      },
+      "artifacts": [
+        {
+          "id": "digital-humanism-pdf",
+          "role": "book",
+          "url": "https://link.springer.com/content/pdf/10.1007/978-3-031-45304-5.pdf",
+          "retrievedUtc": "2026-09-09T00:00:00Z",
+          "size": 25808724,
+          "sha256": "9b68858e1b2b7b30f77eb74dd48e9b26e78419e9c8a7f08adfe01876ac7ee2b8",
+          "contentTypes": ["application/pdf", "application/octet-stream"],
+          "fileName": "Introduction to Digital Humanism - A Textbook (2024).pdf",
+          "allowedRedirectHosts": ["link.springer.com", "idp.springer.com"],
+          "allowedTransports": [
+            "dotnet-http-pinned-dns",
+            "curl-pinned-springer"
+          ]
+        }
+      ],
+      "anchors": [
+        {
+          "artifactId": "digital-humanism-pdf",
+          "artifactSha256": "9b68858e1b2b7b30f77eb74dd48e9b26e78419e9c8a7f08adfe01876ac7ee2b8",
+          "extractorIdentity": "markitdown-0.1.7-pdfminer-v1",
+          "normalization": "unicode-nfc;pinned-pdf-dehyphenation-and-line-join;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+          "location": "book opening text",
+          "text": "The recent wave of more widely available artificial intelligence (AI) technologies"
+        },
+        {
+          "artifactId": "digital-humanism-pdf",
+          "artifactSha256": "9b68858e1b2b7b30f77eb74dd48e9b26e78419e9c8a7f08adfe01876ac7ee2b8",
+          "extractorIdentity": "markitdown-0.1.7-pdfminer-v1",
+          "normalization": "unicode-nfc;pinned-pdf-dehyphenation-and-line-join;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+          "location": "Preface, canonical extraction around lines 90-96",
+          "text": "our collective digital future is determined through human agency.",
+          "queryToMeasure": "How should people shape our collective digital future?"
+        }
+      ]
+    },
+    {
+      "id": "sherlock-holmes-1661",
+      "jellyfinType": "Book",
+      "title": "The Adventures of Sherlock Holmes",
+      "year": 1999,
+      "demoGenerated": {
+        "library": "Showcase Books",
+        "uniqueId": "showcase-sherlock-holmes-1661",
+        "folderName": "The Adventures of Sherlock Holmes (1999)",
+        "metadataFileSha256": "cca1372705cd45360f8770e2ad38537d8f2e5488056f0b60dc30f908e544007d",
+        "semanticSidecarSha256": "969f01c3f979b2c7954fb3e645a7752eda3e9b6f954e1701a87841c5fc30f88b",
+        "projectedMetadataSha256": "116bb6db37db1488835d76ab3d1288b38cfb40465db20cf5d25f6ec9b600c36d"
+      },
+      "metadata": {
+        "overview": "Holmes, Sherlock (Fictitious character) -- Fiction; Private investigators -- England -- Fiction; Detective and mystery stories, English.",
+        "genres": ["Detective and mystery stories, English"],
+        "studios": [],
+        "people": ["Arthur Conan Doyle"],
+        "publicationDate": "1999-03-01"
+      },
+      "rights": {
+        "authoritativeMetadataUrl": "https://www.gutenberg.org/ebooks/1661",
+        "authoritativeRightsUrl": "https://www.gutenberg.org/policy/permission.html",
+        "primaryLicense": "Public-Domain-US",
+        "licenseScope": "mixed",
+        "attribution": "Project Gutenberg eBook #1661, The Adventures of Sherlock Holmes by Arthur Conan Doyle",
+        "evidenceRetrievedUtc": "2026-09-09T00:00:00Z",
+        "evidenceQuote": "Public domain in the USA.",
+        "reviewerState": "human-reviewed",
+        "evidenceRecordSha256": "95f650d2996c6931fdaf12112f15d8d2b456b1aca83c651537483fd980814d62",
+        "localProcessingBoundary": "The exact publisher EPUB is processed locally. The cache, extracted text, chunks, and vectors are not redistributed; users outside the United States must verify local law.",
+        "exclusions": [
+          "Project Gutenberg asserts public-domain status in the United States only; non-U.S. users must verify local law.",
+          "Project Gutenberg is a registered trademark; do not use its logos, imply endorsement, redistribute the cached EPUB, or trade on the mark.",
+          "The exact publisher EPUB and its embedded license are processed locally only."
+        ],
+        "mirrorIsRightsAuthority": true,
+        "embeddedEvidence": {
+          "artifactId": "sherlock-epub",
+          "artifactSha256": "209a8fd827fa88a11f04253d5af10d47967eaa1df3a5c74120ba9aa5e855bba6",
+          "entryPath": "OEBPS/content.opf",
+          "extractorIdentity": "epub-zip-entry-utf8-xml-dc-rights-v1",
+          "maximumEntryBytes": 16384,
+          "expectedTitle": "The Adventures of Sherlock Holmes",
+          "exactText": "Public domain in the USA."
+        }
+      },
+      "artifacts": [
+        {
+          "id": "sherlock-epub",
+          "role": "book",
+          "url": "https://www.gutenberg.org/ebooks/1661.epub.noimages",
+          "retrievedUtc": "2026-09-09T00:00:00Z",
+          "size": 311344,
+          "sha256": "209a8fd827fa88a11f04253d5af10d47967eaa1df3a5c74120ba9aa5e855bba6",
+          "contentTypes": ["application/epub+zip", "application/octet-stream"],
+          "fileName": "The Adventures of Sherlock Holmes (1999).epub",
+          "allowedRedirectHosts": ["www.gutenberg.org"],
+          "allowedTransports": ["dotnet-http-pinned-dns"]
+        }
+      ],
+      "anchors": [
+        {
+          "artifactId": "sherlock-epub",
+          "artifactSha256": "209a8fd827fa88a11f04253d5af10d47967eaa1df3a5c74120ba9aa5e855bba6",
+          "extractorIdentity": "markitdown-0.1.7-epub-html-v1",
+          "normalization": "unicode-nfc;html-entity-decode;strip-markup;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+          "location": "A Scandal in Bohemia",
+          "text": "You see, but you do not observe.",
+          "queryToMeasure": "the detective distinguishes seeing from observing"
+        }
+      ]
+    }
+  ],
+  "rejectedCandidates": [
+    {
+      "id": "NASAExplorers-S4E6",
+      "reason": "NASA asset metadata embeds 'This music requires a license for use'; fetch-only delivery does not cure that restriction."
+    },
+    {
+      "id": "NASAExplorers-S4E7",
+      "reason": "NASA asset metadata embeds 'This music requires a license for use'; fetch-only delivery does not cure that restriction."
+    },
+    {
+      "id": "Space Food Scientist",
+      "reason": "NASA asset metadata embeds 'This music requires a license for use'; fetch-only delivery does not cure that restriction."
+    },
+    {
+      "id": "Current & Emerging Computing Technology",
+      "reason": "Widespread embedded NC/ND/SA exceptions make the work unsuitable for the minimal showcase."
+    },
+    {
+      "id": "Public Domain Review and Internet Archive catalog-only candidates",
+      "reason": "Catalog or mirror presence alone is not authoritative rights evidence."
+    },
+    {
+      "id": "standard-ebooks-additional-classics",
+      "reason": "No additional Standard Ebooks title was selected. The one selected Project Gutenberg title is separately locked to its exact EPUB, title-specific embedded U.S. public-domain statement, jurisdiction caveat, and trademark exclusions."
+    }
+  ]
+}

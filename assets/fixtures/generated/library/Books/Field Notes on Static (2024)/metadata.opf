@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package unique-identifier="BookId" version="2.0" xmlns="http://www.idpf.org/2007/opf">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:identifier id="BookId">fixture-book-field-notes-on-static</dc:identifier>
+    <dc:title>Field Notes on Static</dc:title>
+    <dc:creator>Silver Engine Fixtures</dc:creator>
+    <dc:language>en</dc:language>
+    <dc:date>2024</dc:date>
+    <dc:description>An original synthetic field log used only as a repository fixture for retrieval demos.</dc:description>
+  </metadata>
+  <manifest>
+    <item id="book" href="Field Notes on Static (2024).pdf" media-type="application/pdf" />
+  </manifest>
+</package>

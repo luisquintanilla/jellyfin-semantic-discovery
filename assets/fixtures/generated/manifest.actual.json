@@ -1,0 +1,181 @@
+{
+  "generatorOwnedOutput": true,
+  "manifestVersion": 1,
+  "generatorIdentity": "fixture-generator-v4-linux-amd64-no-x264-asm",
+  "manifestSha256": "c5b8733c4521994ac8ac5c50979f9477b76a002a15a374220077e178cf461ea6",
+  "generatorScriptSha256": "05e84533b9a73df448eda29f8e85d8bb65a0368c45e22ea2158a1c87f65443c5",
+  "canonicalHashesMatch": true,
+  "overallSuccess": true,
+  "items": [
+    {
+      "id": "movie-signal-garden",
+      "kind": "movie",
+      "paths": {
+        "video": "library/Movies/The Signal Garden (2024)/The Signal Garden (2024).mp4",
+        "nfo": "library/Movies/The Signal Garden (2024)/movie.nfo",
+        "srt": "library/Movies/The Signal Garden (2024)/The Signal Garden (2024).en.srt",
+        "vtt": "library/Movies/The Signal Garden (2024)/The Signal Garden (2024).en.vtt"
+      },
+      "video": {
+        "durationSeconds": 6.0,
+        "durationOk": true,
+        "containerOk": true,
+        "videoCodecOk": true,
+        "audioCodecOk": true,
+        "pixelFormatOk": true,
+        "resolutionOk": true,
+        "success": true
+      },
+      "subtitles": {
+        "srtExists": true,
+        "vttExists": true,
+        "srtCueCount": 3,
+        "vttCueCount": 3,
+        "srtCueCountOk": true,
+        "vttCueCountOk": true,
+        "success": true
+      },
+      "nfoExists": true,
+      "success": true
+    },
+    {
+      "id": "movie-orbit-almanac",
+      "kind": "movie",
+      "paths": {
+        "video": "library/Movies/Orbit Almanac (2024)/Orbit Almanac (2024).mp4",
+        "nfo": "library/Movies/Orbit Almanac (2024)/movie.nfo",
+        "srt": "library/Movies/Orbit Almanac (2024)/Orbit Almanac (2024).en.srt",
+        "vtt": "library/Movies/Orbit Almanac (2024)/Orbit Almanac (2024).en.vtt"
+      },
+      "video": {
+        "durationSeconds": 4.0,
+        "durationOk": true,
+        "containerOk": true,
+        "videoCodecOk": true,
+        "audioCodecOk": true,
+        "pixelFormatOk": true,
+        "resolutionOk": true,
+        "success": true
+      },
+      "subtitles": {
+        "srtExists": true,
+        "vttExists": true,
+        "srtCueCount": 2,
+        "vttCueCount": 2,
+        "srtCueCountOk": true,
+        "vttCueCountOk": true,
+        "success": true
+      },
+      "nfoExists": true,
+      "success": true
+    },
+    {
+      "id": "series-harbor-static",
+      "kind": "series",
+      "paths": {
+        "video": "library/Series/Harbor Static (2024)/Season 01/Harbor Static (2024) S01E01.mp4",
+        "tvshowNfo": "library/Series/Harbor Static (2024)/tvshow.nfo",
+        "seasonNfo": "library/Series/Harbor Static (2024)/Season 01/season.nfo",
+        "episodeNfo": "library/Series/Harbor Static (2024)/Season 01/Harbor Static (2024) S01E01.nfo",
+        "srt": "library/Series/Harbor Static (2024)/Season 01/Harbor Static (2024) S01E01.en.srt",
+        "vtt": "library/Series/Harbor Static (2024)/Season 01/Harbor Static (2024) S01E01.en.vtt"
+      },
+      "video": {
+        "durationSeconds": 4.0,
+        "durationOk": true,
+        "containerOk": true,
+        "videoCodecOk": true,
+        "audioCodecOk": true,
+        "pixelFormatOk": true,
+        "resolutionOk": true,
+        "success": true
+      },
+      "subtitles": {
+        "srtExists": true,
+        "vttExists": true,
+        "srtCueCount": 2,
+        "vttCueCount": 2,
+        "srtCueCountOk": true,
+        "vttCueCountOk": true,
+        "success": true
+      },
+      "nfosExist": true,
+      "success": true
+    },
+    {
+      "id": "series-tidal-register",
+      "kind": "series",
+      "paths": {
+        "video": "library/Series/Tidal Register (2024)/Season 01/Tidal Register (2024) S01E01.mp4",
+        "tvshowNfo": "library/Series/Tidal Register (2024)/tvshow.nfo",
+        "seasonNfo": "library/Series/Tidal Register (2024)/Season 01/season.nfo",
+        "episodeNfo": "library/Series/Tidal Register (2024)/Season 01/Tidal Register (2024) S01E01.nfo",
+        "srt": "library/Series/Tidal Register (2024)/Season 01/Tidal Register (2024) S01E01.en.srt",
+        "vtt": "library/Series/Tidal Register (2024)/Season 01/Tidal Register (2024) S01E01.en.vtt"
+      },
+      "video": {
+        "durationSeconds": 3.0,
+        "durationOk": true,
+        "containerOk": true,
+        "videoCodecOk": true,
+        "audioCodecOk": true,
+        "pixelFormatOk": true,
+        "resolutionOk": true,
+        "success": true
+      },
+      "subtitles": {
+        "srtExists": true,
+        "vttExists": true,
+        "srtCueCount": 2,
+        "vttCueCount": 2,
+        "srtCueCountOk": true,
+        "vttCueCountOk": true,
+        "success": true
+      },
+      "nfosExist": true,
+      "success": true
+    },
+    {
+      "id": "book-field-notes-on-static",
+      "kind": "pdf",
+      "paths": {
+        "pdf": "library/Books/Field Notes on Static (2024)/Field Notes on Static (2024).pdf",
+        "opf": "library/Books/Field Notes on Static (2024)/metadata.opf"
+      },
+      "structure": {
+        "headerOk": true,
+        "footerOk": true,
+        "pageCountActual": 2,
+        "pageCountOk": true,
+        "xrefOk": true,
+        "rootOk": true,
+        "noStrayEscapesOk": true,
+        "phrasesOk": true,
+        "success": true
+      },
+      "opfExists": true,
+      "success": true
+    },
+    {
+      "id": "book-notes-choir-loft",
+      "kind": "epub",
+      "paths": {
+        "epub": "library/Books/Notes from the Choir Loft (2024)/Notes from the Choir Loft (2024).epub",
+        "opf": "library/Books/Notes from the Choir Loft (2024)/metadata.opf"
+      },
+      "structure": {
+        "mimetypeFirstOk": true,
+        "mimetypeStoredOk": true,
+        "mimetypeValueOk": true,
+        "containerOk": true,
+        "opfOk": true,
+        "chapterCountOk": true,
+        "chaptersReadableOk": true,
+        "phrasesOk": true,
+        "success": true
+      },
+      "opfExists": true,
+      "success": true
+    }
+  ]
+}

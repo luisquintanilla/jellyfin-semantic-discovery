@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Semantic Discovery</title>
+</head>
+<body>
+    <div id="semanticDiscoveryConfigPage"
+         data-role="page"
+         class="page type-interior pluginConfigurationPage"
+         data-require="emby-input,emby-button">
+        <div data-role="content">
+            <div class="content-primary">
+                <h1>Semantic Discovery</h1>
+                <form id="semanticDiscoveryConfigForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="enabled">Enabled</label>
+                        <select id="enabled" is="emby-select" class="emby-select-withcolor emby-select">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="searchLimit">Maximum semantic results</label>
+                        <input id="searchLimit" is="emby-input" type="number" min="1" max="100">
+                    </div>
+                    <h2>Status</h2>
+                    <p id="lastStatus">Not indexed</p>
+                    <p id="lastError"></p>
+                    <dl>
+                        <dt>Model assets</dt>
+                        <dd id="modelStatus">Not validated</dd>
+                        <dt>Index generation</dt>
+                        <dd id="indexGeneration">0</dd>
+                        <dt>Index identity</dt>
+                        <dd id="indexIdentity">Not built</dd>
+                        <dt>Metadata records</dt>
+                        <dd id="metadataRecordCount">0</dd>
+                        <dt>Content chunks</dt>
+                        <dd id="contentChunkCount">0</dd>
+                        <dt>Last rebuild embeddings (metadata / content)</dt>
+                        <dd id="lastEmbeddedCounts">0 / 0</dd>
+                        <dt>Semantic recommendation queries / results</dt>
+                        <dd id="recommendationCounts">0 / 0</dd>
+                        <dt>Effective recommendation floor</dt>
+                        <dd id="effectiveRecommendationFloor">0.50</dd>
+                        <dt>Embedding totals (ingest / query)</dt>
+                        <dd id="embeddingTotals">0 / 0</dd>
+                        <dt>Last successful refresh</dt>
+                        <dd id="lastSuccessfulRefresh">Never</dd>
+                    </dl>
+                    <p>Model, snapshot, and MarkItDown endpoint changes made through environment or XML configuration require a server restart.</p>
+                    <button id="rebuildIndex" is="emby-button" type="button" class="raised block emby-button">
+                        <span>Rebuild semantic index</span>
+                    </button>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            (() => {
+                const pluginId = 'de965148-5789-4e8c-9774-6d1409ef3478';
+                const page = document.querySelector('#semanticDiscoveryConfigPage');
+                const form = page.querySelector('#semanticDiscoveryConfigForm');
+
+                page.addEventListener('pageshow', async () => {
+                    Dashboard.showLoadingMsg();
+                    try {
+                        const config = await ApiClient.getPluginConfiguration(pluginId);
+                        page.querySelector('#enabled').value = String(config.Enabled);
+                        page.querySelector('#searchLimit').value = config.SearchLimit || 20;
+                        page.querySelector('#lastStatus').textContent = config.LastStatus || 'Not indexed';
+                        page.querySelector('#lastError').textContent = config.LastError || '';
+                        page.querySelector('#modelStatus').textContent = config.ModelStatus || 'Not validated';
+                        page.querySelector('#indexGeneration').textContent = String(config.IndexGeneration || 0);
+                        page.querySelector('#indexIdentity').textContent = config.IndexIdentity || 'Not built';
+                        page.querySelector('#metadataRecordCount').textContent = String(config.MetadataRecordCount || 0);
+                        page.querySelector('#contentChunkCount').textContent = String(config.ContentChunkCount || 0);
+                        page.querySelector('#lastEmbeddedCounts').textContent =
+                            `${config.LastEmbeddedMetadataCount || 0} / ${config.LastEmbeddedContentChunkCount || 0}`;
+                        page.querySelector('#recommendationCounts').textContent =
+                            `${config.RecommendationQueryCount || 0} / ${config.RecommendationResultCount || 0}`;
+                        page.querySelector('#effectiveRecommendationFloor').textContent =
+                            Number(config.EffectiveRecommendationFloor).toFixed(2);
+                        page.querySelector('#embeddingTotals').textContent =
+                            `${config.IngestEmbeddingsTotal || 0} / ${config.QueryEmbeddingsTotal || 0}`;
+                        page.querySelector('#lastSuccessfulRefresh').textContent =
+                            config.LastSuccessfulRefreshUtc || 'Never';
+                    } finally {
+                        Dashboard.hideLoadingMsg();
+                    }
+                });
+
+                form.addEventListener('submit', async event => {
+                    event.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    try {
+                        const config = await ApiClient.getPluginConfiguration(pluginId);
+                        config.Enabled = page.querySelector('#enabled').value === 'true';
+                        const rawSearchLimit =
+                            Number(page.querySelector('#searchLimit').value);
+                        const configuredSearchLimit =
+                            Number.isFinite(config.SearchLimit)
+                                ? config.SearchLimit
+                                : 20;
+                        config.SearchLimit = Number.isFinite(rawSearchLimit)
+                            ? Math.max(1, Math.min(100, rawSearchLimit))
+                            : Math.max(1, Math.min(100, configuredSearchLimit));
+                        const result = await ApiClient.updatePluginConfiguration(pluginId, config);
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    } finally {
+                        Dashboard.hideLoadingMsg();
+                    }
+                });
+
+                page.querySelector('#rebuildIndex').addEventListener('click', async () => {
+                    Dashboard.showLoadingMsg();
+                    try {
+                        const tasks = await ApiClient.getJSON(ApiClient.getUrl('ScheduledTasks'));
+                        const task = tasks.find(item => item.Key === 'SemanticDiscoveryRebuild');
+                        if (!task) {
+                            throw new Error('Semantic Discovery scheduled task is unavailable.');
+                        }
+                        await ApiClient.ajax({
+                            type: 'POST',
+                            url: ApiClient.getUrl(`ScheduledTasks/Running/${encodeURIComponent(task.Id)}`)
+                        });
+                        page.querySelector('#lastStatus').textContent = 'Rebuild queued';
+                    } finally {
+                        Dashboard.hideLoadingMsg();
+                    }
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>

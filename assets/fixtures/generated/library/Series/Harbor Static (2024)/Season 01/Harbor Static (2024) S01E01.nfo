@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<episodedetails>
+  <title>Low Tide Static</title>
+  <season>1</season>
+  <episode>1</episode>
+  <plot>The tide comes in, the tide goes out, and nothing unusual happens today.</plot>
+  <uniqueid type="fixture" default="true">fixture-series-harbor-static-s01e01</uniqueid>
+</episodedetails>

@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      SEMANTIC_DISCOVERY_REQUIRE_MODEL: "true"
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
+        with:
+          dotnet-version: 10.0.303
+
+      - name: Record CI environment
+        shell: pwsh
+        run: |
+          "## CI environment" | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          "GitHub runner image: $env:ImageOS $env:ImageVersion" | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          "Docker: $(docker version --format '{{.Server.Version}} {{.Server.Os}}/{{.Server.Arch}}')" | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          "PowerShell: $($PSVersionTable.PSVersion)" | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          "dotnet SDK: $(dotnet --version)" | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          "The GitHub-hosted runner is a moving input; fixture bytes are generated in the digest-pinned tool container." | Out-File $env:GITHUB_STEP_SUMMARY -Append
+
+      - name: Restore
+        shell: pwsh
+        run: |
+          dotnet tool restore --configfile NuGet.Config
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet tool run aspire --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet restore Jellyfin.SemanticDiscovery.slnx --configfile NuGet.Config --locked-mode
+
+      - name: Install pinned model
+        run: dotnet run --project src/Jellyfin.SemanticDiscovery.Setup --no-restore -- model
+
+      - name: Validate PowerShell scripts
+        shell: pwsh
+        run: ./scripts/Test-PowerShellSyntax.ps1
+
+      - name: Verify reproducible synthetic fixtures
+        shell: pwsh
+        run: ./scripts/Test-FixtureReproducibility.ps1
+
+      - name: MarkItDown security and conversion smoke
+        shell: pwsh
+        run: ./scripts/Test-MarkItDown.ps1
+
+      - name: Build
+        run: dotnet build Jellyfin.SemanticDiscovery.slnx --no-restore
+
+      - name: Test
+        shell: pwsh
+        run: |
+          dotnet test tests/Jellyfin.SemanticDiscovery.Core.Tests --no-build --no-restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet test tests/Jellyfin.SemanticDiscovery.IntegrationTests --no-build --no-restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Linux plugin smoke
+        shell: pwsh
+        run: ./scripts/Smoke-Plugin.ps1
+
+      - name: Aspire end-to-end
+        shell: pwsh
+        run: ./scripts/Test-EndToEnd.ps1
+
+      - name: Upload end-to-end evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: semantic-discovery-e2e-evidence
+          path: artifacts/e2e
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "ubuntuSnapshot": "20250201T000000Z",
+  "baseImage": "mcr.microsoft.com/powershell:7.5-ubuntu-24.04@sha256:042240d57ec9e47e511033b92625a8d95875ee5860af3015992c248b58a8be81",
+  "powershellVersion": "PowerShell 7.5.0",
+  "ffmpegVersion": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "ffmpegSha256": "ed16af623947494a72e284b6eb8ff225f2da22b38b5d5069c2fd4b4ba3384e41",
+  "ffprobeVersion": "ffprobe version 6.1.1-3ubuntu5 Copyright (c) 2007-2023 the FFmpeg developers",
+  "ffprobeSha256": "272f6ebc634a63d9c8b4ca68e964119d980f25154e5aa2c35e5487da48e9a58f",
+  "packageClosureSha256": "9187d89d5369664a83e07c5d7ecf3cf9941087de3d1826caf30ead1fdcb7181c",
+  "linkedLibraryClosureSha256": "f4b5b7a11ecb725c4a1de35e1d3f788ea2857e98fac27f624f52620e38801b2a",
+  "relevantPackages": [
+    "ffmpeg=7:6.1.1-3ubuntu5",
+    "libaom3=3.8.2-2ubuntu0.1",
+    "libavcodec60=7:6.1.1-3ubuntu5",
+    "libavdevice60=7:6.1.1-3ubuntu5",
+    "libavfilter9=7:6.1.1-3ubuntu5",
+    "libavformat60=7:6.1.1-3ubuntu5",
+    "libavutil58=7:6.1.1-3ubuntu5",
+    "libmp3lame0=3.100-6build1",
+    "libopus0=1.4-1build1",
+    "libsvtav1enc1d1=1.7.0+dfsg-2build1",
+    "libvorbis0a=1.3.7-1build3",
+    "libvorbisenc2=1.3.7-1build3",
+    "libvorbisfile3=1.3.7-1build3",
+    "libvpx9=1.14.0-1ubuntu2.1",
+    "libx264-164=2:0.164.3108+git31e19f9-1",
+    "libx265-199=3.5-2build1"
+  ],
+  "criticalLinkedLibraries": {
+    "/lib/x86_64-linux-gnu/libavformat.so.60": "5f0970c52b7723037a7f6357cc1931879513449f742240fff7c37ceb7175ac9f",
+    "/lib/x86_64-linux-gnu/libavcodec.so.60": "8231c9aecba7d02c132de0e16195ccb3e8002a235a5f364b3635df09e7f513e0",
+    "/lib/x86_64-linux-gnu/libavfilter.so.9": "863ec5f6b0d32cbc64a10048e987a2bba79e3852abc73dfcb9a435158fc75f24",
+    "/lib/x86_64-linux-gnu/libx264.so.164": "e8d6174800d71680cdd48a4d4cd21eadc57bddf67115beccf583a47b5470162f"
+  }
+}

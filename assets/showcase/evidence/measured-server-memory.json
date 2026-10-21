@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 2,
+  "generatorId": "showcase-server-memory-evidence-v3",
+  "evidenceKind": "markitdown-server-memory",
+  "interpretation": "Linux process-lifetime high-water and current RSS observations; values are not per-document allocation deltas.",
+  "observations": [
+    {
+      "mediaType": "application/pdf",
+      "decodedSourceBytes": 25808724,
+      "sourceSha256": "9b68858e1b2b7b30f77eb74dd48e9b26e78419e9c8a7f08adfe01876ac7ee2b8",
+      "process": "markitdown-python",
+      "units": "kib",
+      "metricKind": "process_lifetime_high_water",
+      "processStartPeakRssKiB": 26932,
+      "beforePeakRssKiB": 223624,
+      "beforeCurrentRssKiB": 156756,
+      "afterPeakRssKiB": 317248,
+      "afterCurrentRssKiB": 313616
+    },
+    {
+      "mediaType": "application/epub+zip",
+      "decodedSourceBytes": 311344,
+      "sourceSha256": "209a8fd827fa88a11f04253d5af10d47967eaa1df3a5c74120ba9aa5e855bba6",
+      "process": "markitdown-python",
+      "units": "kib",
+      "metricKind": "process_lifetime_high_water",
+      "processStartPeakRssKiB": 26932,
+      "beforePeakRssKiB": 317248,
+      "beforeCurrentRssKiB": 315644,
+      "afterPeakRssKiB": 319352,
+      "afterCurrentRssKiB": 319960
+    },
+    {
+      "mediaType": "application/epub+zip",
+      "decodedSourceBytes": 12635708,
+      "sourceSha256": "3e309209c3cef66ca4fad0de19849947232f7515d75b0ae2e2becbe29e8ea25a",
+      "process": "markitdown-python",
+      "units": "kib",
+      "metricKind": "process_lifetime_high_water",
+      "processStartPeakRssKiB": 26932,
+      "beforePeakRssKiB": 411668,
+      "beforeCurrentRssKiB": 412324,
+      "afterPeakRssKiB": 411796,
+      "afterCurrentRssKiB": 379932
+    }
+  ]
+}
