@@ -11,8 +11,30 @@ RUN printf '%s\n' \
         'Components: main universe restricted multiverse' \
         'Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg' \
         > /etc/apt/sources.list.d/ubuntu.sources \
-    && apt-get -o Acquire::Check-Valid-Until=false update \
-    && apt-get install --yes --no-install-recommends "ffmpeg=${FFMPEG_VERSION}" \
+    && attempt=1 \
+    && until apt-get \
+            -o Acquire::Check-Valid-Until=false \
+            -o Acquire::Retries=3 \
+            -o APT::Update::Error-Mode=any \
+            update; do \
+        if [ "$attempt" -ge 15 ]; then \
+            exit 1; \
+        fi; \
+        echo "Snapshot refresh attempt ${attempt} failed; retrying in 20 seconds." >&2; \
+        sleep 20; \
+        attempt=$((attempt + 1)); \
+    done \
+    && install_attempt=1 \
+    && until apt-get \
+            -o Acquire::Retries=3 \
+            install --yes --no-install-recommends "ffmpeg=${FFMPEG_VERSION}"; do \
+        if [ "$install_attempt" -ge 15 ]; then \
+            exit 1; \
+        fi; \
+        echo "Snapshot package attempt ${install_attempt} failed; retrying in 20 seconds." >&2; \
+        sleep 20; \
+        install_attempt=$((install_attempt + 1)); \
+    done \
     && rm -rf /var/lib/apt/lists/*
 
 COPY containers/fixture-generator/toolchain-lock.json /opt/fixture-generator/toolchain-lock.json
