@@ -59,8 +59,27 @@ function Get-FileHashes {
     return $hashes
 }
 
+function Get-DockerHostUserArguments {
+    if ($IsWindows) {
+        return @()
+    }
+
+    $uid = (& id -u).Trim()
+    if ($LASTEXITCODE -ne 0 -or $uid -notmatch '^\d+$') {
+        throw "Could not determine the host user ID for fixture generation."
+    }
+
+    $gid = (& id -g).Trim()
+    if ($LASTEXITCODE -ne 0 -or $gid -notmatch '^\d+$') {
+        throw "Could not determine the host group ID for fixture generation."
+    }
+
+    return @("--user", "${uid}:${gid}", "--env", "HOME=/tmp")
+}
+
 Push-Location $repoRoot
 try {
+    $dockerHostUserArguments = @(Get-DockerHostUserArguments)
     $fixtureStatusBefore =
         @(git status --porcelain=v1 --untracked-files=all -- assets/fixtures)
     docker build `
@@ -73,6 +92,7 @@ try {
 
     Reset-TemporaryOutput $temporaryOutput
     docker run --rm `
+        @dockerHostUserArguments `
         --mount "type=bind,source=$temporaryOutput,target=/output" `
         $ImageTag `
         -ManifestPath /opt/fixture-generator/manifest.json `
@@ -139,6 +159,7 @@ try {
         [System.Text.UTF8Encoding]::new($false))
     Invoke-ExpectFailure "Generate into an unowned populated directory" {
         docker run --rm `
+            @dockerHostUserArguments `
             --mount "type=bind,source=$unsafeOutput,target=/output" `
             $ImageTag `
             -ManifestPath /opt/fixture-generator/manifest.json `
@@ -167,6 +188,7 @@ try {
     $checksumBefore = (Get-FileHash $invalidChecksumPath -Algorithm SHA256).Hash
     Invoke-ExpectFailure "Invalid checksum update" {
         docker run --rm `
+            @dockerHostUserArguments `
             --mount "type=bind,source=$invalidUpdateRoot,target=/source" `
             $ImageTag `
             -ManifestPath /source/manifest.json `
