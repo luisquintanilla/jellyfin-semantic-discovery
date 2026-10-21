@@ -1,4 +1,5 @@
 using Jellyfin.SemanticDiscovery.Core.Domain;
+using Jellyfin.SemanticDiscovery.Core.Identity;
 using Jellyfin.SemanticDiscovery.Core.Ingestion;
 using Jellyfin.SemanticDiscovery.Core.Tests.TestSupport;
 
@@ -135,6 +136,46 @@ public sealed class SubtitleChunkerTests
 
         Assert.NotEqual(first[0].Id, second[0].Id);
         Assert.NotEqual(first[0].ContentHash, second[0].ContentHash);
+    }
+
+    [Fact]
+    public void ChunkProjectsLanguageTicksOrdinalsHashesAndIdentity()
+    {
+        SubtitleChunker chunker = CreateChunker(maxTokens: 3);
+        Guid ownerId = Guid.NewGuid();
+        const string sourcePath = "episode.en.srt";
+        SubtitleCue[] cues =
+        [
+            new SubtitleCue(30, 40, "one two three four"),
+            new SubtitleCue(10, 20, "five six"),
+        ];
+
+        IReadOnlyList<ContentChunk> chunks = chunker.Chunk(
+            ownerId,
+            sourcePath,
+            "en",
+            ContentSourceKind.Subtitle,
+            cues);
+
+        Assert.Equal(["one two three", "four five six"], chunks.Select(static chunk => chunk.Text));
+        Assert.Equal([0, 1], chunks.Select(static chunk => chunk.Ordinal));
+        Assert.Equal([30, 10], chunks.Select(static chunk => chunk.StartTicks));
+        Assert.Equal([40, 40], chunks.Select(static chunk => chunk.EndTicks));
+        Assert.All(
+            chunks,
+            chunk =>
+            {
+                Assert.Equal("en", chunk.Language);
+                Assert.Equal(ContentHash.Compute(chunk.Text), chunk.ContentHash);
+                Assert.Equal(
+                    ContentChunkIdentity.Compute(
+                        ownerId,
+                        sourcePath,
+                        ContentSourceKind.Subtitle,
+                        chunk.Ordinal,
+                        chunk.ContentHash),
+                    chunk.Id);
+            });
     }
 
     [Fact]

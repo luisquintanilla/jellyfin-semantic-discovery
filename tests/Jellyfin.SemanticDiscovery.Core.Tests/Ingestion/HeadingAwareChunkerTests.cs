@@ -1,5 +1,6 @@
 using System.Reflection;
 using Jellyfin.SemanticDiscovery.Core.Domain;
+using Jellyfin.SemanticDiscovery.Core.Identity;
 using Jellyfin.SemanticDiscovery.Core.Ingestion;
 using Jellyfin.SemanticDiscovery.Core.Projection;
 using Jellyfin.SemanticDiscovery.Core.Tests.TestSupport;
@@ -71,6 +72,70 @@ public sealed class HeadingAwareChunkerTests
 
         Assert.NotEqual(first[0].Id, second[0].Id);
         Assert.NotEqual(first[0].ContentHash, second[0].ContentHash);
+    }
+
+    [Fact]
+    public void ChunkPreservesStructuredMarkdownContentAndDomainIdentity()
+    {
+        HeadingAwareChunker chunker = CreateChunker(maxTokens: 200);
+        Guid ownerId = Guid.NewGuid();
+        const string sourcePath = "guide.pdf";
+        string markdown =
+            """
+            # Guide
+
+            Intro paragraph.
+
+            - first item
+            - second item
+
+            | Name | Value |
+            | --- | --- |
+            | alpha | one |
+
+            ```csharp
+            Console.WriteLine("hello");
+            ```
+            """;
+
+        IReadOnlyList<ContentChunk> chunks = chunker.Chunk(
+            ownerId,
+            sourcePath,
+            ContentSourceKind.Pdf,
+            markdown);
+
+        Assert.NotEmpty(chunks);
+        Assert.Equal(
+            Enumerable.Range(0, chunks.Count),
+            chunks.Select(static chunk => chunk.Ordinal));
+        Assert.All(
+            chunks,
+            chunk =>
+            {
+                Assert.Equal(ownerId, chunk.OwnerId);
+                Assert.Equal(sourcePath, chunk.SourcePath);
+                Assert.Equal(ContentSourceKind.Pdf, chunk.SourceKind);
+                Assert.Equal("Guide", chunk.Heading);
+                Assert.Equal(ContentHash.Compute(chunk.Text), chunk.ContentHash);
+                Assert.Equal(
+                    ContentChunkIdentity.Compute(
+                        ownerId,
+                        sourcePath,
+                        ContentSourceKind.Pdf,
+                        chunk.Ordinal,
+                        chunk.ContentHash),
+                    chunk.Id);
+            });
+
+        string projected = string.Join('\n', chunks.Select(static chunk => chunk.Text));
+        Assert.Contains("Intro paragraph.", projected, StringComparison.Ordinal);
+        Assert.Contains("- first item", projected, StringComparison.Ordinal);
+        Assert.Contains("| Name | Value |", projected, StringComparison.Ordinal);
+        Assert.Contains("```csharp", projected, StringComparison.Ordinal);
+        Assert.Contains(
+            "Console.WriteLine(\"hello\");",
+            projected,
+            StringComparison.Ordinal);
     }
 
     [Fact]
