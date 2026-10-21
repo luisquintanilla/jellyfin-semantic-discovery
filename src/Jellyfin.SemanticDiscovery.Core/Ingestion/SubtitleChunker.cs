@@ -1,105 +1,153 @@
-using Jellyfin.SemanticDiscovery.Core.Domain;
-using Jellyfin.SemanticDiscovery.Core.Identity;
+using System.Runtime.CompilerServices;
+using Microsoft.Extensions.DataIngestion;
 
 namespace Jellyfin.SemanticDiscovery.Core.Ingestion;
 
-public sealed class SubtitleChunker(ITokenCounter tokenCounter, int maxTokens = 192)
+internal sealed class SubtitleChunker : IngestionChunker<string>
 {
-    private readonly ITokenCounter _tokenCounter =
-        tokenCounter ?? throw new ArgumentNullException(nameof(tokenCounter));
+    private readonly MiniLmTokenBudget _tokenBudget;
 
-    private readonly int _maxTokens = maxTokens > 0
-        ? maxTokens
-        : throw new ArgumentOutOfRangeException(nameof(maxTokens));
-
-    public IReadOnlyList<ContentChunk> Chunk(
-        Guid ownerId,
-        string sourcePath,
-        string? language,
-        ContentSourceKind sourceKind,
-        IReadOnlyList<SubtitleCue> cues)
+    public SubtitleChunker(
+        ITokenCounter tokenCounter,
+        int maximumTokens = MiniLmTokenBudget.MaximumInputTokens)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
-        ArgumentNullException.ThrowIfNull(cues);
+        _tokenBudget = new MiniLmTokenBudget(tokenCounter, maximumTokens);
+    }
 
-        List<ContentChunk> chunks = [];
-        List<SubtitleCue> pending = [];
+    public override async IAsyncEnumerable<IngestionChunk<string>> ProcessAsync(
+        IngestionDocument document,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        await Task.CompletedTask.ConfigureAwait(false);
 
-        foreach (SubtitleCue cue in cues)
+        List<CueFragment> pending = [];
+        foreach (IngestionDocumentElement element in document.EnumerateContent())
         {
-            foreach (SubtitleCue boundedCue in SplitCue(cue))
+            cancellationToken.ThrowIfCancellationRequested();
+            if (element is not IngestionDocumentParagraph paragraph)
             {
+                throw new InvalidDataException(
+                    "Timed-text documents may contain paragraph elements only.");
+            }
+
+            CueMetadata metadata = ReadCueMetadata(paragraph);
+            string text = paragraph.Text ?? paragraph.GetMarkdown();
+            foreach (string part in _tokenBudget.SplitNormalized(text))
+            {
+                CueFragment fragment = new(part, metadata);
                 if (pending.Count > 0 &&
-                    _tokenCounter.CountTokens(Join(pending.Append(boundedCue))) > _maxTokens)
+                    !_tokenBudget.Fits(Join(pending.Append(fragment))))
                 {
-                    chunks.Add(CreateChunk(
-                        ownerId,
-                        sourcePath,
-                        language,
-                        sourceKind,
-                        chunks.Count,
-                        pending));
+                    yield return CreateChunk(document, pending);
                     pending.Clear();
                 }
 
-                pending.Add(boundedCue);
+                pending.Add(fragment);
             }
         }
 
         if (pending.Count > 0)
         {
-            chunks.Add(CreateChunk(
-                ownerId,
-                sourcePath,
-                language,
-                sourceKind,
-                chunks.Count,
-                pending));
-        }
-
-        return chunks;
-    }
-
-    private IEnumerable<SubtitleCue> SplitCue(SubtitleCue cue)
-    {
-        IReadOnlyList<string> parts =
-            TokenBoundedTextSplitter.Split(cue.Text, _tokenCounter, _maxTokens);
-        foreach (string part in parts)
-        {
-            yield return cue with { Text = part };
+            yield return CreateChunk(document, pending);
         }
     }
 
-    private static ContentChunk CreateChunk(
-        Guid ownerId,
-        string sourcePath,
-        string? language,
-        ContentSourceKind sourceKind,
-        int ordinal,
-        List<SubtitleCue> cues)
+    private IngestionChunk<string> CreateChunk(
+        IngestionDocument document,
+        IReadOnlyList<CueFragment> fragments)
     {
-        string text = Join(cues);
-        string contentHash = ContentHash.Compute(text);
-        return new ContentChunk
+        string content = Join(fragments);
+        _tokenBudget.Validate(content);
+        string[] languages = fragments
+            .Select(static fragment => fragment.Metadata.Language)
+            .Where(static language => language.Length > 0)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        if (languages.Length > 1)
         {
-            Id = ContentChunkIdentity.Compute(
-                ownerId,
-                sourcePath,
-                sourceKind,
-                ordinal,
-                contentHash),
-            OwnerId = ownerId,
-            SourceKind = sourceKind,
-            SourcePath = sourcePath,
-            Ordinal = ordinal,
-            Text = text,
-            Language = language,
-            StartTicks = cues.Min(static cue => cue.StartTicks),
-            EndTicks = cues.Max(static cue => cue.EndTicks),
-            ContentHash = contentHash,
-        };
+            throw new InvalidDataException(
+                "A timed-text document contains conflicting languages.");
+        }
+
+        IngestionChunk<string> chunk = new(content, document);
+        chunk.Metadata[IngestionMetadata.TokenCount] =
+            _tokenBudget.CountTokens(content);
+        chunk.Metadata[IngestionMetadata.CueOrdinals] = fragments
+            .Select(static fragment => fragment.Metadata.Ordinal)
+            .Distinct()
+            .ToArray();
+        chunk.Metadata[IngestionMetadata.StartTicks] = fragments.Min(
+            static fragment => fragment.Metadata.StartTicks);
+        chunk.Metadata[IngestionMetadata.EndTicks] = fragments.Max(
+            static fragment => fragment.Metadata.EndTicks);
+        chunk.Metadata[IngestionMetadata.Language] =
+            languages.FirstOrDefault() ?? string.Empty;
+        return chunk;
     }
 
-    private static string Join(IEnumerable<SubtitleCue> cues) =>
-        string.Join(' ', cues.Select(static cue => cue.Text));
+    private static CueMetadata ReadCueMetadata(
+        IngestionDocumentParagraph paragraph) => new(
+            GetRequiredInt32(paragraph, IngestionMetadata.CueOrdinal),
+            GetRequiredInt64(paragraph, IngestionMetadata.StartTicks),
+            GetRequiredInt64(paragraph, IngestionMetadata.EndTicks),
+            GetRequiredString(paragraph, IngestionMetadata.Language));
+
+    private static int GetRequiredInt32(
+        IngestionDocumentElement element,
+        string key)
+    {
+        if (element.Metadata.TryGetValue(key, out object? value) &&
+            value is int result)
+        {
+            return result;
+        }
+
+        throw new InvalidDataException(
+            $"Timed-text metadata '{key}' must be an integer.");
+    }
+
+    private static long GetRequiredInt64(
+        IngestionDocumentElement element,
+        string key)
+    {
+        if (element.Metadata.TryGetValue(key, out object? value))
+        {
+            return value switch
+            {
+                long result => result,
+                int result => result,
+                _ => throw new InvalidDataException(
+                    $"Timed-text metadata '{key}' must be an integer."),
+            };
+        }
+
+        throw new InvalidDataException(
+            $"Timed-text metadata '{key}' is required.");
+    }
+
+    private static string GetRequiredString(
+        IngestionDocumentElement element,
+        string key)
+    {
+        if (element.Metadata.TryGetValue(key, out object? value) &&
+            value is string result)
+        {
+            return result;
+        }
+
+        throw new InvalidDataException(
+            $"Timed-text metadata '{key}' must be a string.");
+    }
+
+    private static string Join(IEnumerable<CueFragment> fragments) =>
+        string.Join(' ', fragments.Select(static fragment => fragment.Text));
+
+    private sealed record CueFragment(string Text, CueMetadata Metadata);
+
+    private sealed record CueMetadata(
+        int Ordinal,
+        long StartTicks,
+        long EndTicks,
+        string Language);
 }

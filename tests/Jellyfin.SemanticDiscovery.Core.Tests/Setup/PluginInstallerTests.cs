@@ -93,6 +93,25 @@ public sealed class PluginInstallerTests : IDisposable
             Path.Combine(destination, "Jellyfin.Controller.dll")));
     }
 
+    [Fact]
+    public void CommittedManifestMatchesInstallerAllowlist()
+    {
+        string manifestPath = Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "Jellyfin.SemanticDiscovery.Plugin",
+            "meta.json");
+        using JsonDocument manifest =
+            JsonDocument.Parse(File.ReadAllBytes(manifestPath));
+        string[] assemblies = manifest.RootElement
+            .GetProperty("assemblies")
+            .EnumerateArray()
+            .Select(static element => element.GetString()!)
+            .ToArray();
+
+        Assert.Equal(PluginInstaller.ExpectedManagedAssemblies, assemblies);
+    }
+
     private string CreateValidSource()
     {
         string source = Path.Combine(_root, $"source-{Guid.NewGuid():N}");
@@ -133,4 +152,22 @@ public sealed class PluginInstallerTests : IDisposable
             {
                 WriteIndented = true,
             }));
+
+    private static string FindRepositoryRoot()
+    {
+        for (DirectoryInfo? directory = new(AppContext.BaseDirectory);
+             directory is not null;
+             directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(
+                    directory.FullName,
+                    "Jellyfin.SemanticDiscovery.slnx")))
+            {
+                return directory.FullName;
+            }
+        }
+
+        throw new DirectoryNotFoundException(
+            "The repository root could not be located.");
+    }
 }

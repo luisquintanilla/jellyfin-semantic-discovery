@@ -9,6 +9,7 @@
     <PackageReference Include="Jellyfin.Controller" />
     <PackageReference Include="Jellyfin.Database.Implementations" />
     <PackageReference Include="Jellyfin.Model" />
+    <PackageReference Include="Microsoft.Extensions.DataIngestion" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />

@@ -1,25 +1,25 @@
 using System.Reflection;
 using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Core.Identity;
+using Jellyfin.SemanticDiscovery.Core.Indexing;
 using Jellyfin.SemanticDiscovery.Core.Ingestion;
 using Jellyfin.SemanticDiscovery.Core.Projection;
 using Jellyfin.SemanticDiscovery.Core.Tests.TestSupport;
+using Microsoft.Extensions.DataIngestion;
 
 namespace Jellyfin.SemanticDiscovery.Core.Tests.Ingestion;
 
 public sealed class HeadingAwareChunkerTests
 {
-    private static HeadingAwareChunker CreateChunker(int maxTokens = 50) =>
-        new(new WordCountTokenCounter(), maxTokens);
-
     [Fact]
-    public void ChunkBuildsHeadingAncestryPathFromNestedHeadings()
+    public async Task ChunkBuildsHeadingAncestryPathFromNestedHeadings()
     {
-        HeadingAwareChunker chunker = CreateChunker();
-        string markdown = "# Chapter 1\n\nIntro paragraph.\n\n## Section A\n\nSection A content.\n";
+        string markdown =
+            "# Chapter 1\n\nIntro paragraph.\n\n" +
+            "## Section A\n\nSection A content.\n";
 
-        IReadOnlyList<ContentChunk> chunks = chunker.Chunk(
-            Guid.NewGuid(), "book.pdf", ContentSourceKind.Pdf, markdown);
+        IReadOnlyList<ContentChunk> chunks =
+            await ChunkAsync(markdown);
 
         Assert.Equal(2, chunks.Count);
         Assert.Equal("Chapter 1", chunks[0].Heading);
@@ -27,32 +27,30 @@ public sealed class HeadingAwareChunkerTests
     }
 
     [Fact]
-    public void ChunkResetsDeeperHeadingLevelsWhenAShallowerHeadingAppears()
+    public async Task ChunkResetsDeeperHeadingLevelsWhenShallowerHeadingAppears()
     {
-        HeadingAwareChunker chunker = CreateChunker();
         string markdown =
-            "# Chapter 1\n\n## Section A\n\nFirst.\n\n# Chapter 2\n\nSecond.\n";
+            "# Chapter 1\n\n## Section A\n\nFirst.\n\n" +
+            "# Chapter 2\n\nSecond.\n";
 
-        IReadOnlyList<ContentChunk> chunks = chunker.Chunk(
-            Guid.NewGuid(), "book.pdf", ContentSourceKind.Pdf, markdown);
+        IReadOnlyList<ContentChunk> chunks =
+            await ChunkAsync(markdown);
 
         Assert.Equal(2, chunks.Count);
         Assert.Equal("Chapter 1 > Section A", chunks[0].Heading);
-        // "Chapter 2" (a new H1) clears the stale H2 ancestor from "Chapter 1".
         Assert.Equal("Chapter 2", chunks[1].Heading);
     }
 
     [Fact]
-    public void ChunkProducesDeterministicIdsOrdinalsAndHashesForIdenticalInput()
+    public async Task ChunkProducesDeterministicIdsOrdinalsAndHashes()
     {
-        HeadingAwareChunker chunker = CreateChunker();
         Guid ownerId = Guid.NewGuid();
-        string markdown = "# Heading\n\nBody text.\n";
+        const string markdown = "# Heading\n\nBody text.\n";
 
         IReadOnlyList<ContentChunk> first =
-            chunker.Chunk(ownerId, "book.pdf", ContentSourceKind.Pdf, markdown);
+            await ChunkAsync(markdown, ownerId: ownerId);
         IReadOnlyList<ContentChunk> second =
-            chunker.Chunk(ownerId, "book.pdf", ContentSourceKind.Pdf, markdown);
+            await ChunkAsync(markdown, ownerId: ownerId);
 
         Assert.Equal(first[0].Id, second[0].Id);
         Assert.Equal(first[0].ContentHash, second[0].ContentHash);
@@ -60,24 +58,50 @@ public sealed class HeadingAwareChunkerTests
     }
 
     [Fact]
-    public void ChunkProducesDifferentIdsForDifferentContent()
+    public async Task ChunkProducesDifferentIdsForDifferentContent()
     {
-        HeadingAwareChunker chunker = CreateChunker();
         Guid ownerId = Guid.NewGuid();
 
         IReadOnlyList<ContentChunk> first =
-            chunker.Chunk(ownerId, "book.pdf", ContentSourceKind.Pdf, "# H\n\nOne.\n");
+            await ChunkAsync("# H\n\nOne.\n", ownerId: ownerId);
         IReadOnlyList<ContentChunk> second =
-            chunker.Chunk(ownerId, "book.pdf", ContentSourceKind.Pdf, "# H\n\nTwo.\n");
+            await ChunkAsync("# H\n\nTwo.\n", ownerId: ownerId);
 
         Assert.NotEqual(first[0].Id, second[0].Id);
         Assert.NotEqual(first[0].ContentHash, second[0].ContentHash);
     }
 
     [Fact]
-    public void ChunkPreservesStructuredMarkdownContentAndDomainIdentity()
+    public async Task ChunkIdentityIsStableAcrossMarkdownLineEndings()
     {
-        HeadingAwareChunker chunker = CreateChunker(maxTokens: 200);
+        Guid ownerId = Guid.NewGuid();
+        const string lineFeedMarkdown =
+            "# Heading\n\nParagraph.\n\n```text\ncode\n```\n";
+
+        IReadOnlyList<ContentChunk> lineFeed = await ChunkAsync(
+            lineFeedMarkdown,
+            ownerId: ownerId);
+        IReadOnlyList<ContentChunk> carriageReturnLineFeed = await ChunkAsync(
+            lineFeedMarkdown.Replace(
+                "\n",
+                "\r\n",
+                StringComparison.Ordinal),
+            ownerId: ownerId);
+
+        Assert.Equal(
+            lineFeed.Select(static chunk => chunk.Text),
+            carriageReturnLineFeed.Select(static chunk => chunk.Text));
+        Assert.Equal(
+            lineFeed.Select(static chunk => chunk.ContentHash),
+            carriageReturnLineFeed.Select(static chunk => chunk.ContentHash));
+        Assert.Equal(
+            lineFeed.Select(static chunk => chunk.Id),
+            carriageReturnLineFeed.Select(static chunk => chunk.Id));
+    }
+
+    [Fact]
+    public async Task ChunkPreservesStructuredMarkdownContentAndDomainIdentity()
+    {
         Guid ownerId = Guid.NewGuid();
         const string sourcePath = "guide.pdf";
         string markdown =
@@ -96,13 +120,16 @@ public sealed class HeadingAwareChunkerTests
             ```csharp
             Console.WriteLine("hello");
             ```
+
+            <div data-example="raw">Raw HTML</div>
             """;
 
-        IReadOnlyList<ContentChunk> chunks = chunker.Chunk(
+        IReadOnlyList<ContentChunk> chunks = await ChunkAsync(
+            markdown,
             ownerId,
             sourcePath,
             ContentSourceKind.Pdf,
-            markdown);
+            maxTokens: 200);
 
         Assert.NotEmpty(chunks);
         Assert.Equal(
@@ -127,41 +154,61 @@ public sealed class HeadingAwareChunkerTests
                     chunk.Id);
             });
 
-        string projected = string.Join('\n', chunks.Select(static chunk => chunk.Text));
+        string projected = string.Join(
+            '\n',
+            chunks.Select(static chunk => chunk.Text));
         Assert.Contains("Intro paragraph.", projected, StringComparison.Ordinal);
-        Assert.Contains("- first item", projected, StringComparison.Ordinal);
+        Assert.Contains(
+            "first item\nsecond item",
+            projected,
+            StringComparison.Ordinal);
         Assert.Contains("| Name | Value |", projected, StringComparison.Ordinal);
-        Assert.Contains("```csharp", projected, StringComparison.Ordinal);
         Assert.Contains(
             "Console.WriteLine(\"hello\");",
             projected,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "<div data-example=\"raw\">Raw HTML</div>",
+            projected,
+            StringComparison.Ordinal);
+        Assert.True(
+            projected.IndexOf("Intro paragraph.", StringComparison.Ordinal) <
+            projected.IndexOf("first item", StringComparison.Ordinal));
+        Assert.True(
+            projected.IndexOf("first item", StringComparison.Ordinal) <
+            projected.IndexOf("| Name | Value |", StringComparison.Ordinal));
+        Assert.True(
+            projected.IndexOf("| Name | Value |", StringComparison.Ordinal) <
+            projected.IndexOf("Console.WriteLine", StringComparison.Ordinal));
+        Assert.True(
+            projected.IndexOf("Console.WriteLine", StringComparison.Ordinal) <
+            projected.IndexOf("<div data-example", StringComparison.Ordinal));
     }
 
     [Fact]
-    public void ChunkRespectsTokenBudgetIncludingHeadingPrefixReSplit()
+    public async Task ChunkRespectsTokenBudgetIncludingHeadingContext()
     {
-        HeadingAwareChunker chunker = new(new WordCountTokenCounter(), maxTokens: 3);
-        string markdown = "## Head One\n\na b c\n";
+        IReadOnlyList<ContentChunk> chunks = await ChunkAsync(
+            "## Head One\n\na b c\n",
+            sourcePath: "book.epub",
+            sourceKind: ContentSourceKind.Epub,
+            maxTokens: 3);
 
-        IReadOnlyList<ContentChunk> chunks = chunker.Chunk(
-            Guid.NewGuid(), "book.epub", ContentSourceKind.Epub, markdown);
-
-        // The heading fits its own budget unbounded, so the body must be
-        // split across more than one chunk to keep heading+body within the
-        // overall token budget on every chunk.
         Assert.True(chunks.Count > 1);
         Assert.All(chunks, chunk => Assert.Equal("Head One", chunk.Heading));
         Assert.All(
             chunks,
             chunk => Assert.True(
-                chunk.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length <= 3));
+                chunk.Text.Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries).Length <= 3));
         Assert.All(
             chunks,
-            chunk => Assert.StartsWith("Head One", chunk.Text, StringComparison.Ordinal));
+            chunk => Assert.StartsWith(
+                "Head One",
+                chunk.Text,
+                StringComparison.Ordinal));
 
-        // The original body words are preserved, in order, once the
-        // "{heading}\n{body}" prefix is stripped back off of each chunk.
         string[] recombinedBodyWords = chunks
             .SelectMany(chunk => chunk.Text.Split('\n', 2)[1]
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries))
@@ -170,13 +217,11 @@ public sealed class HeadingAwareChunkerTests
     }
 
     [Fact]
-    public void ChunkSplitsOversizedSectionWithoutAHeadingIntoMultipleChunks()
+    public async Task ChunkSplitsOversizedSectionWithoutHeading()
     {
-        HeadingAwareChunker chunker = new(new WordCountTokenCounter(), maxTokens: 3);
-        string markdown = "word1 word2 word3 word4 word5 word6 word7\n";
-
-        IReadOnlyList<ContentChunk> chunks = chunker.Chunk(
-            Guid.NewGuid(), "book.pdf", ContentSourceKind.Pdf, markdown);
+        IReadOnlyList<ContentChunk> chunks = await ChunkAsync(
+            "word1 word2 word3 word4 word5 word6 word7\n",
+            maxTokens: 3);
 
         Assert.Equal(3, chunks.Count);
         Assert.Equal("word1 word2 word3", chunks[0].Text);
@@ -186,22 +231,209 @@ public sealed class HeadingAwareChunkerTests
     }
 
     [Fact]
-    public void ChunkShrinksExtremeHeadingAgainstCombinedSpecialTokenCount()
+    public async Task ChunkShrinksExtremeHeadingAgainstCombinedTokenCount()
     {
         SpecialTokenCounter counter = new();
-        HeadingAwareChunker chunker = new(counter, maxTokens: 6);
-        string markdown =
-            "# one two three four five six seven eight\n\nbody\n";
-
-        ContentChunk chunk = Assert.Single(chunker.Chunk(
-            Guid.NewGuid(),
-            "book.epub",
-            ContentSourceKind.Epub,
-            markdown));
+        ContentChunk chunk = Assert.Single(await ChunkAsync(
+            "# one two three four five six seven eight\n\nbody\n",
+            sourcePath: "book.epub",
+            sourceKind: ContentSourceKind.Epub,
+            maxTokens: 6,
+            tokenCounter: counter));
 
         Assert.Equal("body", chunk.Text.Split('\n')[^1]);
         Assert.False(string.IsNullOrWhiteSpace(chunk.Heading));
         Assert.True(counter.CountTokens(chunk.Text) <= 6);
+    }
+
+    [Fact]
+    public async Task ChunkRetainsDeepestHeadingWhenAncestryExceedsBudget()
+    {
+        string ancestor = string.Join(
+            ' ',
+            Enumerable.Repeat("ancestor", 20));
+
+        ContentChunk chunk = Assert.Single(await ChunkAsync(
+            $"# {ancestor}\n\n## Specific\n\nbody\n",
+            maxTokens: 2));
+
+        Assert.Equal("Specific", chunk.Heading);
+        Assert.Equal("Specific\nbody", chunk.Text);
+    }
+
+    [Fact]
+    public async Task ChunkDropsContextWhenOneHeadingScalarExceedsBudget()
+    {
+        ContentChunk chunk = Assert.Single(await ChunkAsync(
+            "# 💣\n\nbody\n",
+            maxTokens: 2,
+            tokenCounter: new RejectedHeadingTokenCounter()));
+
+        Assert.Null(chunk.Heading);
+        Assert.Equal("body", chunk.Text);
+    }
+
+    [Fact]
+    public async Task ChunkPreservesCodeOnlyDocument()
+    {
+        ContentChunk chunk = Assert.Single(await ChunkAsync(
+            "```csharp\nConsole.WriteLine(\"hello\");\n```\n",
+            maxTokens: 50));
+
+        Assert.Null(chunk.Heading);
+        Assert.Contains(
+            "Console.WriteLine(\"hello\");",
+            chunk.Text,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ChunkRecordsExactModelTokenCountInMediMetadata()
+    {
+        WordCountTokenCounter counter = new();
+        ContentSourceDescriptor source = new()
+        {
+            OwnerId = Guid.NewGuid(),
+            Kind = ContentSourceKind.Pdf,
+            Path = "book.pdf",
+        };
+        IngestionDocument document =
+            await new MarkdownIngestionDocumentAdapter().ReadAsync(
+                source,
+                "# Heading\n\none two three",
+                CancellationToken.None);
+
+        IReadOnlyList<IngestionChunk<string>> chunks = await CollectAsync(
+            new HeadingAwareChunker(counter).ProcessAsync(document));
+
+        Assert.All(
+            chunks,
+            chunk => Assert.Equal(
+                counter.CountTokens(chunk.Content),
+                Assert.IsType<int>(
+                    chunk.Metadata[IngestionMetadata.TokenCount])));
+    }
+
+    [Fact]
+    public async Task DocumentIdentifiersAreStableAndDoNotExposeSourcePaths()
+    {
+        ContentSourceDescriptor source = new()
+        {
+            OwnerId = Guid.Parse("c7d4b4af-14ef-498a-aaba-c3f5f2c819ac"),
+            Kind = ContentSourceKind.Epub,
+            Path = @"C:\Users\private\Books\guide.epub",
+        };
+        MarkdownIngestionDocumentAdapter adapter = new();
+
+        IngestionDocument first = await adapter.ReadAsync(
+            source,
+            "text",
+            CancellationToken.None);
+        IngestionDocument second = await adapter.ReadAsync(
+            source,
+            "different text",
+            CancellationToken.None);
+        IngestionDocument other = await adapter.ReadAsync(
+            source with { Path = @"C:\Users\private\Books\other.epub" },
+            "text",
+            CancellationToken.None);
+
+        Assert.Equal(first.Identifier, second.Identifier);
+        Assert.NotEqual(first.Identifier, other.Identifier);
+        Assert.StartsWith(
+            "semantic-content:",
+            first.Identifier,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "private",
+            first.Identifier,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(
+            "guide.epub",
+            first.Identifier,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   \n\n   \n")]
+    [InlineData("# Heading Only\n\n")]
+    public async Task ChunkReturnsEmptyForBlankOrHeadingOnlyMarkdown(
+        string markdown)
+    {
+        IReadOnlyList<ContentChunk> chunks =
+            await ChunkAsync(markdown);
+
+        Assert.Empty(chunks);
+    }
+
+    [Theory]
+    [InlineData(ContentSourceKind.Subtitle)]
+    [InlineData(ContentSourceKind.Transcript)]
+    public async Task DocumentAdapterRejectsUnsupportedSourceKind(
+        ContentSourceKind kind)
+    {
+        ContentSourceDescriptor source = new()
+        {
+            OwnerId = Guid.NewGuid(),
+            Kind = kind,
+            Path = "book.pdf",
+        };
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => new MarkdownIngestionDocumentAdapter()
+                .ReadAsync(source, "text", CancellationToken.None)
+                .AsTask());
+    }
+
+    [Fact]
+    public void ConstructorOnlyDependsOnTokenCounterAndBudget()
+    {
+        ConstructorInfo constructor = Assert.Single(
+            typeof(HeadingAwareChunker).GetConstructors());
+        ParameterInfo[] parameters = constructor.GetParameters();
+
+        Assert.Equal(2, parameters.Length);
+        Assert.Equal(typeof(ITokenCounter), parameters[0].ParameterType);
+        Assert.Equal(typeof(int), parameters[1].ParameterType);
+    }
+
+    private static async Task<IReadOnlyList<ContentChunk>> ChunkAsync(
+        string markdown,
+        Guid? ownerId = null,
+        string sourcePath = "book.pdf",
+        ContentSourceKind sourceKind = ContentSourceKind.Pdf,
+        int maxTokens = 50,
+        ITokenCounter? tokenCounter = null)
+    {
+        ITokenCounter counter = tokenCounter ?? new WordCountTokenCounter();
+        ContentSourceDescriptor source = new()
+        {
+            OwnerId = ownerId ?? Guid.NewGuid(),
+            Kind = sourceKind,
+            Path = sourcePath,
+        };
+        IngestionDocument document =
+            await new MarkdownIngestionDocumentAdapter().ReadAsync(
+                source,
+                markdown,
+                CancellationToken.None);
+        return await new ContentChunkMapper(counter, maxTokens).MapAsync(
+            source,
+            new HeadingAwareChunker(counter, maxTokens).ProcessAsync(document),
+            CancellationToken.None);
+    }
+
+    private static async Task<IReadOnlyList<T>> CollectAsync<T>(
+        IAsyncEnumerable<T> values)
+    {
+        List<T> result = [];
+        await foreach (T value in values)
+        {
+            result.Add(value);
+        }
+
+        return result;
     }
 
     private sealed class SpecialTokenCounter : ITokenCounter
@@ -212,40 +444,13 @@ public sealed class HeadingAwareChunkerTests
                 .Length + 2;
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   \n\n   \n")]
-    [InlineData("# Heading Only\n\n")]
-    public void ChunkReturnsEmptyForBlankOrHeadingOnlyMarkdown(string markdown)
+    private sealed class RejectedHeadingTokenCounter : ITokenCounter
     {
-        HeadingAwareChunker chunker = CreateChunker();
-
-        IReadOnlyList<ContentChunk> chunks = chunker.Chunk(
-            Guid.NewGuid(), "book.pdf", ContentSourceKind.Pdf, markdown);
-
-        Assert.Empty(chunks);
-    }
-
-    [Theory]
-    [InlineData(ContentSourceKind.Subtitle)]
-    [InlineData(ContentSourceKind.Transcript)]
-    public void ChunkRejectsUnsupportedSourceKind(ContentSourceKind kind)
-    {
-        HeadingAwareChunker chunker = CreateChunker();
-
-        Assert.Throws<ArgumentOutOfRangeException>(
-            () => chunker.Chunk(Guid.NewGuid(), "book.pdf", kind, "text"));
-    }
-
-    [Fact]
-    public void ConstructorOnlyDependsOnTokenCounterNotAnEmbeddingGenerator()
-    {
-        ConstructorInfo constructor = Assert.Single(
-            typeof(HeadingAwareChunker).GetConstructors());
-        ParameterInfo[] parameters = constructor.GetParameters();
-
-        Assert.Equal(2, parameters.Length);
-        Assert.Equal(typeof(ITokenCounter), parameters[0].ParameterType);
-        Assert.Equal(typeof(int), parameters[1].ParameterType);
+        public int CountTokens(string text) =>
+            text.Contains("💣", StringComparison.Ordinal)
+                ? 100
+                : TextNormalization.NormalizeWhitespace(text)
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .Length;
     }
 }

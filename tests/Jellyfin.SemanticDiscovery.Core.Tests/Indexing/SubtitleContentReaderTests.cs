@@ -10,6 +10,56 @@ namespace Jellyfin.SemanticDiscovery.Core.Tests.Indexing;
 public sealed class SubtitleContentReaderTests
 {
     [Fact]
+    public async Task ReadAsyncMapsParsedCuesThroughMediContracts()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            $"subtitle-medi-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string path = Path.Combine(directory, "movie.en.srt");
+            await File.WriteAllTextAsync(
+                path,
+                """
+                1
+                00:00:01,000 --> 00:00:02,500
+                Hello world
+
+                2
+                00:00:03,000 --> 00:00:04,000
+                Second cue
+                """);
+            Guid ownerId = Guid.NewGuid();
+
+            ContentChunk chunk = Assert.Single(
+                await new SubtitleContentReader(new WordCountTokenCounter())
+                    .ReadAsync(
+                        new ContentSourceDescriptor
+                        {
+                            OwnerId = ownerId,
+                            Kind = ContentSourceKind.Subtitle,
+                            Path = path,
+                            Language = "en",
+                        },
+                        CancellationToken.None));
+
+            Assert.Equal(ownerId, chunk.OwnerId);
+            Assert.Equal(path, chunk.SourcePath);
+            Assert.Equal(ContentSourceKind.Subtitle, chunk.SourceKind);
+            Assert.Equal("Hello world Second cue", chunk.Text);
+            Assert.Equal("en", chunk.Language);
+            Assert.Equal(TimeSpan.FromSeconds(1).Ticks, chunk.StartTicks);
+            Assert.Equal(TimeSpan.FromSeconds(4).Ticks, chunk.EndTicks);
+            Assert.Equal(0, chunk.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task ReadAsyncRejectsMutatedSubtitleAgainstShowcaseSidecar()
     {
         string directory = Path.Combine(
@@ -56,7 +106,7 @@ public sealed class SubtitleContentReaderTests
                     ],
                 }));
             SubtitleContentReader reader = new(
-                new SubtitleChunker(new WordCountTokenCounter()));
+                new WordCountTokenCounter());
 
             ContentIngestionException exception =
                 await Assert.ThrowsAsync<ContentIngestionException>(

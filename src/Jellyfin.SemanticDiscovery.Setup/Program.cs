@@ -101,8 +101,7 @@ static async Task<int> RunAsync(
                            new Uri(
                                GetRequiredStringOption(args, "--endpoint"),
                                UriKind.Absolute),
-                           new HeadingAwareChunker(
-                               new ProbeTokenCounter())))
+                           new ProbeTokenCounter()))
                 {
                     try
                     {

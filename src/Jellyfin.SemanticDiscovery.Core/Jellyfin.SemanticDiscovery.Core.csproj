@@ -6,7 +6,10 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.VectorData.InMemory" />
+    <PackageReference Include="Markdig.Signed" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DataIngestion.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DataIngestion.Markdig" />
     <PackageReference Include="Microsoft.Extensions.VectorData.Abstractions" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" />
     <PackageReference Include="Microsoft.ML.Tokenizers" />

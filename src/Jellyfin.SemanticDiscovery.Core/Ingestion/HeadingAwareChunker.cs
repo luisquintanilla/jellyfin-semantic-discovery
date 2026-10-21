@@ -1,254 +1,255 @@
-using Jellyfin.SemanticDiscovery.Core.Domain;
-using Jellyfin.SemanticDiscovery.Core.Identity;
+using System.Runtime.CompilerServices;
 using Jellyfin.SemanticDiscovery.Core.Projection;
+using Microsoft.Extensions.DataIngestion;
 
 namespace Jellyfin.SemanticDiscovery.Core.Ingestion;
 
-public sealed class HeadingAwareChunker(ITokenCounter tokenCounter, int maxTokens = 224)
+internal sealed class HeadingAwareChunker : IngestionChunker<string>
 {
-    private readonly ITokenCounter _tokenCounter =
-        tokenCounter ?? throw new ArgumentNullException(nameof(tokenCounter));
+    private const int MaximumHeaderLevel = 10;
+    private readonly MiniLmTokenBudget _tokenBudget;
 
-    private readonly int _maxTokens = maxTokens > 0
-        ? maxTokens
-        : throw new ArgumentOutOfRangeException(nameof(maxTokens));
-
-    public IReadOnlyList<ContentChunk> Chunk(
-        Guid ownerId,
-        string sourcePath,
-        ContentSourceKind sourceKind,
-        string markdown)
+    public HeadingAwareChunker(
+        ITokenCounter tokenCounter,
+        int maximumTokens = MiniLmTokenBudget.MaximumInputTokens)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
-        ArgumentNullException.ThrowIfNull(markdown);
-        if (sourceKind is not ContentSourceKind.Pdf and not ContentSourceKind.Epub)
+        _tokenBudget = new MiniLmTokenBudget(tokenCounter, maximumTokens);
+    }
+
+    public override async IAsyncEnumerable<IngestionChunk<string>> ProcessAsync(
+        IngestionDocument document,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        await Task.CompletedTask.ConfigureAwait(false);
+
+        List<IngestionDocumentElement> elements = [];
+        string?[] headings = new string?[MaximumHeaderLevel + 1];
+        foreach (IngestionDocumentElement element in EnumerateTopLevelElements(document))
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(sourceKind),
-                sourceKind,
-                "Heading-aware chunks are only supported for PDF and EPUB content.");
+            cancellationToken.ThrowIfCancellationRequested();
+            if (element is not IngestionDocumentHeader header)
+            {
+                elements.Add(element);
+                continue;
+            }
+
+            foreach (IngestionChunk<string> chunk in ChunkElements(
+                         document,
+                         headings,
+                         elements,
+                         cancellationToken))
+            {
+                yield return chunk;
+            }
+
+            elements.Clear();
+            int level = Math.Clamp(
+                header.Level.GetValueOrDefault(1),
+                1,
+                MaximumHeaderLevel);
+            headings[level] = TextNormalization.NormalizeWhitespace(
+                header.Text ?? header.GetMarkdown());
+            headings.AsSpan(level + 1).Clear();
         }
 
-        List<Section> sections = ParseSections(markdown);
-        List<ContentChunk> chunks = [];
-
-        foreach (Section section in sections)
+        foreach (IngestionChunk<string> chunk in ChunkElements(
+                     document,
+                     headings,
+                     elements,
+                     cancellationToken))
         {
-            (string heading, IReadOnlyList<string> bodyParts) =
-                FitSection(section);
-            string prefix = heading.Length == 0 ? string.Empty : $"{heading}\n";
+            yield return chunk;
+        }
+    }
 
-            foreach (string part in bodyParts)
+    private List<IngestionChunk<string>> ChunkElements(
+        IngestionDocument document,
+        string?[] headings,
+        List<IngestionDocumentElement> elements,
+        CancellationToken cancellationToken)
+    {
+        if (elements.Count == 0)
+        {
+            return [];
+        }
+
+        foreach (string candidateContext in GetContextCandidates(headings))
+        {
+            try
             {
-                string projected = $"{prefix}{part}";
-                chunks.Add(CreateChunk(
-                    ownerId,
-                    sourcePath,
-                    sourceKind,
-                    heading,
-                    chunks.Count,
-                    projected));
+                return ChunkWithContext(
+                    document,
+                    candidateContext,
+                    elements,
+                    cancellationToken);
+            }
+            catch (TokenBudgetExceededException)
+            {
             }
         }
 
-        return chunks;
+        throw new InvalidDataException(
+            "The configured model budget cannot hold non-empty document content.");
     }
 
-    private (string Heading, IReadOnlyList<string> BodyParts) FitSection(
-        Section section)
+    private List<IngestionChunk<string>> ChunkWithContext(
+        IngestionDocument document,
+        string context,
+        List<IngestionDocumentElement> elements,
+        CancellationToken cancellationToken)
     {
-        IReadOnlyList<string> coarseParts = TokenBoundedTextSplitter.Split(
-            section.Text,
-            _tokenCounter,
-            _maxTokens);
-        List<int> headingBudgets = [];
-        if (section.Heading.Length > 0)
+        List<IngestionChunk<string>> chunks = [];
+        List<string> pending = [];
+        foreach (IngestionDocumentElement element in elements)
         {
-            for (int budget = Math.Max(1, _maxTokens - 1);
+            cancellationToken.ThrowIfCancellationRequested();
+            string markdown = GetSemanticMarkdown(element);
+            if (markdown.Length == 0)
+            {
+                continue;
+            }
+
+            string candidateBody = string.Join(
+                "\n\n",
+                pending.Append(markdown));
+            if (pending.Count > 0 &&
+                !_tokenBudget.Fits(
+                    MiniLmTokenBudget.Combine(context, candidateBody)))
+            {
+                CommitPending();
+            }
+
+            if (_tokenBudget.Fits(
+                    MiniLmTokenBudget.Combine(context, markdown)))
+            {
+                pending.Add(markdown);
+                continue;
+            }
+
+            foreach (string part in _tokenBudget.SplitMarkdown(markdown, context))
+            {
+                CommitPending();
+                string content = MiniLmTokenBudget.Combine(context, part);
+                chunks.Add(CreateChunk(document, context, content));
+            }
+        }
+
+        CommitPending();
+        return chunks;
+
+        void CommitPending()
+        {
+            if (pending.Count == 0)
+            {
+                return;
+            }
+
+            string body = string.Join("\n\n", pending);
+            string content = MiniLmTokenBudget.Combine(context, body);
+            chunks.Add(CreateChunk(document, context, content));
+            pending.Clear();
+        }
+    }
+
+    private IngestionChunk<string> CreateChunk(
+        IngestionDocument document,
+        string context,
+        string content)
+    {
+        _tokenBudget.Validate(content);
+        IngestionChunk<string> chunk = new(
+            content,
+            document,
+            context.Length == 0 ? null : context);
+        chunk.Metadata[IngestionMetadata.TokenCount] =
+            _tokenBudget.CountTokens(content);
+        return chunk;
+    }
+
+    private IEnumerable<string> GetContextCandidates(string?[] headings)
+    {
+        HashSet<string> yielded = new(StringComparer.Ordinal);
+        string[] path = headings
+            .Where(static heading => !string.IsNullOrWhiteSpace(heading))
+            .Cast<string>()
+            .ToArray();
+        string context = string.Join(" > ", path);
+        if (yielded.Add(context))
+        {
+            yield return context;
+        }
+
+        for (int start = 1; start < path.Length; start++)
+        {
+            string suffix = string.Join(" > ", path[start..]);
+            if (yielded.Add(suffix))
+            {
+                yield return suffix;
+            }
+        }
+
+        if (path.Length > 0)
+        {
+            string deepestHeading = path[^1];
+            for (int budget = Math.Max(1, _tokenBudget.MaximumTokens - 1);
                  budget > 0;
                  budget /= 2)
             {
-                headingBudgets.Add(budget);
+                IReadOnlyList<string> parts;
+                try
+                {
+                    parts = _tokenBudget.SplitNormalized(
+                        deepestHeading,
+                        budget);
+                }
+                catch (TokenBudgetExceededException)
+                {
+                    continue;
+                }
+
+                if (parts.Count > 0 && yielded.Add(parts[0]))
+                {
+                    yield return parts[0];
+                }
+
                 if (budget == 1)
                 {
                     break;
                 }
             }
         }
-        headingBudgets.Add(0);
 
-        foreach (int headingBudget in headingBudgets)
+        if (yielded.Add(string.Empty))
         {
-            string heading;
-            try
-            {
-                heading = headingBudget == 0
-                    ? string.Empty
-                    : TokenBoundedTextSplitter.Split(
-                        section.Heading,
-                        _tokenCounter,
-                        headingBudget)[0];
-            }
-            catch (InvalidDataException)
-            {
-                continue;
-            }
-
-            string prefix = heading.Length == 0 ? string.Empty : $"{heading}\n";
-            List<string> fitted = [];
-            bool success = true;
-            foreach (string coarsePart in coarseParts)
-            {
-                IReadOnlyList<string>? parts = FitBodyPart(
-                    prefix,
-                    coarsePart);
-                if (parts is null)
-                {
-                    success = false;
-                    break;
-                }
-
-                fitted.AddRange(parts);
-            }
-
-            if (success)
-            {
-                return (heading, fitted);
-            }
+            yield return string.Empty;
         }
-
-        throw new InvalidDataException(
-            "The configured chunk budget cannot hold non-empty body text.");
     }
 
-    private IReadOnlyList<string>? FitBodyPart(
-        string prefix,
-        string body)
+    private static IEnumerable<IngestionDocumentElement>
+        EnumerateTopLevelElements(IngestionDocument document)
     {
-        if (_tokenCounter.CountTokens($"{prefix}{body}") <= _maxTokens)
+        foreach (IngestionDocumentSection section in document.Sections)
         {
-            return [body];
-        }
-
-        IReadOnlyList<string>? best = null;
-        int low = 1;
-        int high = _maxTokens;
-        while (low <= high)
-        {
-            int middle = low + ((high - low) / 2);
-            IReadOnlyList<string> candidate;
-            try
+            foreach (IngestionDocumentElement element in section.Elements)
             {
-                candidate = TokenBoundedTextSplitter.Split(
-                    body,
-                    _tokenCounter,
-                    middle);
-            }
-            catch (InvalidDataException)
-            {
-                low = middle + 1;
-                continue;
-            }
-
-            if (candidate.All(part =>
-                    _tokenCounter.CountTokens($"{prefix}{part}") <= _maxTokens))
-            {
-                best = candidate;
-                low = middle + 1;
-            }
-            else
-            {
-                high = middle - 1;
+                yield return element;
             }
         }
-
-        return best;
     }
 
-    private static List<Section> ParseSections(string markdown)
+    private static string GetSemanticMarkdown(
+        IngestionDocumentElement element)
     {
-        string[] lines = markdown.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
-        List<Section> sections = [];
-        string[] headings = new string[6];
-        List<string> paragraph = [];
-
-        void Flush()
+        string? content = element switch
         {
-            string text = TextNormalization.NormalizeWhitespace(string.Join(' ', paragraph));
-            if (text.Length > 0)
-            {
-                string heading = string.Join(
-                    " > ",
-                    headings.Where(static value => !string.IsNullOrEmpty(value)));
-                sections.Add(new Section(heading, text));
-            }
-
-            paragraph.Clear();
-        }
-
-        foreach (string line in lines)
-        {
-            int headingLevel = GetHeadingLevel(line);
-            if (headingLevel > 0)
-            {
-                Flush();
-                headings[headingLevel - 1] =
-                    TextNormalization.NormalizeWhitespace(line[headingLevel..]);
-                Array.Clear(headings, headingLevel, headings.Length - headingLevel);
-                continue;
-            }
-
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                Flush();
-            }
-            else
-            {
-                paragraph.Add(line);
-            }
-        }
-
-        Flush();
-        return sections;
-    }
-
-    private static int GetHeadingLevel(string line)
-    {
-        int level = 0;
-        while (level < line.Length && level < 6 && line[level] == '#')
-        {
-            level++;
-        }
-
-        return level > 0 && level < line.Length && line[level] == ' ' ? level : 0;
-    }
-
-    private static ContentChunk CreateChunk(
-        Guid ownerId,
-        string sourcePath,
-        ContentSourceKind sourceKind,
-        string heading,
-        int ordinal,
-        string text)
-    {
-        string contentHash = ContentHash.Compute(text);
-        return new ContentChunk
-        {
-            Id = ContentChunkIdentity.Compute(
-                ownerId,
-                sourcePath,
-                sourceKind,
-                ordinal,
-                contentHash),
-            OwnerId = ownerId,
-            SourceKind = sourceKind,
-            SourcePath = sourcePath,
-            Ordinal = ordinal,
-            Text = text,
-            Heading = heading.Length == 0 ? null : heading,
-            ContentHash = contentHash,
+            IngestionDocumentImage image =>
+                image.AlternativeText ?? image.Text,
+            _ => element.GetMarkdown(),
         };
+        return content?
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim() ?? string.Empty;
     }
-
-    private sealed record Section(string Heading, string Text);
 }

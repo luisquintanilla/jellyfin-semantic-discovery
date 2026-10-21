@@ -22,8 +22,8 @@ public sealed class SemanticIndexBuilder(
     private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator =
         embeddingGenerator ?? throw new ArgumentNullException(nameof(embeddingGenerator));
 
-    private readonly ITokenCounter _tokenCounter =
-        tokenCounter ?? throw new ArgumentNullException(nameof(tokenCounter));
+    private readonly MiniLmTokenBudget _tokenBudget =
+        new(tokenCounter ?? throw new ArgumentNullException(nameof(tokenCounter)));
 
     private readonly IIndexSource _source =
         source ?? throw new ArgumentNullException(nameof(source));
@@ -247,7 +247,7 @@ public sealed class SemanticIndexBuilder(
     private string BoundMetadataProjection(string projection)
     {
         IReadOnlyList<string> parts =
-            TokenBoundedTextSplitter.Split(projection, _tokenCounter, maxTokens: 256);
+            _tokenBudget.SplitNormalized(projection);
         return parts.Count == 0 ? string.Empty : parts[0];
     }
 

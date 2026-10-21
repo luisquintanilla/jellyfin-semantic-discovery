@@ -81,13 +81,13 @@ public sealed class MarkItDownMcpReaderTests : IDisposable
     {
         ScriptedHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler);
-        HeadingAwareChunker chunker = new(new WordCountTokenCounter(), maxTokens: 200);
         MarkItDownMcpReader reader = new(
             httpClient,
             Endpoint,
-            chunker,
+            new WordCountTokenCounter(),
             maximumDocumentBytes,
-            maximumRequestBytes: maximumRequestBytes);
+            maximumRequestBytes: maximumRequestBytes,
+            maximumTokens: 200);
         return (reader, handler);
     }
 
@@ -276,7 +276,7 @@ public sealed class MarkItDownMcpReaderTests : IDisposable
         using MarkItDownMcpReader reader = new(
             client,
             new Uri($"http://127.0.0.1:{sourcePort}/mcp"),
-            new HeadingAwareChunker(new WordCountTokenCounter()));
+            new WordCountTokenCounter());
         string path = CreateFile("redirect.pdf", "private document bytes"u8.ToArray());
 
         ContentIngestionException exception =

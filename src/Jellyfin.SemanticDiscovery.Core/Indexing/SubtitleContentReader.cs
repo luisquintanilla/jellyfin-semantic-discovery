@@ -1,18 +1,23 @@
 using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Core.Ingestion;
+using Microsoft.Extensions.DataIngestion;
 
 namespace Jellyfin.SemanticDiscovery.Core.Indexing;
 
 public sealed class SubtitleContentReader : IContentReader
 {
     private readonly SubtitleChunker _chunker;
+    private readonly ContentChunkMapper _mapper;
     private readonly long _maximumDocumentBytes;
 
     public SubtitleContentReader(
-        SubtitleChunker chunker,
-        long maximumDocumentBytes = 2 * 1024 * 1024)
+        ITokenCounter tokenCounter,
+        long maximumDocumentBytes = 2 * 1024 * 1024,
+        int maximumTokens = MiniLmTokenBudget.MaximumInputTokens)
     {
-        _chunker = chunker ?? throw new ArgumentNullException(nameof(chunker));
+        ArgumentNullException.ThrowIfNull(tokenCounter);
+        _chunker = new SubtitleChunker(tokenCounter, maximumTokens);
+        _mapper = new ContentChunkMapper(tokenCounter, maximumTokens);
         _maximumDocumentBytes = maximumDocumentBytes is > 0 and <= int.MaxValue - 1
             ? maximumDocumentBytes
             : throw new ArgumentOutOfRangeException(nameof(maximumDocumentBytes));
@@ -56,12 +61,12 @@ public sealed class SubtitleContentReader : IContentReader
             IReadOnlyList<SubtitleCue> cues =
                 await SubtitleCueReader.ReadAsync(reader, cancellationToken)
                     .ConfigureAwait(false);
-            return _chunker.Chunk(
-                source.OwnerId,
-                source.Path,
-                source.Language,
-                source.Kind,
-                cues);
+            IngestionDocument document =
+                TimedTextIngestionDocumentAdapter.Create(source, cues);
+            return await _mapper.MapAsync(
+                source,
+                _chunker.ProcessAsync(document, cancellationToken),
+                cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -70,7 +75,8 @@ public sealed class SubtitleContentReader : IContentReader
         catch (Exception exception)
             when (exception is IOException
                 or UnauthorizedAccessException
-                or InvalidDataException)
+                or InvalidDataException
+                or TokenBudgetExceededException)
         {
             throw new ContentIngestionException(
                 "The subtitle or transcript source could not be ingested.",
