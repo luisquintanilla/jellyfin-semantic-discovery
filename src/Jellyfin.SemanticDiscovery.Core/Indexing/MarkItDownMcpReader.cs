@@ -355,6 +355,14 @@ public sealed class MarkItDownMcpReader : IContentReader, IDisposable
                     isTransient: false,
                     exception);
             }
+            catch (NotSupportedException exception)
+            {
+                throw new ContentIngestionException(
+                    "The converted Markdown uses an unsupported structure.",
+                    source.Path,
+                    isTransient: false,
+                    exception);
+            }
             catch (FileNotFoundException exception)
             {
                 throw new ContentIngestionException(

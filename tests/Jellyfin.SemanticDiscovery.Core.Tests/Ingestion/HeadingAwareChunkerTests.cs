@@ -186,6 +186,163 @@ public sealed class HeadingAwareChunkerTests
     }
 
     [Fact]
+    public async Task ChunkFallsBackForUnsupportedAdvancedMarkdown()
+    {
+        string markdown =
+            """
+            # Advanced
+
+            - [x] completed task
+
+            A sentence with a footnote.[^1]
+
+            [^1]: retained footnote detail
+            """;
+
+        IReadOnlyList<ContentChunk> chunks = await ChunkAsync(
+            markdown,
+            maxTokens: 200);
+
+        string projected = string.Join(
+            '\n',
+            chunks.Select(static chunk => chunk.Text));
+        Assert.Contains(
+            "completed task",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "A sentence with a footnote.",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "retained footnote detail",
+            projected,
+            StringComparison.Ordinal);
+        Assert.All(
+            chunks,
+            chunk => Assert.True(
+                new WordCountTokenCounter().CountTokens(chunk.Text) <= 200));
+    }
+
+    [Fact]
+    public async Task DocumentAdapterDoesNotReplaceCancellationWithFallback()
+    {
+        ContentSourceDescriptor source = new()
+        {
+            OwnerId = Guid.NewGuid(),
+            Kind = ContentSourceKind.Pdf,
+            Path = "advanced.pdf",
+        };
+        using CancellationTokenSource cancellationSource = new();
+        cancellationSource.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => new MarkdownIngestionDocumentAdapter()
+                .ReadAsync(
+                    source,
+                    "- [x] completed task",
+                    cancellationSource.Token)
+                .AsTask());
+    }
+
+    [Fact]
+    public async Task ChunkFallsBackWhenMediDropsNestedListAndCodeContent()
+    {
+        string markdown =
+            """
+            # Nested
+
+            - parent
+              - duplicate item
+              - duplicate item
+
+                ```csharp
+                Console.WriteLine("nested");
+                ```
+
+            After the nested list.
+            """;
+
+        IReadOnlyList<ContentChunk> chunks = await ChunkAsync(
+            markdown,
+            maxTokens: 200);
+
+        string projected = string.Join(
+            '\n',
+            chunks.Select(static chunk => chunk.Text));
+        Assert.Equal(
+            2,
+            CountOccurrences(projected, "duplicate item"));
+        Assert.Contains(
+            "Console.WriteLine(\"nested\");",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "After the nested list.",
+            projected,
+            StringComparison.Ordinal);
+        Assert.True(
+            projected.IndexOf("parent", StringComparison.Ordinal) <
+            projected.IndexOf(
+                "Console.WriteLine",
+                StringComparison.Ordinal));
+        Assert.True(
+            projected.IndexOf(
+                "Console.WriteLine",
+                StringComparison.Ordinal) <
+            projected.IndexOf(
+                "After the nested list.",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ChunkPreservesMixedAndMultipleImageParagraphTextWithoutLocations()
+    {
+        string markdown =
+            """
+            # Images
+
+            Before ![diagram](https://private.example/diagram.png) Important explanation ![second](data:image/png;base64,AAAA) after.
+
+            <img src="https://private.example/third.png" alt="third diagram"> Final explanation.
+            """;
+
+        IReadOnlyList<ContentChunk> chunks = await ChunkAsync(
+            markdown,
+            maxTokens: 200);
+
+        string projected = string.Join(
+            '\n',
+            chunks.Select(static chunk => chunk.Text));
+        Assert.Contains(
+            "Before diagram Important explanation second after.",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "third diagram Final explanation.",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "private.example",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "data:image",
+            projected,
+            StringComparison.Ordinal);
+        Assert.True(
+            projected.IndexOf("diagram", StringComparison.Ordinal) <
+            projected.IndexOf(
+                "Important explanation",
+                StringComparison.Ordinal));
+        Assert.True(
+            projected.IndexOf(
+                "Important explanation",
+                StringComparison.Ordinal) <
+            projected.IndexOf("second", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task ChunkRespectsTokenBudgetIncludingHeadingContext()
     {
         IReadOnlyList<ContentChunk> chunks = await ChunkAsync(
@@ -434,6 +591,24 @@ public sealed class HeadingAwareChunkerTests
         }
 
         return result;
+    }
+
+    private static int CountOccurrences(
+        string value,
+        string substring)
+    {
+        int count = 0;
+        int position = 0;
+        while ((position = value.IndexOf(
+                   substring,
+                   position,
+                   StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            position += substring.Length;
+        }
+
+        return count;
     }
 
     private sealed class SpecialTokenCounter : ITokenCounter

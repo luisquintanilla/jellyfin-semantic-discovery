@@ -99,14 +99,33 @@ so CRLF and LF sources produce identical chunk text, hashes, and IDs.
 MEDI Markdig 10.9 preserves tables, but a list section's public
 `GetMarkdown()` joins child content and loses the original list markers. The
 contract therefore guarantees ordered semantic list lines, not exact `- `
-syntax.
+syntax for flat lists that MEDI maps without semantic loss.
 
 The same preview also classifies non-empty top-level leaf blocks with no
 `Inline`/`FirstChild` as empty. That drops fenced code, indented code, and raw
 HTML. A thin adapter first runs MEDI's `MarkdownReader`, then merges every such
 leaf block back by its original Markdig source span as an
 `IngestionDocumentParagraph`. It does not use reflection or a second heading
-parser, and it verifies mapped-element alignment.
+parser.
+
+The preview reader also rejects valid Advanced Markdown constructs such as
+task lists and footnotes, and some successfully mapped nested lists, nested
+code, duplicate items, or mixed image paragraphs can omit semantic text. The
+adapter therefore compares an ordered, multiplicity-preserving semantic
+projection of the original Markdig AST with the public MEDI document. If MEDI
+throws `NotSupportedException`, mapped-element alignment fails, or that
+recursive coverage check differs, the adapter creates a fallback
+`IngestionDocument` from the original bounded top-level Markdown spans.
+Headings remain typed MEDI headers, body blocks remain typed MEDI paragraphs,
+and the same exact MiniLM chunker and mapper enforce the final model budget.
+
+Image-bearing Markdown uses the same fallback so mixed text and multiple image
+alternative texts remain in source order. Markdown image destinations, HTML
+`img`/`source` locations, and data-URI payloads are removed before chunking;
+only alternative text and surrounding semantic content are embedded. Any
+residual unsupported-structure exception is translated to a permanent
+per-source ingestion error, so `SemanticIndexBuilder` records that source and
+continues with later sources instead of aborting the complete rebuild.
 
 `MediMigrationFixtureComparisonTests` records the pre-migration and MEDI
 results:
@@ -117,6 +136,9 @@ results:
 | Structured Markdown | Separate whitespace-flattened paragraph chunks | One structure-aware chunk at the fixture budget |
 | Lists | Literal markers retained in flattened text | Markers omitted by MEDI preview; ordered item lines retained |
 | Fenced code | Content retained but whitespace-flattened | Original fenced Markdown and ordering retained by the lossless merge |
+| Unsupported Advanced Markdown | Parsed by the custom text path | Raw-span MEDI document fallback preserves bounded semantic content |
+| Nested lists/code and duplicate items | Flattened content retained | Recursive coverage mismatch selects the raw-span fallback without dropping or deduplicating text |
+| Mixed or multiple images | Alt text and surrounding text retained | Alt text and surrounding text retained in order; image locations and payloads removed |
 
 Real-model integration tests separately enforce the exact MiniLM limit for
 documents, timed text, CJK text, and long unbroken Unicode.

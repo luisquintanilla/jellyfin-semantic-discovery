@@ -547,6 +547,76 @@ public sealed class SemanticIndexBuilderTests
     }
 
     [Fact]
+    public async Task RebuildAsyncPermanentDocumentFailureContinuesWithLaterSources()
+    {
+        using SemanticIndexBuilderHarness harness = new();
+        Guid bookId = Guid.NewGuid();
+        Guid movieId = Guid.NewGuid();
+        ContentSourceDescriptor unsupportedPdf = new()
+        {
+            OwnerId = bookId,
+            Kind = ContentSourceKind.Pdf,
+            Path = "unsupported.pdf",
+        };
+        ContentSourceDescriptor laterSubtitle = new()
+        {
+            OwnerId = movieId,
+            Kind = ContentSourceKind.Subtitle,
+            Path = "later.srt",
+        };
+        harness.BookReader.SetFailure(
+            unsupportedPdf,
+            new ContentIngestionException(
+            "The converted Markdown could not be represented safely.",
+            unsupportedPdf.Path,
+            isTransient: false));
+        harness.SubtitleReader.SetChunks(
+            laterSubtitle,
+            [
+            TestData.Chunk(
+                movieId,
+                laterSubtitle.Path,
+                laterSubtitle.Kind,
+                text: "later subtitle text"),
+            ]);
+        harness.Source.Items =
+        [
+            new IndexSourceItem
+            {
+            Metadata = TestData.Book(bookId),
+            ContentSources = [unsupportedPdf],
+            },
+            new IndexSourceItem
+            {
+            Metadata = TestData.Movie(movieId),
+            ContentSources = [laterSubtitle],
+            },
+        ];
+        SemanticIndexBuilder builder = harness.CreateBuilder(
+            TestData.Identity());
+
+        IndexBuildResult result = await builder.RebuildAsync();
+        IndexSnapshot snapshot =
+            Assert.IsType<IndexSnapshot>(
+            await harness.CreateSnapshotStore().LoadAsync());
+
+        ContentIngestionError error = Assert.Single(result.Errors);
+        Assert.Equal(unsupportedPdf.Path, error.SourcePath);
+        Assert.False(error.IsTransient);
+        Assert.Contains(
+            snapshot.Content,
+            item => item.Chunk.OwnerId == movieId &&
+            item.Chunk.SourcePath == laterSubtitle.Path &&
+            item.Chunk.Text == "later subtitle text");
+        Assert.Equal(
+            [unsupportedPdf],
+            harness.BookReader.ReadCalls);
+        Assert.Equal(
+            [laterSubtitle],
+            harness.SubtitleReader.ReadCalls);
+    }
+
+    [Fact]
     public async Task RebuildAsyncEmptySuccessfulContentReadRemovesPriorChunks()
     {
         using SemanticIndexBuilderHarness harness = new();

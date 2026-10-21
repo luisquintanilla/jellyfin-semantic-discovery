@@ -50,6 +50,46 @@ public sealed class RealTokenizerTextSplitterTests
     }
 
     [ModelFact]
+    public async Task AdvancedMarkdownFallbackRespectsExactMiniLmInputLimit()
+    {
+        using MiniLmEmbeddingGenerator generator =
+            MiniLmModelFixture.CreateGenerator();
+        string body = string.Join(
+            ' ',
+            Enumerable.Range(0, 700).Select(index => $"detail{index}"));
+        string markdown =
+            $"""
+             # Advanced
+
+             - [x] {body}
+
+             ![diagram](data:image/png;base64,AAAA) Important explanation.
+             """;
+
+        IReadOnlyList<ContentChunk> chunks =
+            await ChunkMarkdownAsync(generator, markdown);
+
+        Assert.True(chunks.Count > 1);
+        Assert.All(
+            chunks,
+            chunk => Assert.InRange(
+                generator.CountTokens(chunk.Text),
+                1,
+                MiniLmTokenBudget.MaximumInputTokens));
+        string projected = string.Join(
+            '\n',
+            chunks.Select(static chunk => chunk.Text));
+        Assert.Contains(
+            "Important explanation.",
+            projected,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "data:image",
+            projected,
+            StringComparison.Ordinal);
+    }
+
+    [ModelFact]
     public async Task MediHeaderChunkerUsesRawMarkdownHeadingContext()
     {
         using MiniLmEmbeddingGenerator generator =

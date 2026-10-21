@@ -366,6 +366,50 @@ public sealed class MarkItDownMcpReaderTests : IDisposable
     }
 
     [Fact]
+    public async Task ReadAsyncFallsBackForUnsupportedAdvancedMarkdown()
+    {
+        (MarkItDownMcpReader reader, ScriptedHttpMessageHandler handler) = CreateReader();
+        handler.Handler = (request, _) =>
+            Task.FromResult(SuccessJsonRpcResponse(
+                GetRequestId(request),
+                """
+                # Advanced
+
+                - [x] completed task
+
+                Text with a footnote.[^1]
+
+                [^1]: retained detail
+                """));
+        string path = CreateFile("advanced.pdf", "pdf-bytes"u8.ToArray());
+        ContentSourceDescriptor source = new()
+        {
+            OwnerId = Guid.NewGuid(),
+            Kind = ContentSourceKind.Pdf,
+            Path = path,
+        };
+
+        IReadOnlyList<ContentChunk> chunks =
+            await reader.ReadAsync(source, CancellationToken.None);
+
+        string projected = string.Join(
+            '\n',
+            chunks.Select(static chunk => chunk.Text));
+        Assert.Contains(
+            "completed task",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "retained detail",
+            projected,
+            StringComparison.Ordinal);
+        Assert.All(
+            chunks,
+            chunk => Assert.True(
+                new WordCountTokenCounter().CountTokens(chunk.Text) <= 200));
+    }
+
+    [Fact]
     public async Task ReadAsyncRejectsBytesThatDoNotMatchSidecarBeforeSendingHttp()
     {
         (MarkItDownMcpReader reader, ScriptedHttpMessageHandler handler) = CreateReader();
