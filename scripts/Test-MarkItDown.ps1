@@ -1,7 +1,8 @@
 #requires -version 7.0
 [CmdletBinding()]
 param(
-    [string] $ImageTag = "jellyfin-semantic-markitdown:smoke"
+    [string] $ImageTag = "jellyfin-semantic-markitdown:smoke",
+    [string] $FixtureImageTag = "jellyfin-semantic-fixture-generator:locked"
 )
 
 $ErrorActionPreference = "Stop"
@@ -208,9 +209,26 @@ function ConvertTo-UnsupportedCompressionEpubDataUri {
 Push-Location $repoRoot
 $containerId = $null
 try {
-    & (Join-Path $PSScriptRoot "Generate-Fixtures.ps1")
+    docker image inspect $FixtureImageTag *> $null
     if ($LASTEXITCODE -ne 0) {
-        throw "Fixture generation or checksum validation failed."
+        docker build `
+            --tag $FixtureImageTag `
+            --file (Join-Path $repoRoot "containers\fixture-generator\Dockerfile") `
+            $repoRoot
+        if ($LASTEXITCODE -ne 0) {
+            throw "The locked fixture generator image failed to build."
+        }
+    }
+
+    $fixtureAssets = Join-Path $repoRoot "assets\fixtures"
+    docker run --rm `
+        --mount "type=bind,source=$fixtureAssets,target=/fixtures,readonly" `
+        $FixtureImageTag `
+        -ManifestPath /fixtures/manifest.json `
+        -OutputRoot /fixtures/generated `
+        -Mode Verify
+    if ($LASTEXITCODE -ne 0) {
+        throw "Locked fixture verification failed."
     }
 
     docker build --tag $ImageTag (Join-Path $repoRoot "containers\markitdown")

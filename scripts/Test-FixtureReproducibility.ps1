@@ -130,10 +130,13 @@ try {
     }
     $staleBefore = Get-FileHashes $staleOutput
     Invoke-ExpectFailure "Read-only stale fixture verification" {
-        pwsh -NoProfile -File (Join-Path $PSScriptRoot "Generate-Fixtures.ps1") `
+        docker run --rm `
+            @dockerHostUserArguments `
+            --mount "type=bind,source=$staleOutput,target=/output" `
+            $ImageTag `
             -Mode Verify `
-            -ManifestPath (Join-Path $repoRoot "assets\fixtures\manifest.json") `
-            -OutputRoot $staleOutput
+            -ManifestPath /opt/fixture-generator/manifest.json `
+            -OutputRoot /output
     }
     $staleAfter = Get-FileHashes $staleOutput
     if ($staleBefore.Count -ne $staleAfter.Count) {
