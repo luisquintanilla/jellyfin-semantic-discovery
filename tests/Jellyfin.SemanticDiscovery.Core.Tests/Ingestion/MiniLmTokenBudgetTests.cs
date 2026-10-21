@@ -117,6 +117,24 @@ public sealed class MiniLmTokenBudgetTests
                 StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void SplitMarkdownUsesFullBudgetForNormalWhitespaceSeparatedText()
+    {
+        string input = string.Join(
+            ' ',
+            Enumerable.Range(0, 200).Select(index => $"word{index}"));
+
+        IReadOnlyList<string> parts =
+            new MiniLmTokenBudget(Counter, maximumTokens: 50)
+                .SplitMarkdown(input, context: string.Empty);
+
+        Assert.Equal(4, parts.Count);
+        Assert.Equal(input, string.Concat(parts));
+        Assert.All(
+            parts,
+            part => Assert.True(Counter.CountTokens(part) <= 50));
+    }
+
     private sealed class FixedTokenCounter(int tokensPerCall) : ITokenCounter
     {
         public int CountTokens(string text) => tokensPerCall;

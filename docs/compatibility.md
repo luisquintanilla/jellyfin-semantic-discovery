@@ -87,7 +87,8 @@ two embedding special tokens before computing hashes or deterministic chunk
 identities. Heading fallback removes older ancestors first, preserves the
 deepest heading when possible, and finally uses empty context instead of
 allowing MEDI's context-only exception to escape as an accidental behavior
-change.
+change. If the deepest heading itself must be truncated, its first candidate is
+limited to half the model budget so document chunks retain useful body capacity.
 
 Markdown line endings are canonicalized to LF before MEDI parsing. Chunk
 mapping repeats that canonicalization before hashing and identity generation,

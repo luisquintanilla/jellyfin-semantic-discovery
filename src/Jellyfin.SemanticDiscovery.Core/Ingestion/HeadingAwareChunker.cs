@@ -192,7 +192,7 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
         if (path.Length > 0)
         {
             string deepestHeading = path[^1];
-            for (int budget = Math.Max(1, _tokenBudget.MaximumTokens - 1);
+            for (int budget = Math.Max(1, _tokenBudget.MaximumTokens / 2);
                  budget > 0;
                  budget /= 2)
             {

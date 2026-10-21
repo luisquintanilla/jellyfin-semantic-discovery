@@ -40,6 +40,7 @@ public sealed class RealTokenizerTextSplitterTests
 
         Assert.NotEmpty(documentChunks);
         Assert.NotEmpty(timedTextChunks);
+        Assert.InRange(documentChunks.Count, 2, 32);
         Assert.All(
             documentChunks.Concat(timedTextChunks),
             chunk => Assert.InRange(

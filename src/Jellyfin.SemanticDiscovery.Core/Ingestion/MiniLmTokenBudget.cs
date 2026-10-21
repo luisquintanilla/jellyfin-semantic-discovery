@@ -192,7 +192,9 @@ internal sealed class MiniLmTokenBudget
             parts.Add(string.Join('\n', pending).Trim());
         }
 
-        return parts.Where(static part => part.Length > 0).ToArray();
+        return parts
+            .Where(static part => !string.IsNullOrWhiteSpace(part))
+            .ToArray();
     }
 
     public static string Combine(string context, string content) =>
@@ -215,16 +217,15 @@ internal sealed class MiniLmTokenBudget
         while (start < boundaries.Count - 1)
         {
             int low = start + 1;
-            int high = Math.Min(
-                boundaries.Count - 1,
-                start + MaximumScalarsPerUnbrokenSegment);
+            int high = boundaries.Count - 1;
             int best = start;
             while (low <= high)
             {
                 int middle = low + ((high - low) / 2);
                 string candidate = text[
                     boundaries[start]..boundaries[middle]];
-                if (Fits(Combine(context, candidate)))
+                if (!ContainsOversizedSegment(candidate) &&
+                    Fits(Combine(context, candidate)))
                 {
                     best = middle;
                     low = middle + 1;
@@ -241,8 +242,13 @@ internal sealed class MiniLmTokenBudget
                     "The model budget cannot hold one Unicode scalar with its context.");
             }
 
-            parts.Add(text[boundaries[start]..boundaries[best]]);
-            start = best;
+            int split = FindPreferredSplitBoundary(
+                text,
+                boundaries,
+                start,
+                best);
+            parts.Add(text[boundaries[start]..boundaries[split]]);
+            start = split;
         }
 
         return parts;
@@ -298,12 +304,49 @@ internal sealed class MiniLmTokenBudget
         return parts;
     }
 
-    private static bool ContainsOversizedSegment(string value) =>
-        value.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Any(static segment =>
-                segment.EnumerateRunes()
-                    .Take(MaximumScalarsPerUnbrokenSegment + 1)
-                    .Count() > MaximumScalarsPerUnbrokenSegment);
+    private static int FindPreferredSplitBoundary(
+        string text,
+        List<int> boundaries,
+        int start,
+        int best)
+    {
+        if (best == boundaries.Count - 1)
+        {
+            return best;
+        }
+
+        for (int boundary = best; boundary > start; boundary--)
+        {
+            Rune rune = Rune.GetRuneAt(text, boundaries[boundary - 1]);
+            if (Rune.IsWhiteSpace(rune))
+            {
+                return boundary;
+            }
+        }
+
+        return best;
+    }
+
+    private static bool ContainsOversizedSegment(string value)
+    {
+        int scalarCount = 0;
+        foreach (Rune rune in value.EnumerateRunes())
+        {
+            if (Rune.IsWhiteSpace(rune))
+            {
+                scalarCount = 0;
+                continue;
+            }
+
+            scalarCount++;
+            if (scalarCount > MaximumScalarsPerUnbrokenSegment)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 internal sealed class TokenBudgetExceededException(string message)
