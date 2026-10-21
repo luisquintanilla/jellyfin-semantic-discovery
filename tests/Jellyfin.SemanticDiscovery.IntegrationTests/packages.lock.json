@@ -41,6 +41,20 @@
           "Jellyfin.Extensions": "12.0.0"
         }
       },
+      "Microsoft.Extensions.DataIngestion": {
+        "type": "Direct",
+        "requested": "[10.9.0-preview.1.26411.16, )",
+        "resolved": "10.9.0-preview.1.26411.16",
+        "contentHash": "IfmrC20oAjp23r2/OuZqUMC7iB6oz/vI2j6an1wR/vFKtr8UzUTXO4PZGvFUkqOvx69cgR6FsQOjv8hze1/fOg==",
+        "dependencies": {
+          "Microsoft.Extensions.AI": "10.9.0",
+          "Microsoft.Extensions.DataIngestion.Abstractions": "10.9.0-preview.1.26411.16",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.11",
+          "Microsoft.Extensions.VectorData.Abstractions": "9.7.0",
+          "Microsoft.ML.Tokenizers": "1.0.1",
+          "System.Numerics.Tensors": "10.0.11"
+        }
+      },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
         "requested": "[18.0.1, )",
@@ -178,6 +192,18 @@
           "Microsoft.Extensions.Caching.Memory": "10.0.11",
           "Microsoft.Extensions.Configuration.Abstractions": "10.0.11",
           "Microsoft.Extensions.Logging": "10.0.11"
+        }
+      },
+      "Microsoft.Extensions.AI": {
+        "type": "Transitive",
+        "resolved": "10.9.0",
+        "contentHash": "ymREzi/+uQ9KL0d0ir3FXHUb/XLHyLYcJYH/7A/uO6rg6Km8hUk++nMRG4/gDpDYrrU6s6YIpSDTexofexMGRg==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.9.0",
+          "Microsoft.Extensions.Caching.Abstractions": "10.0.11",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.11",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.11",
+          "System.Numerics.Tensors": "10.0.11"
         }
       },
       "Microsoft.Extensions.Caching.Abstractions": {
@@ -360,7 +386,10 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.VectorData.InMemory": "[1.0.1, )",
+          "Markdig.Signed": "[0.43.0, )",
           "Microsoft.Extensions.AI.Abstractions": "[10.9.0, )",
+          "Microsoft.Extensions.DataIngestion.Abstractions": "[10.9.0-preview.1.26411.16, )",
+          "Microsoft.Extensions.DataIngestion.Markdig": "[10.9.0-preview.1.26411.16, )",
           "Microsoft.Extensions.VectorData.Abstractions": "[10.9.0, )",
           "Microsoft.ML.OnnxRuntime": "[1.29.0, )",
           "Microsoft.ML.Tokenizers": "[2.0.0, )",
@@ -389,11 +418,33 @@
           "System.Numerics.Tensors": "10.0.10"
         }
       },
+      "Markdig.Signed": {
+        "type": "CentralTransitive",
+        "requested": "[0.43.0, )",
+        "resolved": "0.43.0",
+        "contentHash": "Ly5oB+iS5rA2GqLuv7KZNJWQnHXLb5oi7cmIpGrrCrsvU9oplSKO/Xo65tLUiC+bcMjhQ7ZHn97h6vcvF24FbQ=="
+      },
       "Microsoft.Extensions.AI.Abstractions": {
         "type": "CentralTransitive",
         "requested": "[10.9.0, )",
         "resolved": "10.9.0",
         "contentHash": "//nASHMCJVxnYfE/WSzfaLOao6/q816kPpgB9rxU0gfSmAny1u3rfQT0D4xAmcIo4yQqJs7rAeBB+M/dIMdZYA=="
+      },
+      "Microsoft.Extensions.DataIngestion.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[10.9.0-preview.1.26411.16, )",
+        "resolved": "10.9.0-preview.1.26411.16",
+        "contentHash": "+WD7DoRmPQhfY3z0v1KocL+HoVHl/g+27dgJsw0rwBg/l3u6NK8zY5s/YDlzxsrWRQzagJax7+otlA29kgGMhA=="
+      },
+      "Microsoft.Extensions.DataIngestion.Markdig": {
+        "type": "CentralTransitive",
+        "requested": "[10.9.0-preview.1.26411.16, )",
+        "resolved": "10.9.0-preview.1.26411.16",
+        "contentHash": "AhHlSZ7HD6zFeY2sd9gHQ8GV2PjxsXNvktvhSmVe9Y/PwV6gr18k/HHJX7Nt0RwBfVS/IS7A1pj2AhYhKRlUDw==",
+        "dependencies": {
+          "Markdig.Signed": "0.43.0",
+          "Microsoft.Extensions.DataIngestion.Abstractions": "10.9.0-preview.1.26411.16"
+        }
       },
       "Microsoft.Extensions.VectorData.Abstractions": {
         "type": "CentralTransitive",

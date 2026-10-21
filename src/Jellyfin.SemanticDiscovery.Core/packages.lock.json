@@ -14,11 +14,33 @@
           "System.Numerics.Tensors": "10.0.10"
         }
       },
+      "Markdig.Signed": {
+        "type": "Direct",
+        "requested": "[0.43.0, )",
+        "resolved": "0.43.0",
+        "contentHash": "Ly5oB+iS5rA2GqLuv7KZNJWQnHXLb5oi7cmIpGrrCrsvU9oplSKO/Xo65tLUiC+bcMjhQ7ZHn97h6vcvF24FbQ=="
+      },
       "Microsoft.Extensions.AI.Abstractions": {
         "type": "Direct",
         "requested": "[10.9.0, )",
         "resolved": "10.9.0",
         "contentHash": "//nASHMCJVxnYfE/WSzfaLOao6/q816kPpgB9rxU0gfSmAny1u3rfQT0D4xAmcIo4yQqJs7rAeBB+M/dIMdZYA=="
+      },
+      "Microsoft.Extensions.DataIngestion.Abstractions": {
+        "type": "Direct",
+        "requested": "[10.9.0-preview.1.26411.16, )",
+        "resolved": "10.9.0-preview.1.26411.16",
+        "contentHash": "+WD7DoRmPQhfY3z0v1KocL+HoVHl/g+27dgJsw0rwBg/l3u6NK8zY5s/YDlzxsrWRQzagJax7+otlA29kgGMhA=="
+      },
+      "Microsoft.Extensions.DataIngestion.Markdig": {
+        "type": "Direct",
+        "requested": "[10.9.0-preview.1.26411.16, )",
+        "resolved": "10.9.0-preview.1.26411.16",
+        "contentHash": "AhHlSZ7HD6zFeY2sd9gHQ8GV2PjxsXNvktvhSmVe9Y/PwV6gr18k/HHJX7Nt0RwBfVS/IS7A1pj2AhYhKRlUDw==",
+        "dependencies": {
+          "Markdig.Signed": "0.43.0",
+          "Microsoft.Extensions.DataIngestion.Abstractions": "10.9.0-preview.1.26411.16"
+        }
       },
       "Microsoft.Extensions.VectorData.Abstractions": {
         "type": "Direct",

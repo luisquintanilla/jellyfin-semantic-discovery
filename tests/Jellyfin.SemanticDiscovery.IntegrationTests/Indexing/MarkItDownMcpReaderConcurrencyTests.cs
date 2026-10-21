@@ -168,12 +168,12 @@ public sealed class MarkItDownMcpReaderConcurrencyTests : IDisposable
             return BuildSuccessResponse(request, "# Heading\n\nBody.");
         };
         using HttpClient httpClient = new(handler);
-        HeadingAwareChunker chunker = new(new WordCountTokenCounter(), maxTokens: 200);
         using MarkItDownMcpReader reader = new(
             httpClient,
             Endpoint,
-            chunker,
-            maximumConcurrency: 1);
+            new WordCountTokenCounter(),
+            maximumConcurrency: 1,
+            maximumTokens: 200);
         string path = CreateFile();
         ContentSourceDescriptor source = new()
         {
@@ -227,13 +227,13 @@ public sealed class MarkItDownMcpReaderConcurrencyTests : IDisposable
             return BuildSuccessResponse(request, "# Heading\n\nBody.");
         };
         using HttpClient httpClient = new(handler);
-        HeadingAwareChunker chunker = new(new WordCountTokenCounter(), maxTokens: 200);
         MarkItDownMcpReader reader = new(
             httpClient,
             Endpoint,
-            chunker,
+            new WordCountTokenCounter(),
             maximumConcurrency: 1,
-            disposeTimeout: TimeSpan.FromMilliseconds(50));
+            disposeTimeout: TimeSpan.FromMilliseconds(50),
+            maximumTokens: 200);
         string path = CreateFile();
         ContentSourceDescriptor source = new()
         {

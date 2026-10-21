@@ -121,7 +121,10 @@
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.VectorData.InMemory": "[1.0.1, )",
+          "Markdig.Signed": "[0.43.0, )",
           "Microsoft.Extensions.AI.Abstractions": "[10.9.0, )",
+          "Microsoft.Extensions.DataIngestion.Abstractions": "[10.9.0-preview.1.26411.16, )",
+          "Microsoft.Extensions.DataIngestion.Markdig": "[10.9.0-preview.1.26411.16, )",
           "Microsoft.Extensions.VectorData.Abstractions": "[10.9.0, )",
           "Microsoft.ML.OnnxRuntime": "[1.29.0, )",
           "Microsoft.ML.Tokenizers": "[2.0.0, )",
@@ -140,11 +143,33 @@
           "System.Numerics.Tensors": "10.0.10"
         }
       },
+      "Markdig.Signed": {
+        "type": "CentralTransitive",
+        "requested": "[0.43.0, )",
+        "resolved": "0.43.0",
+        "contentHash": "Ly5oB+iS5rA2GqLuv7KZNJWQnHXLb5oi7cmIpGrrCrsvU9oplSKO/Xo65tLUiC+bcMjhQ7ZHn97h6vcvF24FbQ=="
+      },
       "Microsoft.Extensions.AI.Abstractions": {
         "type": "CentralTransitive",
         "requested": "[10.9.0, )",
         "resolved": "10.9.0",
         "contentHash": "//nASHMCJVxnYfE/WSzfaLOao6/q816kPpgB9rxU0gfSmAny1u3rfQT0D4xAmcIo4yQqJs7rAeBB+M/dIMdZYA=="
+      },
+      "Microsoft.Extensions.DataIngestion.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[10.9.0-preview.1.26411.16, )",
+        "resolved": "10.9.0-preview.1.26411.16",
+        "contentHash": "+WD7DoRmPQhfY3z0v1KocL+HoVHl/g+27dgJsw0rwBg/l3u6NK8zY5s/YDlzxsrWRQzagJax7+otlA29kgGMhA=="
+      },
+      "Microsoft.Extensions.DataIngestion.Markdig": {
+        "type": "CentralTransitive",
+        "requested": "[10.9.0-preview.1.26411.16, )",
+        "resolved": "10.9.0-preview.1.26411.16",
+        "contentHash": "AhHlSZ7HD6zFeY2sd9gHQ8GV2PjxsXNvktvhSmVe9Y/PwV6gr18k/HHJX7Nt0RwBfVS/IS7A1pj2AhYhKRlUDw==",
+        "dependencies": {
+          "Markdig.Signed": "0.43.0",
+          "Microsoft.Extensions.DataIngestion.Abstractions": "10.9.0-preview.1.26411.16"
+        }
       },
       "Microsoft.Extensions.VectorData.Abstractions": {
         "type": "CentralTransitive",

@@ -81,13 +81,13 @@ public sealed class MarkItDownMcpReaderTests : IDisposable
     {
         ScriptedHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler);
-        HeadingAwareChunker chunker = new(new WordCountTokenCounter(), maxTokens: 200);
         MarkItDownMcpReader reader = new(
             httpClient,
             Endpoint,
-            chunker,
+            new WordCountTokenCounter(),
             maximumDocumentBytes,
-            maximumRequestBytes: maximumRequestBytes);
+            maximumRequestBytes: maximumRequestBytes,
+            maximumTokens: 200);
         return (reader, handler);
     }
 
@@ -276,7 +276,7 @@ public sealed class MarkItDownMcpReaderTests : IDisposable
         using MarkItDownMcpReader reader = new(
             client,
             new Uri($"http://127.0.0.1:{sourcePort}/mcp"),
-            new HeadingAwareChunker(new WordCountTokenCounter()));
+            new WordCountTokenCounter());
         string path = CreateFile("redirect.pdf", "private document bytes"u8.ToArray());
 
         ContentIngestionException exception =
@@ -363,6 +363,50 @@ public sealed class MarkItDownMcpReaderTests : IDisposable
         string dataUri = document.RootElement
             .GetProperty("params").GetProperty("arguments").GetProperty("source").GetString()!;
         Assert.StartsWith("data:application/epub+zip;base64,", dataUri, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ReadAsyncFallsBackForUnsupportedAdvancedMarkdown()
+    {
+        (MarkItDownMcpReader reader, ScriptedHttpMessageHandler handler) = CreateReader();
+        handler.Handler = (request, _) =>
+            Task.FromResult(SuccessJsonRpcResponse(
+                GetRequestId(request),
+                """
+                # Advanced
+
+                - [x] completed task
+
+                Text with a footnote.[^1]
+
+                [^1]: retained detail
+                """));
+        string path = CreateFile("advanced.pdf", "pdf-bytes"u8.ToArray());
+        ContentSourceDescriptor source = new()
+        {
+            OwnerId = Guid.NewGuid(),
+            Kind = ContentSourceKind.Pdf,
+            Path = path,
+        };
+
+        IReadOnlyList<ContentChunk> chunks =
+            await reader.ReadAsync(source, CancellationToken.None);
+
+        string projected = string.Join(
+            '\n',
+            chunks.Select(static chunk => chunk.Text));
+        Assert.Contains(
+            "completed task",
+            projected,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "retained detail",
+            projected,
+            StringComparison.Ordinal);
+        Assert.All(
+            chunks,
+            chunk => Assert.True(
+                new WordCountTokenCounter().CountTokens(chunk.Text) <= 200));
     }
 
     [Fact]

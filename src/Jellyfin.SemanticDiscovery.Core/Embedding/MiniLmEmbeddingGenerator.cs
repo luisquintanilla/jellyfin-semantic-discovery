@@ -32,6 +32,8 @@ public sealed class MiniLmEmbeddingGenerator :
 
     public MiniLmSpecialTokenIds SpecialTokenIds { get; }
 
+    internal BertTokenizer Tokenizer => _tokenizer;
+
     public MiniLmEmbeddingGenerator(MiniLmEmbeddingOptions options)
         : this(options, MiniLmModelArtifacts.Load(options))
     {

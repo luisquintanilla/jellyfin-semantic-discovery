@@ -3,7 +3,7 @@ using Jellyfin.SemanticDiscovery.Core.Tests.TestSupport;
 
 namespace Jellyfin.SemanticDiscovery.Core.Tests.Ingestion;
 
-public sealed class TokenBoundedTextSplitterTests
+public sealed class MiniLmTokenBudgetTests
 {
     private static readonly WordCountTokenCounter Counter = new();
 
@@ -13,7 +13,9 @@ public sealed class TokenBoundedTextSplitterTests
     [InlineData("\t\n")]
     public void SplitReturnsEmptyForBlankText(string text)
     {
-        IReadOnlyList<string> parts = TokenBoundedTextSplitter.Split(text, Counter, maxTokens: 10);
+        IReadOnlyList<string> parts =
+            new MiniLmTokenBudget(Counter, maximumTokens: 10)
+                .SplitNormalized(text);
 
         Assert.Empty(parts);
     }
@@ -21,10 +23,9 @@ public sealed class TokenBoundedTextSplitterTests
     [Fact]
     public void SplitReturnsSinglePartWhenUnderBudget()
     {
-        IReadOnlyList<string> parts = TokenBoundedTextSplitter.Split(
-            "one two three",
-            Counter,
-            maxTokens: 5);
+        IReadOnlyList<string> parts =
+            new MiniLmTokenBudget(Counter, maximumTokens: 5)
+                .SplitNormalized("one two three");
 
         Assert.Equal(["one two three"], parts);
     }
@@ -32,10 +33,9 @@ public sealed class TokenBoundedTextSplitterTests
     [Fact]
     public void SplitReturnsSinglePartWhenExactlyAtBudget()
     {
-        IReadOnlyList<string> parts = TokenBoundedTextSplitter.Split(
-            "one two three four five",
-            Counter,
-            maxTokens: 5);
+        IReadOnlyList<string> parts =
+            new MiniLmTokenBudget(Counter, maximumTokens: 5)
+                .SplitNormalized("one two three four five");
 
         Assert.Equal(["one two three four five"], parts);
     }
@@ -43,10 +43,9 @@ public sealed class TokenBoundedTextSplitterTests
     [Fact]
     public void SplitProducesMultiplePartsEachWithinBudgetWhenOverBudget()
     {
-        IReadOnlyList<string> parts = TokenBoundedTextSplitter.Split(
-            "one two three four five six seven",
-            Counter,
-            maxTokens: 3);
+        IReadOnlyList<string> parts =
+            new MiniLmTokenBudget(Counter, maximumTokens: 3)
+                .SplitNormalized("one two three four five six seven");
 
         Assert.Equal(["one two three", "four five six", "seven"], parts);
         Assert.All(parts, part => Assert.True(Counter.CountTokens(part) <= 3));
@@ -55,10 +54,9 @@ public sealed class TokenBoundedTextSplitterTests
     [Fact]
     public void SplitNormalizesWhitespaceBeforeCounting()
     {
-        IReadOnlyList<string> parts = TokenBoundedTextSplitter.Split(
-            "  one   two  \t three  ",
-            Counter,
-            maxTokens: 10);
+        IReadOnlyList<string> parts =
+            new MiniLmTokenBudget(Counter, maximumTokens: 10)
+                .SplitNormalized("  one   two  \t three  ");
 
         Assert.Equal(["one two three"], parts);
     }
@@ -68,8 +66,10 @@ public sealed class TokenBoundedTextSplitterTests
     {
         FixedTokenCounter counter = new(tokensPerCall: 100);
 
-        InvalidDataException exception = Assert.Throws<InvalidDataException>(
-            () => TokenBoundedTextSplitter.Split("word", counter, maxTokens: 5));
+        TokenBudgetExceededException exception =
+            Assert.Throws<TokenBudgetExceededException>(
+            () => new MiniLmTokenBudget(counter, maximumTokens: 5)
+                .SplitNormalized("word"));
 
         Assert.Contains("above the token limit", exception.Message, StringComparison.Ordinal);
     }
@@ -82,10 +82,9 @@ public sealed class TokenBoundedTextSplitterTests
             ' ',
             Enumerable.Range(0, 10_000).Select(index => $"word{index}"));
 
-        IReadOnlyList<string> parts = TokenBoundedTextSplitter.Split(
-            input,
-            counter,
-            maxTokens: 50);
+        IReadOnlyList<string> parts =
+            new MiniLmTokenBudget(counter, maximumTokens: 50)
+                .SplitNormalized(input);
 
         Assert.Equal(
             input,
@@ -96,6 +95,44 @@ public sealed class TokenBoundedTextSplitterTests
                 part.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length <= 50));
         Assert.True(counter.CharactersCounted < input.Length * 30L);
         Assert.True(counter.CallCount < 5_000);
+    }
+
+    [Fact]
+    public void SplitMarkdownPreservesLineStructureWhenLinesFit()
+    {
+        MiniLmTokenBudget budget = new(Counter, maximumTokens: 5);
+
+        IReadOnlyList<string> parts = budget.SplitMarkdown(
+            "- one two\n- three four\n- five six",
+            context: string.Empty);
+
+        Assert.Equal(
+            "- one two\n- three four\n- five six",
+            string.Join('\n', parts));
+        Assert.All(
+            ["- one two", "- three four", "- five six"],
+            line => Assert.Contains(
+                line,
+                string.Join('\n', parts),
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void SplitMarkdownUsesFullBudgetForNormalWhitespaceSeparatedText()
+    {
+        string input = string.Join(
+            ' ',
+            Enumerable.Range(0, 200).Select(index => $"word{index}"));
+
+        IReadOnlyList<string> parts =
+            new MiniLmTokenBudget(Counter, maximumTokens: 50)
+                .SplitMarkdown(input, context: string.Empty);
+
+        Assert.Equal(4, parts.Count);
+        Assert.Equal(input, string.Concat(parts));
+        Assert.All(
+            parts,
+            part => Assert.True(Counter.CountTokens(part) <= 50));
     }
 
     private sealed class FixedTokenCounter(int tokensPerCall) : ITokenCounter

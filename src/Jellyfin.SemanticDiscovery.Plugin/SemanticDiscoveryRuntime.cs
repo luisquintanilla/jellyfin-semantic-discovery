@@ -461,7 +461,7 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
             markItDown = new MarkItDownMcpReader(
                 markItDownClient,
                 markItDownEndpoint,
-                new HeadingAwareChunker(generator),
+                generator,
                 maximumDocumentBytes,
                 maximumConcurrency: 1,
                 maximumRequestBytes: maximumRequestBytes);
@@ -470,7 +470,7 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
                 generator,
                 source,
                 [
-                    new SubtitleContentReader(new SubtitleChunker(generator)),
+                    new SubtitleContentReader(generator),
                     markItDown,
                 ],
                 new AtomicSnapshotStore(paths.GetSnapshotPath(configuration)),
@@ -742,9 +742,9 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
 
         bool blocked;
         using (HttpClient external = new()
-               {
-                   Timeout = TimeSpan.FromSeconds(3),
-               })
+        {
+            Timeout = TimeSpan.FromSeconds(3),
+        })
         {
             try
             {

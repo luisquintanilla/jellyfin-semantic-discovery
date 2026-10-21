@@ -10,7 +10,8 @@ public static class SemanticConstants
     public const string EmbeddingAlgorithmVersion =
         "attention-mask-mean-pooling-l2-v1";
     public const string IndexingPipelineVersion =
-        "srt-webvtt-v2;subtitle-chunker-v2;heading-chunker-v3;" +
-        "wordpiece-scalar-bound-v2;markitdown-0.1.7-http-jsonrpc-v5;" +
+        "medi-10.9.0-preview.1.26411.16-documents-v1;" +
+        "medi-chunks-v1;srt-webvtt-v3;subtitle-chunker-v3;heading-chunker-v4;" +
+        "wordpiece-scalar-bound-v3;markitdown-0.1.7-http-jsonrpc-v5;" +
         "locked-source-integrity-v2";
 }

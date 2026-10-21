@@ -259,6 +259,14 @@ Jellyfin 12 native search/similar APIs
 | `Jellyfin.SemanticDiscovery.AppHost` | pinned resources, mounts, health, dependencies, generated secret |
 | `Core.Tests`, `IntegrationTests`, `EndToEndTests` | deterministic contracts through live Jellyfin API proof |
 
+Full-content PDF/EPUB and subtitle/transcript paths use the pinned preview MEDI
+document/chunk contracts behind Jellyfin-specific source, provenance, and exact
+MiniLM budget adapters. Stable Jellyfin metadata projection bypasses MEDI, and
+`SemanticIndexBuilder` still owns hash reuse, transient-source retention, and
+atomic snapshot/vector publication. See
+[compatibility evidence](docs/compatibility.md#medi-document-and-chunk-contracts)
+for preview limitations and the full-pipeline decision.
+
 Aspire orchestrates:
 
 - official Jellyfin 12 container
@@ -399,6 +407,7 @@ AppHost supplies:
 | model / vocab | SHA-256 `6fd5d72f...` / `07eced37...` |
 | ONNX Runtime | `1.29.0` |
 | Microsoft.ML.Tokenizers | `2.0.0` |
+| MEDI abstractions / Markdig | `10.9.0-preview.1.26411.16` / `0.43.0` |
 | VectorData abstractions / in-memory | `10.9.0` / `1.0.1` |
 | MarkItDown | `0.1.7`, fully hash-locked Python graph |
 | fixture generator | PowerShell 7.5 + Ubuntu snapshot + FFmpeg 6.1.1 measured closure |

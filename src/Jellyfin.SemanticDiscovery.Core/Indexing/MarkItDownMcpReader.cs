@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Core.Ingestion;
+using Microsoft.Extensions.DataIngestion;
 
 namespace Jellyfin.SemanticDiscovery.Core.Indexing;
 
@@ -15,7 +16,9 @@ public sealed class MarkItDownMcpReader : IContentReader, IDisposable
     private const int MaximumResponseBytes = 16 * 1024 * 1024;
     private readonly HttpClient _httpClient;
     private readonly Uri _endpoint;
+    private readonly MarkdownIngestionDocumentAdapter _documentAdapter = new();
     private readonly HeadingAwareChunker _chunker;
+    private readonly ContentChunkMapper _mapper;
     private readonly long _maximumDocumentBytes;
     private readonly SemaphoreSlim _conversionGate;
     private readonly TimeSpan _disposeTimeout;
@@ -33,17 +36,20 @@ public sealed class MarkItDownMcpReader : IContentReader, IDisposable
     public MarkItDownMcpReader(
         HttpClient httpClient,
         Uri endpoint,
-        HeadingAwareChunker chunker,
+        ITokenCounter tokenCounter,
         long maximumDocumentBytes = 8 * 1024 * 1024,
         int maximumConcurrency = 2,
         TimeSpan? disposeTimeout = null,
-        long maximumRequestBytes = 12 * 1024 * 1024)
+        long maximumRequestBytes = 12 * 1024 * 1024,
+        int maximumTokens = MiniLmTokenBudget.MaximumInputTokens)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
         ValidateEndpoint(_endpoint);
 
-        _chunker = chunker ?? throw new ArgumentNullException(nameof(chunker));
+        ArgumentNullException.ThrowIfNull(tokenCounter);
+        _chunker = new HeadingAwareChunker(tokenCounter, maximumTokens);
+        _mapper = new ContentChunkMapper(tokenCounter, maximumTokens);
         _maximumDocumentBytes =
             maximumDocumentBytes is > 0 and <= AbsoluteMaximumDocumentBytes
             ? maximumDocumentBytes
@@ -290,11 +296,15 @@ public sealed class MarkItDownMcpReader : IContentReader, IDisposable
                         afterCurrentWorkingSetBytes,
                     AfterPeakWorkingSetBytes:
                         afterPeakWorkingSetBytes));
-                return _chunker.Chunk(
-                    source.OwnerId,
-                    source.Path,
-                    source.Kind,
-                    markdown);
+                IngestionDocument document =
+                    await _documentAdapter.ReadAsync(
+                        source,
+                        markdown,
+                        cancellationToken).ConfigureAwait(false);
+                return await _mapper.MapAsync(
+                    source,
+                    _chunker.ProcessAsync(document, cancellationToken),
+                    cancellationToken).ConfigureAwait(false);
             }
             catch (HttpRequestException exception)
             {
@@ -333,6 +343,22 @@ public sealed class MarkItDownMcpReader : IContentReader, IDisposable
             {
                 throw new ContentIngestionException(
                     exception.Message,
+                    source.Path,
+                    isTransient: false,
+                    exception);
+            }
+            catch (TokenBudgetExceededException exception)
+            {
+                throw new ContentIngestionException(
+                    exception.Message,
+                    source.Path,
+                    isTransient: false,
+                    exception);
+            }
+            catch (NotSupportedException exception)
+            {
+                throw new ContentIngestionException(
+                    "The converted Markdown uses an unsupported structure.",
                     source.Path,
                     isTransient: false,
                     exception);
