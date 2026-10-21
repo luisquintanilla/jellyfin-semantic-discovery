@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jellyfin.SemanticDiscovery.Core\Jellyfin.SemanticDiscovery.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Database.Implementations" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Model" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration\configPage.html" />
+    <Content Include="meta.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Jellyfin.SemanticDiscovery.IntegrationTests" />
+  </ItemGroup>
+
+  <Target Name="CopyFlatOnnxRuntimeNativeLibraries" AfterTargets="Build">
+    <ItemGroup>
+      <_OnnxRuntimeNative Include="$(PkgMicrosoft_ML_OnnxRuntime)\runtimes\win-x64\native\onnxruntime.dll" />
+      <_OnnxRuntimeNative Include="$(PkgMicrosoft_ML_OnnxRuntime)\runtimes\win-x64\native\onnxruntime_providers_shared.dll" />
+      <_OnnxRuntimeNative Include="$(PkgMicrosoft_ML_OnnxRuntime)\runtimes\linux-x64\native\libonnxruntime.so" />
+      <_OnnxRuntimeNative Include="$(PkgMicrosoft_ML_OnnxRuntime)\runtimes\linux-x64\native\libonnxruntime_providers_shared.so" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="@(_OnnxRuntimeNative)"
+      DestinationFolder="$(TargetDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 2,
+  "generatorId": "showcase-network-evidence-v3",
+  "evidenceKind": "runtime-network-controls",
+  "jellyfin": {
+    "enforcement": "black-hole HTTP_PROXY/HTTPS_PROXY/ALL_PROXY with NO_PROXY limited to the internal MarkItDown service",
+    "residualLimitation": "This constrains proxy-aware HTTP clients; the Aspire DCP container network still permits direct socket egress.",
+    "initialExternalHttpCanaryBlocked": true,
+    "restartExternalHttpCanaryBlocked": true,
+    "initialMarkItDownReachable": true,
+    "restartMarkItDownReachable": true,
+    "markItDownReachabilityProbe": "JSON-RPC tools/list at the exact configured MCP endpoint"
+  },
+  "markItDown": {
+    "enforcement": "Python socket API guard",
+    "initial": {
+      "blocked": true,
+      "probes": {
+        "getaddrinfo": true,
+        "gethostbyname": true,
+        "gethostbyname_ex": true,
+        "gethostbyaddr": true,
+        "getnameinfo": true,
+        "create_connection": true,
+        "socket_connect": true,
+        "socket_connect_ex": true,
+        "socket_sendto": true,
+        "socket_sendmsg": true
+      }
+    },
+    "restart": {
+      "blocked": true,
+      "probes": {
+        "getaddrinfo": true,
+        "gethostbyname": true,
+        "gethostbyname_ex": true,
+        "gethostbyaddr": true,
+        "getnameinfo": true,
+        "create_connection": true,
+        "socket_connect": true,
+        "socket_connect_ex": true,
+        "socket_sendto": true,
+        "socket_sendmsg": true
+      }
+    }
+  },
+  "providerConfigurationAssertedBy": "LibrariesDisableRemoteMetadataArtworkAndLocalImageGeneration"
+}

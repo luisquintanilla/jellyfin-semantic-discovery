@@ -1,0 +1,5 @@
+# Generated fixture binaries (MP4/SRT/VTT/PDF/EPUB/NFO/OPF) are reproducible
+# from manifest.json via scripts/Generate-Fixtures.ps1 and are intentionally
+# not committed. Only the source manifest, README, and generator script are
+# tracked in git.
+# Canonical generated fixtures are intentionally committed and checksum-locked.

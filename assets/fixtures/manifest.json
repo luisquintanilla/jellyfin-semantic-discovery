@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "manifestVersion": 1,
+  "generator": "scripts/Generate-Fixtures.ps1",
+  "generatorIdentity": "fixture-generator-v4-linux-amd64-no-x264-asm",
+  "canonicalChecksumsFile": "SHA256SUMS",
+  "generatorToolchain": {
+    "lockPath": "/opt/fixture-generator/toolchain-lock.json",
+    "lockSha256": "8e69b7fb08c141dd726535356675d6e5daa37d9ac44e418d67130ff85d3dabb6"
+  },
+  "purpose": "Tiny, deterministic, synthetic Jellyfin library fixtures (Movie, Series, PDF, EPUB) used to exercise semantic discovery across NFO/OPF metadata, subtitle sidecars, and document text. Every value below is source-of-truth: the generator must produce content matching these fields exactly, and the validator measures the generated output (via ffprobe / PDF byte markers / EPUB zip structure) and compares it back against this manifest. No benchmark, accuracy, or performance metrics are recorded anywhere in this file or in the generator output -- only objective structural facts (durations, codecs, counts, byte markers) and the literal fixture text.",
+  "license": {
+    "spdx": "MIT",
+    "note": "All text, metadata, and media below are original and synthetic, written for this repository and procedurally generated (ffmpeg lavfi test patterns/tones, hand-built PDF/EPUB containers). Nothing is derived from third-party copyrighted works. The fixture corpus is licensed under the repository's MIT license."
+  },
+  "distinctivePhraseCategories": [
+    "metadata-only",
+    "subtitle-only",
+    "negative-noise",
+    "pdf-content",
+    "epub-content"
+  ],
+  "video": {
+    "container": "mp4",
+    "videoCodec": "libx264",
+    "videoCodecExpectedName": "h264",
+    "pixelFormat": "yuv420p",
+    "audioCodec": "aac",
+    "audioCodecExpectedName": "aac",
+    "audioSampleRate": 44100,
+    "audioChannels": 1,
+    "durationToleranceSeconds": 0.35,
+    "encodePreset": "veryfast",
+    "crf": 30
+  },
+  "items": [
+    {
+      "id": "movie-signal-garden",
+      "kind": "movie",
+      "title": "The Signal Garden",
+      "sortTitle": "Signal Garden, The",
+      "year": 2024,
+      "premiered": "2024-01-01",
+      "genre": "Science Fiction",
+      "studio": "Silver Engine Fixtures",
+      "officialRating": "R",
+      "tags": ["restricted-semantic"],
+      "folder": "Movies/The Signal Garden (2024)",
+      "videoFile": "The Signal Garden (2024).mp4",
+      "nfoFile": "movie.nfo",
+      "subtitleBaseName": "The Signal Garden (2024)",
+      "subtitleLanguage": "en",
+      "uniqueId": "fixture-movie-signal-garden",
+      "media": {
+        "pattern": "testsrc2",
+        "width": 320,
+        "height": 180,
+        "fps": 24,
+        "durationSeconds": 6.0,
+        "toneHz": 440
+      },
+      "metadata": {
+        "outline": "A night-shift observatory technician logs routine readings that turn out to be anything but routine.",
+        "plot": "At a remote listening post, an aurora cartographer maps the silence between orbits, cataloguing faint signals that no one else has thought to name."
+      },
+      "subtitles": {
+        "expectedCueCount": 3,
+        "cues": [
+          { "start": 0.5, "end": 2.0, "text": "Wind moves through the observatory dome." },
+          { "start": 2.2, "end": 4.0, "text": "The quiet cartouche hums twice before dawn." },
+          { "start": 4.2, "end": 5.8, "text": "Someone logs the reading and moves on." }
+        ]
+      },
+      "distinctivePhrases": [
+        {
+          "category": "metadata-only",
+          "phrase": "an aurora cartographer maps the silence between orbits",
+          "location": "metadata.plot",
+          "mustNotAppearIn": ["subtitles.cues[*].text"]
+        },
+        {
+          "category": "subtitle-only",
+          "phrase": "the quiet cartouche hums twice before dawn",
+          "location": "subtitles.cues[1].text",
+          "mustNotAppearIn": ["metadata.plot", "metadata.outline"]
+        }
+      ]
+    },
+    {
+      "id": "movie-orbit-almanac",
+      "kind": "movie",
+      "title": "Orbit Almanac",
+      "sortTitle": "Orbit Almanac",
+      "year": 2024,
+      "premiered": "2024-01-02",
+      "genre": "Documentary",
+      "studio": "Northern Almanac Workshop",
+      "officialRating": "G",
+      "tags": [],
+      "folder": "Movies/Orbit Almanac (2024)",
+      "videoFile": "Orbit Almanac (2024).mp4",
+      "nfoFile": "movie.nfo",
+      "subtitleBaseName": "Orbit Almanac (2024)",
+      "subtitleLanguage": "en",
+      "uniqueId": "fixture-movie-orbit-almanac",
+      "media": {
+        "pattern": "testsrc2",
+        "width": 320,
+        "height": 180,
+        "fps": 24,
+        "durationSeconds": 4.0,
+        "toneHz": 554
+      },
+      "metadata": {
+        "outline": "A polar radio keeper prepares a quiet orbital almanac.",
+        "plot": "A polar radio keeper charts aurora transmissions between silent orbital stations and preserves each signal in a hand-drawn almanac."
+      },
+      "subtitles": {
+        "expectedCueCount": 2,
+        "cues": [
+          { "start": 0.4, "end": 1.8, "text": "The receiver turns toward the northern lights." },
+          { "start": 2.0, "end": 3.7, "text": "Another orbit is entered in the almanac." }
+        ]
+      },
+      "distinctivePhrases": []
+    },
+    {
+      "id": "series-harbor-static",
+      "kind": "series",
+      "seriesTitle": "Harbor Static",
+      "year": 2024,
+      "premiered": "2024-02-01",
+      "genre": "Drama",
+      "studio": "Silver Engine Fixtures",
+      "seriesFolder": "Series/Harbor Static (2024)",
+      "seasonNumber": 1,
+      "seasonFolder": "Season 01",
+      "episodeNumber": 1,
+      "episodeTitle": "Low Tide Static",
+      "episodeBaseName": "Harbor Static (2024) S01E01",
+      "videoFile": "Harbor Static (2024) S01E01.mp4",
+      "tvshowNfoFile": "tvshow.nfo",
+      "seasonNfoFile": "season.nfo",
+      "episodeNfoFile": "Harbor Static (2024) S01E01.nfo",
+      "subtitleLanguage": "en",
+      "uniqueIdSeries": "fixture-series-harbor-static",
+      "uniqueIdEpisode": "fixture-series-harbor-static-s01e01",
+      "role": "negative-control",
+      "media": {
+        "pattern": "smptebars",
+        "width": 320,
+        "height": 180,
+        "fps": 25,
+        "durationSeconds": 4.0,
+        "toneHz": 220
+      },
+      "metadata": {
+        "seriesPlot": "A quiet coastal town goes about its ordinary business near the harbor.",
+        "seasonPlot": "The first stretch of ordinary days at the harbor.",
+        "episodePlot": "The tide comes in, the tide goes out, and nothing unusual happens today."
+      },
+      "subtitles": {
+        "expectedCueCount": 2,
+        "cues": [
+          { "start": 0.3, "end": 1.8, "text": "The tide is coming in." },
+          { "start": 2.0, "end": 3.7, "text": "We should head back before dark." }
+        ]
+      },
+      "distinctivePhrases": [
+        {
+          "category": "negative-noise",
+          "phrase": null,
+          "note": "Deliberately generic, common wording only -- no rare or invented phrase appears anywhere in this item's metadata or subtitles. Used as a negative control to confirm that distinctive-phrase queries for the other fixtures do not falsely match this item."
+        }
+      ]
+    },
+    {
+      "id": "series-tidal-register",
+      "kind": "series",
+      "seriesTitle": "Tidal Register",
+      "year": 2024,
+      "premiered": "2024-02-02",
+      "genre": "Documentary",
+      "studio": "Tidal Register Workshop",
+      "seriesFolder": "Series/Tidal Register (2024)",
+      "seasonNumber": 1,
+      "seasonFolder": "Season 01",
+      "episodeNumber": 1,
+      "episodeTitle": "Morning Entries",
+      "episodeBaseName": "Tidal Register (2024) S01E01",
+      "videoFile": "Tidal Register (2024) S01E01.mp4",
+      "tvshowNfoFile": "tvshow.nfo",
+      "seasonNfoFile": "season.nfo",
+      "episodeNfoFile": "Tidal Register (2024) S01E01.nfo",
+      "subtitleLanguage": "en",
+      "uniqueIdSeries": "fixture-series-tidal-register",
+      "uniqueIdEpisode": "fixture-series-tidal-register-s01e01",
+      "role": "recommendation-control",
+      "media": {
+        "pattern": "smptebars",
+        "width": 320,
+        "height": 180,
+        "fps": 25,
+        "durationSeconds": 3.0,
+        "toneHz": 247
+      },
+      "metadata": {
+        "seriesPlot": "A dockworker records ordinary tide schedules and quiet morning arrivals in a harbor ledger.",
+        "seasonPlot": "A season of routine entries beside the water.",
+        "episodePlot": "The morning tide arrives and each boat is entered in the ledger."
+      },
+      "subtitles": {
+        "expectedCueCount": 2,
+        "cues": [
+          { "start": 0.2, "end": 1.3, "text": "The first boat reaches the harbor." },
+          { "start": 1.5, "end": 2.8, "text": "Record the tide before the bell." }
+        ]
+      },
+      "distinctivePhrases": [
+        {
+          "category": "negative-noise",
+          "phrase": null,
+          "note": "Recommendation control with ordinary harbor language and no distinctive retrieval phrase."
+        }
+      ]
+    },
+    {
+      "id": "book-field-notes-on-static",
+      "kind": "pdf",
+      "title": "Field Notes on Static",
+      "year": 2024,
+      "author": "Silver Engine Fixtures",
+      "language": "en",
+      "description": "An original synthetic field log used only as a repository fixture for retrieval demos.",
+      "folder": "Books/Field Notes on Static (2024)",
+      "pdfFile": "Field Notes on Static (2024).pdf",
+      "opfFile": "metadata.opf",
+      "uniqueId": "fixture-book-field-notes-on-static",
+      "pages": [
+        [
+          "Field Notes on Static",
+          "",
+          "An original synthetic field log used only",
+          "as a repository fixture for retrieval demos."
+        ],
+        [
+          "The marigold ledger returns before the frost.",
+          "The static settles into a familiar hush."
+        ]
+      ],
+      "expected": {
+        "pageCount": 2,
+        "headerMarker": "%PDF-1.4",
+        "footerMarker": "%%EOF"
+      },
+      "distinctivePhrases": [
+        {
+          "category": "pdf-content",
+          "phrase": "marigold ledger returns before the frost",
+          "location": "pages[1][0]"
+        }
+      ]
+    },
+    {
+      "id": "book-notes-choir-loft",
+      "kind": "epub",
+      "title": "Notes from the Choir Loft",
+      "year": 2024,
+      "author": "Silver Engine Fixtures",
+      "language": "en",
+      "description": "An original synthetic short story used only as a repository fixture for retrieval demos.",
+      "folder": "Books/Notes from the Choir Loft (2024)",
+      "epubFile": "Notes from the Choir Loft (2024).epub",
+      "opfFile": "metadata.opf",
+      "uniqueId": "fixture-book-notes-choir-loft",
+      "chapters": [
+        {
+          "id": "ch1",
+          "file": "chap1.xhtml",
+          "title": "Rehearsal",
+          "paragraphs": [
+            "An original synthetic chapter used only as a repository fixture.",
+            "Nothing here references any existing published work."
+          ]
+        },
+        {
+          "id": "ch2",
+          "file": "chap2.xhtml",
+          "title": "After Hours",
+          "paragraphs": [
+            "Seventeen lanterns of quiet static gather at the loft door before the last hymn fades."
+          ]
+        }
+      ],
+      "expected": {
+        "chapterCount": 2,
+        "mimetypeEntry": "mimetype",
+        "mimetypeValue": "application/epub+zip",
+        "opfExists": true
+      },
+      "distinctivePhrases": [
+        {
+          "category": "epub-content",
+          "phrase": "seventeen lanterns of quiet static gather at the loft door",
+          "location": "chapters[1].paragraphs[0]"
+        }
+      ]
+    }
+  ]
+}

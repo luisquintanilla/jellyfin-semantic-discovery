@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<episodedetails>
+  <title>Morning Entries</title>
+  <season>1</season>
+  <episode>1</episode>
+  <plot>The morning tide arrives and each boat is entered in the ledger.</plot>
+  <uniqueid type="fixture" default="true">fixture-series-tidal-register-s01e01</uniqueid>
+</episodedetails>

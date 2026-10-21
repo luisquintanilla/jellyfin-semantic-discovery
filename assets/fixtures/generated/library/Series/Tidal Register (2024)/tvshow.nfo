@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tvshow>
+  <title>Tidal Register</title>
+  <year>2024</year>
+  <premiered>2024-02-02</premiered>
+  <plot>A dockworker records ordinary tide schedules and quiet morning arrivals in a harbor ledger.</plot>
+  <genre>Documentary</genre>
+  <studio>Tidal Register Workshop</studio>
+  <uniqueid type="fixture" default="true">fixture-series-tidal-register</uniqueid>
+</tvshow>

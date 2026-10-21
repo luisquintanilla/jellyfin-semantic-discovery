@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<movie>
+  <title>The Signal Garden</title>
+  <sorttitle>Signal Garden, The</sorttitle>
+  <year>2024</year>
+  <premiered>2024-01-01</premiered>
+  <plot>At a remote listening post, an aurora cartographer maps the silence between orbits, cataloguing faint signals that no one else has thought to name.</plot>
+  <outline>A night-shift observatory technician logs routine readings that turn out to be anything but routine.</outline>
+  <genre>Science Fiction</genre>
+  <studio>Silver Engine Fixtures</studio>
+  <mpaa>R</mpaa>
+  <tag>restricted-semantic</tag>
+  <uniqueid type="fixture" default="true">fixture-movie-signal-garden</uniqueid>
+</movie>

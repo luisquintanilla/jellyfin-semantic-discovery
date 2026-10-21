@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 2,
+  "generatorId": "showcase-native-search-evidence-v3",
+  "evidenceKind": "native-jellyfin-search",
+  "profileId": "showcase-v1",
+  "source": "jellyfin-native-search-hints-api",
+  "accessControlBoundary": "Showcase uses its generated administrator only; synthetic E2E remains the access-control oracle.",
+  "queries": [
+    {
+      "query": "a dangerous journey to find a dragon",
+      "intendedTitle": "Sintel",
+      "intendedType": "Movie",
+      "results": [
+        {
+          "id": "8abb00881d1cf44cda4357f3c253c369",
+          "name": "Sintel",
+          "type": "Movie"
+        }
+      ]
+    },
+    {
+      "query": "a shepherd girl and her dog confront ancient spirits",
+      "intendedTitle": "Spring",
+      "intendedType": "Movie",
+      "results": [
+        {
+          "id": "a78e7d3f9f723592b7dd764cee7777c9",
+          "name": "Spring",
+          "type": "Movie"
+        },
+        {
+          "id": "c8602429f5f0bd7460c1d2cf932b65a8",
+          "name": "The Adventures of Sherlock Holmes",
+          "type": "Book"
+        }
+      ]
+    },
+    {
+      "query": "caffeine and bittersweet memories of a past relationship",
+      "intendedTitle": "Coffee Run",
+      "intendedType": "Movie",
+      "results": [
+        {
+          "id": "a5f3882d66317f3748c3e2ff5d9cc3a4",
+          "name": "Coffee Run",
+          "type": "Movie"
+        }
+      ]
+    },
+    {
+      "query": "How do search engines understand meaning rather than exact words?",
+      "intendedTitle": "AI for Teachers: an Open Textbook",
+      "intendedType": "Book",
+      "results": [
+        {
+          "id": "cf3df950dd23f804822cc49060dbbfc4",
+          "name": "AI for Teachers: an Open Textbook",
+          "type": "Book"
+        },
+        {
+          "id": "2a6aa11e872b69396c4f1e71188cb65d",
+          "name": "Introduction to Digital Humanism: A Textbook",
+          "type": "Book"
+        }
+      ]
+    },
+    {
+      "query": "How should people shape our collective digital future?",
+      "intendedTitle": "Introduction to Digital Humanism: A Textbook",
+      "intendedType": "Book",
+      "results": [
+        {
+          "id": "2a6aa11e872b69396c4f1e71188cb65d",
+          "name": "Introduction to Digital Humanism: A Textbook",
+          "type": "Book"
+        }
+      ]
+    },
+    {
+      "query": "the detective distinguishes seeing from observing",
+      "intendedTitle": "The Adventures of Sherlock Holmes",
+      "intendedType": "Book",
+      "results": [
+        {
+          "id": "c8602429f5f0bd7460c1d2cf932b65a8",
+          "name": "The Adventures of Sherlock Holmes",
+          "type": "Book"
+        },
+        {
+          "id": "2a6aa11e872b69396c4f1e71188cb65d",
+          "name": "Introduction to Digital Humanism: A Textbook",
+          "type": "Book"
+        }
+      ]
+    }
+  ],
+  "negativeControl": {
+    "query": "quantum banana volcano choreography",
+    "resultCount": 0
+  }
+}

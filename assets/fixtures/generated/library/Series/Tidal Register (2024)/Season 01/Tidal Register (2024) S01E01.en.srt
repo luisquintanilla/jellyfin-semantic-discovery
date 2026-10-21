@@ -1,0 +1,7 @@
+1
+00:00:00,200 --> 00:00:01,300
+The first boat reaches the harbor.
+
+2
+00:00:01,500 --> 00:00:02,800
+Record the tide before the bell.

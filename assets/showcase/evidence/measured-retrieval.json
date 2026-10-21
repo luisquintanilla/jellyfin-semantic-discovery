@@ -1,0 +1,529 @@
+{
+  "SchemaVersion": 3,
+  "GeneratorId": "showcase-direct-csharp-retrieval-evidence-v3",
+  "EvidenceKind": "direct-csharp-in-memory-vector-store",
+  "AccessControlBoundary": "AllowAllAccessPolicy and zero measurement floors expose the complete locked same-type distractor order; synthetic E2E is the access-control oracle.",
+  "ProjectionHashContract": "metadata-projector-v1;unicode-form-kc;unicode-whitespace-ascii-space;full-canonical-text-sha256-v1",
+  "MeasurementMetadataFloor": 0,
+  "MeasurementContentFloor": 0,
+  "ProfileId": "showcase-v1",
+  "IndexIdentity": "ca122a7e7cdfa485c30653da183184ae2d40fdf06e93bb46f1f42b7df6eb6e5d",
+  "SnapshotContentId": "d562095fea9272e9bc2f6cf8114f16e502a7fe4c3c862024a8fe3bfa7f522ba3",
+  "VectorPayloadSha256": "c3726a55db4e1709229474ed732032c28f729a4710cb89346c0b49caf3ef7b9b",
+  "CosineEpsilon": 0.0001,
+  "MetadataCount": 6,
+  "ContentChunkCount": 6649,
+  "RecommendationFloor": 0.38,
+  "Anchors": [
+    {
+      "ItemId": "sintel-2010",
+      "ArtifactSha256": "4ed7e1f1bc5ff69fe33606960e4c048ba6766237bf33b132fef76e1a92cb64b2",
+      "ExtractorIdentity": "srt-cue-text-v1",
+      "Normalization": "unicode-nfc;join-cue-payload-lines;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+      "Location": "cue 7, 00:02:09.400-00:02:13.800",
+      "Matched": true,
+      "CueIndex": 7,
+      "CueStartTicks": 1294000000,
+      "CueEndTicks": 1338000000,
+      "ContainingChunkStartTicks": 1072500000,
+      "ContainingChunkEndTicks": 6298000000
+    },
+    {
+      "ItemId": "sintel-2010",
+      "ArtifactSha256": "4ed7e1f1bc5ff69fe33606960e4c048ba6766237bf33b132fef76e1a92cb64b2",
+      "ExtractorIdentity": "srt-cue-text-v1",
+      "Normalization": "unicode-nfc;join-cue-payload-lines;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+      "Location": "cue 8, 00:02:15.000-00:02:17.500",
+      "Matched": true,
+      "CueIndex": 8,
+      "CueStartTicks": 1350000000,
+      "CueEndTicks": 1375000000,
+      "ContainingChunkStartTicks": 1072500000,
+      "ContainingChunkEndTicks": 6298000000
+    },
+    {
+      "ItemId": "sintel-2010",
+      "ArtifactSha256": "4ed7e1f1bc5ff69fe33606960e4c048ba6766237bf33b132fef76e1a92cb64b2",
+      "ExtractorIdentity": "srt-cue-text-v1",
+      "Normalization": "unicode-nfc;join-cue-payload-lines;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+      "Location": "cue 10, 00:02:23.400-00:02:25.000",
+      "Matched": true,
+      "CueIndex": 10,
+      "CueStartTicks": 1434000000,
+      "CueEndTicks": 1450000000,
+      "ContainingChunkStartTicks": 1072500000,
+      "ContainingChunkEndTicks": 6298000000
+    },
+    {
+      "ItemId": "ai-for-teachers-2024",
+      "ArtifactSha256": "3e309209c3cef66ca4fad0de19849947232f7515d75b0ae2e2becbe29e8ea25a",
+      "ExtractorIdentity": "markitdown-0.1.7-epub-html-v1",
+      "Normalization": "unicode-nfc;html-entity-decode;strip-markup;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+      "Location": "EPUB XHTML chapter 010",
+      "Matched": true,
+      "CueIndex": null,
+      "CueStartTicks": null,
+      "CueEndTicks": null,
+      "ContainingChunkStartTicks": null,
+      "ContainingChunkEndTicks": null
+    },
+    {
+      "ItemId": "ai-for-teachers-2024",
+      "ArtifactSha256": "3e309209c3cef66ca4fad0de19849947232f7515d75b0ae2e2becbe29e8ea25a",
+      "ExtractorIdentity": "markitdown-0.1.7-epub-html-v1",
+      "Normalization": "unicode-nfc;html-entity-decode;strip-markup;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+      "Location": "EPUB main text",
+      "Matched": true,
+      "CueIndex": null,
+      "CueStartTicks": null,
+      "CueEndTicks": null,
+      "ContainingChunkStartTicks": null,
+      "ContainingChunkEndTicks": null
+    },
+    {
+      "ItemId": "digital-humanism-2024",
+      "ArtifactSha256": "9b68858e1b2b7b30f77eb74dd48e9b26e78419e9c8a7f08adfe01876ac7ee2b8",
+      "ExtractorIdentity": "markitdown-0.1.7-pdfminer-v1",
+      "Normalization": "unicode-nfc;pinned-pdf-dehyphenation-and-line-join;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+      "Location": "book opening text",
+      "Matched": true,
+      "CueIndex": null,
+      "CueStartTicks": null,
+      "CueEndTicks": null,
+      "ContainingChunkStartTicks": null,
+      "ContainingChunkEndTicks": null
+    },
+    {
+      "ItemId": "digital-humanism-2024",
+      "ArtifactSha256": "9b68858e1b2b7b30f77eb74dd48e9b26e78419e9c8a7f08adfe01876ac7ee2b8",
+      "ExtractorIdentity": "markitdown-0.1.7-pdfminer-v1",
+      "Normalization": "unicode-nfc;pinned-pdf-dehyphenation-and-line-join;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+      "Location": "Preface, canonical extraction around lines 90-96",
+      "Matched": true,
+      "CueIndex": null,
+      "CueStartTicks": null,
+      "CueEndTicks": null,
+      "ContainingChunkStartTicks": null,
+      "ContainingChunkEndTicks": null
+    },
+    {
+      "ItemId": "sherlock-holmes-1661",
+      "ArtifactSha256": "209a8fd827fa88a11f04253d5af10d47967eaa1df3a5c74120ba9aa5e855bba6",
+      "ExtractorIdentity": "markitdown-0.1.7-epub-html-v1",
+      "Normalization": "unicode-nfc;html-entity-decode;strip-markup;collapse-unicode-whitespace-to-ascii-space;trim;ordinal",
+      "Location": "A Scandal in Bohemia",
+      "Matched": true,
+      "CueIndex": null,
+      "CueStartTicks": null,
+      "CueEndTicks": null,
+      "ContainingChunkStartTicks": null,
+      "ContainingChunkEndTicks": null
+    }
+  ],
+  "Recommendations": [
+    {
+      "SourceItemId": "ai-for-teachers-2024",
+      "ExpectedItemId": "digital-humanism-2024",
+      "ExpectedRank": 1,
+      "TopCandidateSimilarity": 0.4974855,
+      "DefaultFloor": 0.5,
+      "ConfiguredFloor": 0.38,
+      "EligibleAtDefaultFloor": false,
+      "EligibleAtConfiguredFloor": true,
+      "Ranking": [
+        {
+          "ItemId": "digital-humanism-2024",
+          "Similarity": 0.4974855
+        },
+        {
+          "ItemId": "sherlock-holmes-1661",
+          "Similarity": 0.29229748
+        }
+      ]
+    },
+    {
+      "SourceItemId": "coffee-run-2020",
+      "ExpectedItemId": "spring-2019",
+      "ExpectedRank": 1,
+      "TopCandidateSimilarity": 0.40228748,
+      "DefaultFloor": 0.5,
+      "ConfiguredFloor": 0.38,
+      "EligibleAtDefaultFloor": false,
+      "EligibleAtConfiguredFloor": true,
+      "Ranking": [
+        {
+          "ItemId": "spring-2019",
+          "Similarity": 0.40228748
+        },
+        {
+          "ItemId": "sintel-2010",
+          "Similarity": 0.33845967
+        }
+      ]
+    },
+    {
+      "SourceItemId": "digital-humanism-2024",
+      "ExpectedItemId": "ai-for-teachers-2024",
+      "ExpectedRank": 1,
+      "TopCandidateSimilarity": 0.4974855,
+      "DefaultFloor": 0.5,
+      "ConfiguredFloor": 0.38,
+      "EligibleAtDefaultFloor": false,
+      "EligibleAtConfiguredFloor": true,
+      "Ranking": [
+        {
+          "ItemId": "ai-for-teachers-2024",
+          "Similarity": 0.4974855
+        },
+        {
+          "ItemId": "sherlock-holmes-1661",
+          "Similarity": 0.250362
+        }
+      ]
+    },
+    {
+      "SourceItemId": "sherlock-holmes-1661",
+      "ExpectedItemId": null,
+      "ExpectedRank": null,
+      "TopCandidateSimilarity": 0.29229748,
+      "DefaultFloor": 0.5,
+      "ConfiguredFloor": 0.38,
+      "EligibleAtDefaultFloor": false,
+      "EligibleAtConfiguredFloor": false,
+      "Ranking": [
+        {
+          "ItemId": "ai-for-teachers-2024",
+          "Similarity": 0.29229748
+        },
+        {
+          "ItemId": "digital-humanism-2024",
+          "Similarity": 0.250362
+        }
+      ]
+    },
+    {
+      "SourceItemId": "sintel-2010",
+      "ExpectedItemId": null,
+      "ExpectedRank": null,
+      "TopCandidateSimilarity": 0.33845967,
+      "DefaultFloor": 0.5,
+      "ConfiguredFloor": 0.38,
+      "EligibleAtDefaultFloor": false,
+      "EligibleAtConfiguredFloor": false,
+      "Ranking": [
+        {
+          "ItemId": "coffee-run-2020",
+          "Similarity": 0.33845967
+        },
+        {
+          "ItemId": "spring-2019",
+          "Similarity": 0.2937084
+        }
+      ]
+    },
+    {
+      "SourceItemId": "spring-2019",
+      "ExpectedItemId": "coffee-run-2020",
+      "ExpectedRank": 1,
+      "TopCandidateSimilarity": 0.40228748,
+      "DefaultFloor": 0.5,
+      "ConfiguredFloor": 0.38,
+      "EligibleAtDefaultFloor": false,
+      "EligibleAtConfiguredFloor": true,
+      "Ranking": [
+        {
+          "ItemId": "coffee-run-2020",
+          "Similarity": 0.40228748
+        },
+        {
+          "ItemId": "sintel-2010",
+          "Similarity": 0.2937084
+        }
+      ]
+    }
+  ],
+  "Matrices": [
+    {
+      "ItemType": "Movie",
+      "ItemIds": [
+        "coffee-run-2020",
+        "sintel-2010",
+        "spring-2019"
+      ],
+      "Cosine": [
+        [
+          1,
+          0.33845967,
+          0.40228748
+        ],
+        [
+          0.33845967,
+          1,
+          0.2937084
+        ],
+        [
+          0.40228748,
+          0.2937084,
+          1
+        ]
+      ],
+      "CandidateOrder": {
+        "coffee-run-2020": [
+          "spring-2019",
+          "sintel-2010"
+        ],
+        "sintel-2010": [
+          "coffee-run-2020",
+          "spring-2019"
+        ],
+        "spring-2019": [
+          "coffee-run-2020",
+          "sintel-2010"
+        ]
+      }
+    },
+    {
+      "ItemType": "Book",
+      "ItemIds": [
+        "ai-for-teachers-2024",
+        "digital-humanism-2024",
+        "sherlock-holmes-1661"
+      ],
+      "Cosine": [
+        [
+          1,
+          0.4974855,
+          0.29229748
+        ],
+        [
+          0.4974855,
+          1,
+          0.250362
+        ],
+        [
+          0.29229748,
+          0.250362,
+          1
+        ]
+      ],
+      "CandidateOrder": {
+        "ai-for-teachers-2024": [
+          "digital-humanism-2024",
+          "sherlock-holmes-1661"
+        ],
+        "digital-humanism-2024": [
+          "ai-for-teachers-2024",
+          "sherlock-holmes-1661"
+        ],
+        "sherlock-holmes-1661": [
+          "ai-for-teachers-2024",
+          "digital-humanism-2024"
+        ]
+      }
+    }
+  ],
+  "RequestSizes": [
+    {
+      "ArtifactId": "ai-for-teachers-epub",
+      "SourceBytes": 12635708,
+      "SerializedRequestBytes": 18238812,
+      "HardRequestCapBytes": 50331648
+    },
+    {
+      "ArtifactId": "digital-humanism-pdf",
+      "SourceBytes": 25808724,
+      "SerializedRequestBytes": 37396552,
+      "HardRequestCapBytes": 50331648
+    },
+    {
+      "ArtifactId": "sherlock-epub",
+      "SourceBytes": 311344,
+      "SerializedRequestBytes": 445723,
+      "HardRequestCapBytes": 50331648
+    }
+  ],
+  "Queries": [
+    {
+      "IntendedItemId": "sintel-2010",
+      "Query": "a dangerous journey to find a dragon",
+      "IntendedRank": 1,
+      "IntendedScore": 0.7326629,
+      "HighestOtherScore": 0.09632033,
+      "SignedMarginOverHighestOther": 0.6363426,
+      "Results": [
+        {
+          "ItemId": "sintel-2010",
+          "ItemType": "Movie",
+          "Score": 0.7326629
+        },
+        {
+          "ItemId": "coffee-run-2020",
+          "ItemType": "Movie",
+          "Score": 0.09632033
+        },
+        {
+          "ItemId": "spring-2019",
+          "ItemType": "Movie",
+          "Score": 0.061820447
+        }
+      ]
+    },
+    {
+      "IntendedItemId": "spring-2019",
+      "Query": "a shepherd girl and her dog confront ancient spirits",
+      "IntendedRank": 1,
+      "IntendedScore": 0.4682547,
+      "HighestOtherScore": 0.3580584,
+      "SignedMarginOverHighestOther": 0.11019629,
+      "Results": [
+        {
+          "ItemId": "spring-2019",
+          "ItemType": "Movie",
+          "Score": 0.4682547
+        },
+        {
+          "ItemId": "sintel-2010",
+          "ItemType": "Movie",
+          "Score": 0.3580584
+        },
+        {
+          "ItemId": "coffee-run-2020",
+          "ItemType": "Movie",
+          "Score": 0.051464796
+        }
+      ]
+    },
+    {
+      "IntendedItemId": "coffee-run-2020",
+      "Query": "caffeine and bittersweet memories of a past relationship",
+      "IntendedRank": 1,
+      "IntendedScore": 0.5189997,
+      "HighestOtherScore": 0.17004734,
+      "SignedMarginOverHighestOther": 0.34895235,
+      "Results": [
+        {
+          "ItemId": "coffee-run-2020",
+          "ItemType": "Movie",
+          "Score": 0.5189997
+        },
+        {
+          "ItemId": "sintel-2010",
+          "ItemType": "Movie",
+          "Score": 0.17004734
+        },
+        {
+          "ItemId": "spring-2019",
+          "ItemType": "Movie",
+          "Score": 0.13485682
+        }
+      ]
+    },
+    {
+      "IntendedItemId": "ai-for-teachers-2024",
+      "Query": "How do search engines understand meaning rather than exact words?",
+      "IntendedRank": 1,
+      "IntendedScore": 0.7961814,
+      "HighestOtherScore": 0.51357245,
+      "SignedMarginOverHighestOther": 0.28260893,
+      "Results": [
+        {
+          "ItemId": "ai-for-teachers-2024",
+          "ItemType": "Book",
+          "Score": 0.7961814
+        },
+        {
+          "ItemId": "digital-humanism-2024",
+          "ItemType": "Book",
+          "Score": 0.51357245
+        },
+        {
+          "ItemId": "sherlock-holmes-1661",
+          "ItemType": "Book",
+          "Score": 0.067186594
+        }
+      ]
+    },
+    {
+      "IntendedItemId": "digital-humanism-2024",
+      "Query": "How should people shape our collective digital future?",
+      "IntendedRank": 1,
+      "IntendedScore": 0.89,
+      "HighestOtherScore": 0.15462899,
+      "SignedMarginOverHighestOther": 0.735371,
+      "Results": [
+        {
+          "ItemId": "digital-humanism-2024",
+          "ItemType": "Book",
+          "Score": 0.89
+        },
+        {
+          "ItemId": "ai-for-teachers-2024",
+          "ItemType": "Book",
+          "Score": 0.15462899
+        },
+        {
+          "ItemId": "sherlock-holmes-1661",
+          "ItemType": "Book",
+          "Score": 0.018284798
+        }
+      ]
+    },
+    {
+      "IntendedItemId": "sherlock-holmes-1661",
+      "Query": "the detective distinguishes seeing from observing",
+      "IntendedRank": 1,
+      "IntendedScore": 0.77026254,
+      "HighestOtherScore": 0.51697445,
+      "SignedMarginOverHighestOther": 0.2532881,
+      "Results": [
+        {
+          "ItemId": "sherlock-holmes-1661",
+          "ItemType": "Book",
+          "Score": 0.77026254
+        },
+        {
+          "ItemId": "digital-humanism-2024",
+          "ItemType": "Book",
+          "Score": 0.51697445
+        },
+        {
+          "ItemId": "ai-for-teachers-2024",
+          "ItemType": "Book",
+          "Score": 0.08280295
+        }
+      ]
+    }
+  ],
+  "Items": [
+    {
+      "LockItemId": "ai-for-teachers-2024",
+      "JellyfinItemId": "cf3df950-dd23-f804-822c-c49060dbbfc4",
+      "CanonicalProjectionSha256": "1be363e13d0e2d342618b293e28669f95a712e7be06b04065638a8d88b0edcc8"
+    },
+    {
+      "LockItemId": "coffee-run-2020",
+      "JellyfinItemId": "a5f3882d-6631-7f37-48c3-e2ff5d9cc3a4",
+      "CanonicalProjectionSha256": "8292eb9347356e4bc52c263dc6e4ccca8fa22ffc07e8cf85e3ca45b3bebde312"
+    },
+    {
+      "LockItemId": "digital-humanism-2024",
+      "JellyfinItemId": "2a6aa11e-872b-6939-6c4f-1e71188cb65d",
+      "CanonicalProjectionSha256": "cc5dd14abdf655f42a69c6177be805ce36f9e733a39380e84e7474eb351da160"
+    },
+    {
+      "LockItemId": "sherlock-holmes-1661",
+      "JellyfinItemId": "c8602429-f5f0-bd74-60c1-d2cf932b65a8",
+      "CanonicalProjectionSha256": "116bb6db37db1488835d76ab3d1288b38cfb40465db20cf5d25f6ec9b600c36d"
+    },
+    {
+      "LockItemId": "sintel-2010",
+      "JellyfinItemId": "8abb0088-1d1c-f44c-da43-57f3c253c369",
+      "CanonicalProjectionSha256": "c9ea173aba663e7041c70542daccd190e1e5931c1f8a05cdcc3ab4225633d9ad"
+    },
+    {
+      "LockItemId": "spring-2019",
+      "JellyfinItemId": "a78e7d3f-9f72-3592-b7dd-764cee7777c9",
+      "CanonicalProjectionSha256": "2310dd414f4dd8d87a47643507c149d70522ad1af4069b957474b845b997f3b6"
+    }
+  ]
+}

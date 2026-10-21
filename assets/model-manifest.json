@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "repository": "sentence-transformers/all-MiniLM-L6-v2",
+  "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+  "license": "Apache-2.0",
+  "licenseUrl": "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/blob/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md",
+  "embeddingDimensions": 384,
+  "maxSequenceLength": 256,
+  "tokenizer": {
+    "implementation": "Microsoft.ML.Tokenizers.BertTokenizer/2.0.0",
+    "effectiveOptions": "lowercase=true;basic=true;split-special=true;cjk=true;strip-accents=true;max-input-chars-per-word=100;unknown-token=[UNK];separator-token=[SEP];padding-token=[PAD];classification-token=[CLS];masking-token=[MASK];cls-id=101;sep-id=102;pad-id=0;unk-id=100;mask-id=103;max-sequence-length=256",
+    "identitySha256": "b72552a2c29d6e86dc231d17dcd1acb94ef1b783d708d08f8439dd4cd66a2c70"
+  },
+  "files": [
+    {
+      "path": "model.onnx",
+      "sourcePath": "onnx/model.onnx",
+      "size": 90405214,
+      "sha256": "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452"
+    },
+    {
+      "path": "vocab.txt",
+      "sourcePath": "vocab.txt",
+      "size": 231508,
+      "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+    }
+  ]
+}

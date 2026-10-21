@@ -1,0 +1,103 @@
+{
+  "SchemaVersion": 3,
+  "GeneratorId": "showcase-evidence-manifest-v3",
+  "ProfileId": "showcase-v1",
+  "BaseCommit": "43f393b6b419eb95afb0a485756649d4a280a372",
+  "ImplementationContentSha256": "32c3b4756fb865912053d25ef22d2d3d45c3ecf67963726c4ee2a3781de8314e",
+  "SourceLockSha256": "5794c7d2a32eec2804e56ce927f944c2eaa389e11bc35a6dc83c5c21c073f0a8",
+  "GeneratorVersions": {
+    "acquisition": "showcase-acquisition-evidence-v3",
+    "retrieval": "showcase-direct-csharp-retrieval-evidence-v3",
+    "nativeSearch": "showcase-native-search-evidence-v3",
+    "nativeSimilar": "showcase-native-similar-evidence-v3",
+    "runtime": "showcase-runtime-evidence-v3",
+    "network": "showcase-network-evidence-v3",
+    "memory": "showcase-server-memory-evidence-v3"
+  },
+  "SanitizerPolicy": {
+    "SourceBinariesIncluded": false,
+    "BulkExtractedBookTextIncluded": false,
+    "ContentChunksIncluded": false,
+    "VectorValuesIncluded": false,
+    "CredentialsIncluded": false,
+    "CookiesIncluded": false,
+    "AuthorizationHeadersIncluded": false,
+    "PayloadBodiesIncluded": false,
+    "RemoteArtworkIncluded": false,
+    "BookScreenshotsIncluded": false
+  },
+  "Artifacts": [
+    {
+      "Path": "measured-acquisition-cold.json",
+      "Bytes": 8218,
+      "Sha256": "703727e46abb1eddf5b2813cb8ed8fcafaa9a19d11c32a04abaf4ca3a855b1b9",
+      "EvidenceKind": "cold-acquisition",
+      "Proves": "Seven exact network acquisitions and deterministic generated-file identities.",
+      "Deterministic": false
+    },
+    {
+      "Path": "measured-acquisition-restart.json",
+      "Bytes": 6129,
+      "Sha256": "c1a81f44bed171f186faf3a67930a10b3409fea3c9cf6673a9c8c507467d35a8",
+      "EvidenceKind": "restart-reuse",
+      "Proves": "Seven receipt/hash-validated cache reuses with zero downloads.",
+      "Deterministic": true
+    },
+    {
+      "Path": "measured-native-search.json",
+      "Bytes": 2921,
+      "Sha256": "23612c633b1f51c4ae3f574dbb1461a79ceb6ff5a511646fc5c4ad86ed8f1239",
+      "EvidenceKind": "native-jellyfin-search",
+      "Proves": "Sanitized Jellyfin Search/Hints ordering for six positive and one negative query.",
+      "Deterministic": false
+    },
+    {
+      "Path": "measured-native-similar.json",
+      "Bytes": 3893,
+      "Sha256": "4229183446fc34911baea2e6f9160edb957d9c7f0474d9fa86456119d011e7c5",
+      "EvidenceKind": "native-jellyfin-similar",
+      "Proves": "Sanitized Jellyfin Similar API outcomes for all six directed sources.",
+      "Deterministic": false
+    },
+    {
+      "Path": "measured-network-policy.json",
+      "Bytes": 1620,
+      "Sha256": "13db8132366a40e6d666da7bdf1b09fcc4855dcf1469384680d0c2104857bdf0",
+      "EvidenceKind": "runtime-network-controls",
+      "Proves": "Jellyfin proxy-aware HTTP and MarkItDown Python socket canary outcomes.",
+      "Deterministic": false
+    },
+    {
+      "Path": "measured-retrieval.json",
+      "Bytes": 15940,
+      "Sha256": "c9f5f4d3b99f38b07c282e04bba44b4544adeaed422cf27547aeb6c32c0679e0",
+      "EvidenceKind": "direct-csharp-in-memory-vector-store",
+      "Proves": "Direct C# in-memory vector-store matrices, anchors, request sizes, and scoped rankings.",
+      "Deterministic": true
+    },
+    {
+      "Path": "measured-runtime-initial.json",
+      "Bytes": 1291,
+      "Sha256": "899df1464a5aa9c7b47505efea86f7739b1ec40803440c204db6ef295c8c7c3a",
+      "EvidenceKind": "showcase-runtime-status",
+      "Proves": "Authoritative plugin counters, effective floor, client memory, and network diagnostics.",
+      "Deterministic": false
+    },
+    {
+      "Path": "measured-runtime-restart.json",
+      "Bytes": 1289,
+      "Sha256": "3e14b36e00514ed8142c3042ff3118d62ac2ac3f8efa74fef11288dea24eb52d",
+      "EvidenceKind": "showcase-runtime-status",
+      "Proves": "Restart/rescan counters and stable runtime policy diagnostics.",
+      "Deterministic": false
+    },
+    {
+      "Path": "measured-server-memory.json",
+      "Bytes": 1695,
+      "Sha256": "ba7891ec16412aa448d64986c37e3c2ddba20ac89313cb158c27ac2709bc9dcc",
+      "EvidenceKind": "markitdown-server-memory",
+      "Proves": "Sanitized process-lifetime high-water/current RSS observations.",
+      "Deterministic": false
+    }
+  ]
+}

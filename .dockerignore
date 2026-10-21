@@ -1,0 +1,16 @@
+*
+!containers/
+!containers/fixture-generator/
+!containers/fixture-generator/Dockerfile
+!containers/fixture-generator/toolchain-lock.json
+!containers/markitdown/
+!containers/markitdown/Dockerfile
+!containers/markitdown/requirements.lock.txt
+!containers/markitdown/server.py
+!containers/markitdown/THIRD-PARTY-NOTICES.md
+!scripts/
+!scripts/Generate-Fixtures.ps1
+!assets/
+!assets/fixtures/
+!assets/fixtures/manifest.json
+!assets/fixtures/SHA256SUMS

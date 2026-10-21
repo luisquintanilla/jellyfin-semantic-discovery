@@ -1,0 +1,18 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.5.3">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+    <UserSecretsId>970cc338-9686-4668-b94c-9d052006e3b8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference
+      Include="..\Jellyfin.SemanticDiscovery.Plugin\Jellyfin.SemanticDiscovery.Plugin.csproj"
+      ReferenceOutputAssembly="false"
+      IsAspireProjectResource="false" />
+    <ProjectReference Include="..\Jellyfin.SemanticDiscovery.Setup\Jellyfin.SemanticDiscovery.Setup.csproj" />
+  </ItemGroup>
+
+</Project>
