@@ -49,6 +49,10 @@ string extractionState = Path.Combine(dataRoot, "extractions");
 string extractionPublished = Path.Combine(
     extractionState,
     "published");
+string pdfRasterExecutable =
+    Environment.GetEnvironmentVariable(
+        "SEMANTIC_DISCOVERY_PDF_RASTER_EXECUTABLE")
+    ?? "pdftoppm";
 string jellyfinConfigDirectory = Path.Combine(
     dataRoot,
     "jellyfin",
@@ -156,6 +160,9 @@ IResourceBuilder<DotnetProjectResource> extraction = builder
     .WithEnvironment("Extraction__StateRoot", extractionState)
     .WithEnvironment("Extraction__ArtifactRoot", extractionPublished)
     .WithEnvironment("Extraction__Concurrency", "1")
+    .WithEnvironment(
+        "Extraction__PdfRasterExecutable",
+        pdfRasterExecutable)
     .WithEnvironment("Ollama__Model", visionModel)
     .WaitFor(extractionModel);
 if (fixtureSetup is not null)

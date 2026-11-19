@@ -47,6 +47,10 @@ Get-Content .\.data\jellyfin-login.json
 The file contains the generated local administrator credentials and is ignored
 by Git.
 
+If Poppler is installed outside `PATH`, set
+`SEMANTIC_DISCOVERY_PDF_RASTER_EXECUTABLE` to the absolute `pdftoppm`
+executable path before starting Aspire.
+
 ## Hardware profiles
 
 | Profile | Vision model | Use |
