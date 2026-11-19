@@ -45,7 +45,7 @@ Narration was synthesized with Azure Speech. See
 `assets/demo/MEDIA-LICENSE-AUTHORSHIP.txt`.
 
 The additive Movie posters/backdrops, Audio covers, and Book covers are also
-copyright 2026 Luis Quintanilla and licensed CC BY 4.0. Movie and Audio art is
-original vector design derived from the approved explainer concepts. Book
-covers use only verbatim page-one text and cropped page-one illustrations from
-the checked-in PDFs.
+copyright 2026 Luis Quintanilla and licensed CC BY 4.0. All of this artwork is
+original vector illustration: hand-authored SVG written with Claude Opus 5.5
+assistance and rendered to JPEG. It is not AI image generation. Book covers
+keep each book's real title, kicker, and subtitle text with new illustrations.

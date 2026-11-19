@@ -5,6 +5,6 @@ No third-party footage, music, logos, conference slides, or source media are inc
 
 Original additive library artwork for the Jellyfin .NET AI Stack demo.
 Copyright (c) 2026 Luis Quintanilla. Licensed under CC BY 4.0.
-Movie and audio artwork is original vector design derived from the approved explainer concepts.
-Book covers use only verbatim page-one text and cropped page-one illustrations from the checked-in original PDFs.
+Movie posters and backdrops, audio covers, and book covers are original vector illustrations: hand-authored SVG written with Claude Opus 5.5 assistance and rendered to JPEG. They are not AI-generated images.
+Book covers keep each book's real title, kicker, and subtitle text with new illustrations.
 No third-party logos, footage, music, conference slides, or invented book-cover claims are included.
