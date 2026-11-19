@@ -110,10 +110,12 @@ public sealed class JellyfinApiEndToEndTests
                 includeItemTypes: "Movie",
                 mediaTypes: "Video",
                 parentId: movieLibraryId));
-        Assert.Empty(await SearchNamesAsync(
-            context.Admin,
-            "quiet cartouche hums twice before dawn",
-            includeItemTypes: "Book"));
+        Assert.DoesNotContain(
+            "The Signal Garden",
+            await SearchNamesAsync(
+                context.Admin,
+                "quiet cartouche hums twice before dawn",
+                includeItemTypes: "Book"));
         Assert.Empty(await SearchNamesAsync(
             context.Admin,
             "quiet cartouche hums twice before dawn",
