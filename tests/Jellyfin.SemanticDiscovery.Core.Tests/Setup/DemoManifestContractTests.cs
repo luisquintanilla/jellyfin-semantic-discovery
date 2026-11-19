@@ -20,7 +20,7 @@ public sealed class DemoManifestContractTests
             "ready",
             root.GetProperty("deliveryStatus").GetString());
         Assert.Equal(
-            "pending-approved-files",
+            "ready",
             root.GetProperty("artworkStatus").GetString());
         JsonElement[] assets = root.GetProperty("assets")
             .EnumerateArray()
@@ -43,11 +43,11 @@ public sealed class DemoManifestContractTests
             Assert.False(asset.TryGetProperty("generator", out _));
             Assert.False(asset.TryGetProperty("receipt", out _));
             Assert.Equal(
-                JsonValueKind.Null,
+                JsonValueKind.String,
                 asset.GetProperty("artwork").ValueKind);
             Assert.Equal(
-                JsonValueKind.Null,
-                asset.GetProperty("artworkSha256").ValueKind);
+                64,
+                asset.GetProperty("artworkSha256").GetString()!.Length);
         });
         foreach (JsonElement asset in assets)
         {
@@ -67,6 +67,14 @@ public sealed class DemoManifestContractTests
                 asset.GetProperty("metadata").GetString()!
                     .Replace('/', Path.DirectorySeparatorChar));
             Assert.True(File.Exists(metadataPath));
+            string artworkPath = Path.Combine(
+                demoRoot,
+                asset.GetProperty("artwork").GetString()!
+                    .Replace('/', Path.DirectorySeparatorChar));
+            Assert.True(File.Exists(artworkPath));
+            Assert.Equal(
+                asset.GetProperty("artworkSha256").GetString(),
+                await ComputeSha256Async(artworkPath));
             if (asset.GetProperty("mediaKind").GetString() is
                 "Movie" or "Audio")
             {
@@ -85,6 +93,21 @@ public sealed class DemoManifestContractTests
             else
             {
                 Assert.Equal(8, asset.GetProperty("pageCount").GetInt32());
+            }
+
+            if (asset.TryGetProperty(
+                    "backdrop",
+                    out JsonElement backdrop) &&
+                backdrop.ValueKind == JsonValueKind.String)
+            {
+                string backdropPath = Path.Combine(
+                    demoRoot,
+                    backdrop.GetString()!
+                        .Replace('/', Path.DirectorySeparatorChar));
+                Assert.True(File.Exists(backdropPath));
+                Assert.Equal(
+                    asset.GetProperty("backdropSha256").GetString(),
+                    await ComputeSha256Async(backdropPath));
             }
         }
 

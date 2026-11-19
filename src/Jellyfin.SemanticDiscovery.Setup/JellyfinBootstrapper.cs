@@ -590,14 +590,19 @@ public sealed class JellyfinBootstrapper(
         string path,
         CancellationToken cancellationToken)
     {
-        await using FileStream stream = new(
+        FileInfo file = new(path);
+        if (!file.Exists || file.Length is <= 0 or > 10 * 1024 * 1024)
+        {
+            throw new InvalidDataException(
+                $"Audio artwork '{path}' is missing or exceeds 10 MiB.");
+        }
+
+        byte[] bytes = await File.ReadAllBytesAsync(
             path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            bufferSize: 64 * 1024,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
-        using StreamContent content = new(stream);
+            cancellationToken).ConfigureAwait(false);
+        byte[] base64 = System.Text.Encoding.ASCII.GetBytes(
+            Convert.ToBase64String(bytes));
+        using ByteArrayContent content = new(base64);
         content.Headers.ContentType =
             new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
         using HttpResponseMessage response = await _httpClient.PostAsync(

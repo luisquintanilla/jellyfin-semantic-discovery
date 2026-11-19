@@ -43,3 +43,9 @@ The checked-in Movie and Audio corpus is original work authored for
 The .NET AI Stack, copyright 2026 Luis Quintanilla, licensed CC BY 4.0.
 Narration was synthesized with Azure Speech. See
 `assets/demo/MEDIA-LICENSE-AUTHORSHIP.txt`.
+
+The additive Movie posters/backdrops, Audio covers, and Book covers are also
+copyright 2026 Luis Quintanilla and licensed CC BY 4.0. Movie and Audio art is
+original vector design derived from the approved explainer concepts. Book
+covers use only verbatim page-one text and cropped page-one illustrations from
+the checked-in PDFs.
