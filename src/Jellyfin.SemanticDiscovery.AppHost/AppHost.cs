@@ -42,6 +42,8 @@ string manifestPath = profile == "demo"
         "fixtures",
         "extraction-manifest.json");
 string fixtureOutput = Path.Combine(dataRoot, "fixtures");
+string? containerUser = Environment.GetEnvironmentVariable(
+    "SEMANTIC_DISCOVERY_CONTAINER_USER");
 string mediaDirectory = profile == "demo"
     ? Path.Combine(repositoryRoot, "assets", "demo", "library")
     : Path.Combine(fixtureOutput, "library");
@@ -109,7 +111,7 @@ IResourceBuilder<OllamaModelResource> extractionModel =
 IResourceBuilder<ContainerResource>? fixtureSetup = null;
 if (profile == "ci")
 {
-    fixtureSetup = builder
+    IResourceBuilder<ContainerResource> fixture = builder
         .AddDockerfile(
             "fixture-setup",
             repositoryRoot,
@@ -126,6 +128,12 @@ if (profile == "ci")
             "-Mode",
             "Generate")
         .ExcludeFromManifest();
+    if (!string.IsNullOrWhiteSpace(containerUser))
+    {
+        fixture.WithContainerRuntimeArgs("--user", containerUser);
+    }
+
+    fixtureSetup = fixture;
 }
 
 string pluginOutput = Path.Combine(
