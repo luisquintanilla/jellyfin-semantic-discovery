@@ -1,5 +1,6 @@
 using System.Data.Common;
 using System.Text.Json.Serialization;
+using Jellyfin.SemanticDiscovery.Core.Embedding;
 using Jellyfin.SemanticDiscovery.Extraction.Api;
 using Jellyfin.SemanticDiscovery.Extraction.Artifacts;
 using Jellyfin.SemanticDiscovery.Extraction.Configuration;
@@ -122,6 +123,7 @@ builder.Services.AddSingleton<IChatClient>(serviceProvider =>
 builder.Services.AddSingleton<IVisionPageExtractor,
     VisionLanguagePageExtractor>();
 builder.Services.AddSingleton<IProvenanceMerger, ProvenanceMerger>();
+builder.Services.AddSingleton<ApplicationChunkTokenizer>();
 builder.Services.AddSingleton<IExtractionSourceValidator,
     ExtractionSourceValidator>();
 builder.Services.AddSingleton<IDocumentExtractionPipeline,

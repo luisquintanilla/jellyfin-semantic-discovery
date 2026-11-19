@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Jellyfin.SemanticDiscovery.Core.Embedding;
+using Jellyfin.SemanticDiscovery.Core.Ingestion;
 using Jellyfin.SemanticDiscovery.Extraction.Artifacts;
 using Jellyfin.SemanticDiscovery.Extraction.Contracts;
 using Jellyfin.SemanticDiscovery.Extraction.Extraction;
@@ -57,7 +59,8 @@ public sealed class ProvenanceAndArtifactTests
             ExtractionJobState.Running,
             now,
             now);
-        ExtractionArtifactBundle bundle = IngestionArtifactBuilder.Build(
+        ExtractionArtifactBundle bundle =
+            await IngestionArtifactBuilder.BuildAsync(
             job,
             [
                 new ExtractedPage(
@@ -72,7 +75,8 @@ public sealed class ProvenanceAndArtifactTests
                             ["text-layer", "visual:model"]),
                     ]),
             ],
-            maximumChunkCharacters: 100);
+            new ApplicationChunkTokenizer(),
+            CancellationToken.None);
         FileCompletedArtifactPublisher publisher = new(
             directory.Path,
             new AtomicJsonFile(new AtomicFileOperations()));
@@ -98,10 +102,22 @@ public sealed class ProvenanceAndArtifactTests
         Assert.Equal(hash, root.GetProperty("sourceSha256").GetString());
         Assert.Equal("Hybrid", root.GetProperty("extractionProfile").GetString());
         Assert.Equal("explicit-model", root.GetProperty("model").GetString());
+        Assert.Equal(
+            ApplicationChunkTokenizer.IdentityHash,
+            root.GetProperty("tokenizerIdentity").GetString());
+        Assert.Equal(
+            HeadingAwareChunker.Identity,
+            root.GetProperty("chunkingIdentity").GetString());
         JsonElement chunk = root.GetProperty("chunks")[0];
         Assert.Equal(0, chunk.GetProperty("ordinal").GetInt32());
-        Assert.Equal("Page text", chunk.GetProperty("text").GetString());
+        Assert.Equal(
+            "Heading\nPage text",
+            chunk.GetProperty("text").GetString());
         Assert.Equal(1, chunk.GetProperty("pageNumber").GetInt32());
+        Assert.InRange(
+            chunk.GetProperty("tokenCount").GetInt32(),
+            1,
+            HeadingAwareChunker.MaximumTokens);
         Assert.Equal(
             2,
             chunk.GetProperty("provenance").GetArrayLength());

@@ -30,9 +30,6 @@ public sealed class ExtractionOptions
     [Range(72, 600)]
     public int RasterDpi { get; set; } = 144;
 
-    [Range(256, 1_000_000)]
-    public int MaximumChunkCharacters { get; set; } = 4_000;
-
     public string PdfRasterExecutable { get; set; } = "pdftoppm";
 }
 

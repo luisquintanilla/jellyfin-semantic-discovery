@@ -1,5 +1,12 @@
 using System.Text.Json;
+using Jellyfin.SemanticDiscovery.Core.Embedding;
+using Jellyfin.SemanticDiscovery.Core.Ingestion;
+using Jellyfin.SemanticDiscovery.Extraction.Configuration;
+using Jellyfin.SemanticDiscovery.Extraction.Contracts;
+using Jellyfin.SemanticDiscovery.Extraction.Extraction;
+using Jellyfin.SemanticDiscovery.Extraction.Manifest;
 using Jellyfin.SemanticDiscovery.Extraction.Pdf;
+using Jellyfin.SemanticDiscovery.Extraction.Validation;
 
 namespace Jellyfin.SemanticDiscovery.Extraction.Tests;
 
@@ -35,12 +42,7 @@ public sealed class BookCorpusExtractionTests
             string itemId =
                 check.GetProperty("manifestItemId").GetString()!;
             JsonElement item = items[itemId];
-            string path = Path.Combine(
-                root,
-                "assets",
-                "demo",
-                item.GetProperty("sourcePath").GetString()!
-                    .Replace('/', Path.DirectorySeparatorChar));
+            string path = ResolveSourcePath(root, item);
             int expectedPages =
                 check.GetProperty("expectedPages").GetInt32();
 
@@ -63,6 +65,82 @@ public sealed class BookCorpusExtractionTests
                 StringComparison.OrdinalIgnoreCase);
         }
     }
+
+    [Fact]
+    public async Task RealCorpusPdfUsesHeadingAwareTokenBoundedChunks()
+    {
+        string root = FindRepositoryRoot();
+        using JsonDocument manifest = JsonDocument.Parse(
+            await File.ReadAllBytesAsync(
+                Path.Combine(root, "assets", "demo", "manifest.json")));
+        PdfPigTextLayerExtractor textExtractor = new();
+        using TestDirectory state = new();
+        DocumentExtractionPipeline pipeline = new(
+            textExtractor,
+            new UnusedRasterizer(),
+            new UnusedVisionExtractor(),
+            new ProvenanceMerger(),
+            new ExtractionOptions { StateRoot = state.Path },
+            new ApplicationChunkTokenizer());
+
+        foreach (JsonElement item in manifest.RootElement
+                     .GetProperty("items")
+                     .EnumerateArray())
+        {
+            string sourcePath = ResolveSourcePath(root, item);
+            string itemId = item.GetProperty("id").GetString()!;
+            string sourceHash =
+                item.GetProperty("sourceSha256").GetString()!;
+            int pageCount = item.GetProperty("pageCount").GetInt32();
+            ExtractionManifestItem manifestItem = new(
+                itemId,
+                item.GetProperty("sourcePath").GetString()!,
+                sourceHash,
+                item.GetProperty("sourceSizeBytes").GetInt64(),
+                pageCount);
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            ExtractionJob job = new(
+                $"job-{itemId}",
+                itemId,
+                sourceHash,
+                ExtractionProfile.Text,
+                "qwen3-vl:8b",
+                ExtractionJobState.Running,
+                now,
+                now);
+
+            ExtractionArtifactBundle bundle = await pipeline.ExtractAsync(
+                job,
+                new ValidatedExtractionSource(
+                    manifestItem,
+                    sourcePath,
+                    sourceHash,
+                    pageCount),
+                CancellationToken.None);
+
+            Assert.NotEmpty(bundle.Artifact.Chunks);
+            Assert.All(bundle.Artifact.Chunks, static chunk =>
+            {
+                Assert.InRange(
+                    chunk.TokenCount,
+                    1,
+                    HeadingAwareChunker.MaximumTokens);
+                Assert.False(string.IsNullOrWhiteSpace(chunk.Heading));
+                Assert.NotNull(chunk.PageNumber);
+                Assert.Contains("text-layer", chunk.Provenance);
+            });
+        }
+    }
+
+    private static string ResolveSourcePath(
+        string repositoryRoot,
+        JsonElement item) =>
+        Path.Combine(
+            repositoryRoot,
+            "assets",
+            "demo",
+            item.GetProperty("sourcePath").GetString()!
+                .Replace('/', Path.DirectorySeparatorChar));
 
     private static string Normalize(string value) =>
         string.Join(
@@ -88,5 +166,25 @@ public sealed class BookCorpusExtractionTests
 
         throw new DirectoryNotFoundException(
             "The repository root could not be located.");
+    }
+
+    private sealed class UnusedRasterizer : IPdfRasterizer
+    {
+        public ValueTask<RasterizedPdfPage> RasterizeAsync(
+            string sourcePath,
+            int pageNumber,
+            int dpi,
+            string workspace,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+    }
+
+    private sealed class UnusedVisionExtractor : IVisionPageExtractor
+    {
+        public ValueTask<IReadOnlyList<ExtractedFragment>> ExtractAsync(
+            RasterizedPdfPage page,
+            string model,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }

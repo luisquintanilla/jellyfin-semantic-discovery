@@ -1,3 +1,5 @@
+using Jellyfin.SemanticDiscovery.Core.Embedding;
+using Jellyfin.SemanticDiscovery.Core.Ingestion;
 using Jellyfin.SemanticDiscovery.Extraction.Contracts;
 using Microsoft.Extensions.DataIngestion;
 
@@ -5,63 +7,62 @@ namespace Jellyfin.SemanticDiscovery.Extraction.Extraction;
 
 public static class IngestionArtifactBuilder
 {
-    public static ExtractionArtifactBundle Build(
+    public static async ValueTask<ExtractionArtifactBundle> BuildAsync(
         ExtractionJob job,
         IReadOnlyList<ExtractedPage> pages,
-        int maximumChunkCharacters)
+        ApplicationChunkTokenizer tokenizer,
+        CancellationToken cancellationToken)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(
-            maximumChunkCharacters,
-            1);
-        IngestionDocument document = new(job.ManifestItemId);
+        ArgumentNullException.ThrowIfNull(job);
+        ArgumentNullException.ThrowIfNull(pages);
+        ArgumentNullException.ThrowIfNull(tokenizer);
+
+        IngestionDocument document = CreateDocument(job, pages);
+        HeadingAwareChunker chunker = new(tokenizer);
         List<IngestionChunk<string>> ingestionChunks = [];
         List<ExtractionArtifactChunk> artifactChunks = [];
         int sourceOffset = 0;
-
-        foreach (ExtractedPage page in pages.OrderBy(
-                     candidate => candidate.PageNumber))
+        await foreach (IngestionChunk<string> chunk in chunker
+                           .ProcessAsync(document, cancellationToken)
+                           .WithCancellation(cancellationToken)
+                           .ConfigureAwait(false))
         {
-            IngestionDocumentSection section = new();
-            document.Sections.Add(section);
-            foreach (ExtractedFragment fragment in page.Fragments)
+            int tokenCount = GetRequiredInt(
+                chunk.Metadata,
+                IngestionMetadata.TokenCount);
+            if (tokenCount > HeadingAwareChunker.MaximumTokens)
             {
-                IngestionDocumentParagraph paragraph = new(fragment.Text)
-                {
-                    Text = fragment.Text,
-                    PageNumber = page.PageNumber,
-                };
-                paragraph.Metadata["provenance"] =
-                    fragment.Provenance.ToArray();
-                section.Elements.Add(paragraph);
-
-                foreach (string text in Split(
-                             fragment.Text,
-                             maximumChunkCharacters))
-                {
-                    int start = sourceOffset;
-                    int end = checked(start + text.Length);
-                    IngestionChunk<string> chunk = new(
-                        text,
-                        document,
-                        fragment.Heading ?? string.Empty);
-                    chunk.Metadata["ordinal"] = ingestionChunks.Count;
-                    chunk.Metadata["pageNumber"] = page.PageNumber;
-                    chunk.Metadata["sourceStart"] = start;
-                    chunk.Metadata["sourceEnd"] = end;
-                    chunk.Metadata["provenance"] =
-                        fragment.Provenance.ToArray();
-                    ingestionChunks.Add(chunk);
-                    artifactChunks.Add(new ExtractionArtifactChunk(
-                        artifactChunks.Count,
-                        text,
-                        fragment.Heading,
-                        start,
-                        end,
-                        page.PageNumber,
-                        fragment.Provenance));
-                    sourceOffset = checked(end + 2);
-                }
+                throw new InvalidDataException(
+                    $"Chunk {artifactChunks.Count} contains {tokenCount} " +
+                    $"tokens, above the {HeadingAwareChunker.MaximumTokens}-token limit.");
             }
+
+            string text = chunk.Content;
+            int start = sourceOffset;
+            int end = checked(start + text.Length);
+            int? pageNumber = GetPageNumbers(chunk.Metadata)
+                .Order()
+                .Cast<int?>()
+                .FirstOrDefault();
+            string[] provenance = GetStrings(
+                    chunk.Metadata,
+                    "provenance")
+                .Distinct(StringComparer.Ordinal)
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+            ingestionChunks.Add(chunk);
+            artifactChunks.Add(new ExtractionArtifactChunk(
+                artifactChunks.Count,
+                text,
+                string.IsNullOrWhiteSpace(chunk.Context)
+                    ? null
+                    : chunk.Context,
+                start,
+                end,
+                pageNumber,
+                tokenCount,
+                provenance));
+            sourceOffset = checked(end + 2);
         }
 
         ExtractionArtifact artifact = new(
@@ -70,6 +71,8 @@ public static class IngestionArtifactBuilder
             job.SourceSha256,
             job.ExtractionProfile,
             job.Model,
+            ApplicationChunkTokenizer.IdentityHash,
+            HeadingAwareChunker.Identity,
             artifactChunks);
         return new ExtractionArtifactBundle(
             artifact,
@@ -77,32 +80,82 @@ public static class IngestionArtifactBuilder
             ingestionChunks);
     }
 
-    private static IEnumerable<string> Split(
-        string text,
-        int maximumCharacters)
+    private static IngestionDocument CreateDocument(
+        ExtractionJob job,
+        IReadOnlyList<ExtractedPage> pages)
     {
-        int offset = 0;
-        while (offset < text.Length)
+        IngestionDocument document = new(job.ManifestItemId);
+        foreach (ExtractedPage page in pages.OrderBy(
+                     static candidate => candidate.PageNumber))
         {
-            int length = Math.Min(maximumCharacters, text.Length - offset);
-            if (offset + length < text.Length)
+            IngestionDocumentSection section = new();
+            document.Sections.Add(section);
+            foreach (ExtractedFragment fragment in page.Fragments)
             {
-                int breakAt = text.LastIndexOfAny(
-                    ['\n', ' '],
-                    offset + length - 1,
-                    length);
-                if (breakAt >= offset)
+                if (!string.IsNullOrWhiteSpace(fragment.Heading))
                 {
-                    length = breakAt - offset + 1;
+                    IngestionDocumentHeader header = new(
+                        $"# {fragment.Heading}")
+                    {
+                        Level = 1,
+                        Text = fragment.Heading,
+                        PageNumber = page.PageNumber,
+                    };
+                    header.Metadata["provenance"] =
+                        fragment.Provenance.ToArray();
+                    section.Elements.Add(header);
+                    if (string.Equals(
+                            fragment.Text,
+                            fragment.Heading,
+                            StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
                 }
-            }
 
-            string chunk = text.Substring(offset, length).Trim();
-            offset += length;
-            if (chunk.Length > 0)
-            {
-                yield return chunk;
+                IngestionDocumentParagraph paragraph = new(fragment.Text)
+                {
+                    Text = fragment.Text,
+                    PageNumber = page.PageNumber,
+                };
+                paragraph.Metadata["provenance"] =
+                    fragment.Provenance.ToArray();
+                section.Elements.Add(paragraph);
             }
         }
+
+        return document;
     }
+
+    private static int GetRequiredInt(
+        IDictionary<string, object> metadata,
+        string key) =>
+        metadata.TryGetValue(key, out object? value) &&
+        value is int result
+            ? result
+            : throw new InvalidDataException(
+                $"Chunk metadata '{key}' is missing.");
+
+    private static IEnumerable<int> GetPageNumbers(
+        IDictionary<string, object> metadata) =>
+        metadata.TryGetValue("pageNumbers", out object? value)
+            ? value switch
+            {
+                int page => [page],
+                IEnumerable<int> pages => pages,
+                _ => [],
+            }
+            : [];
+
+    private static IEnumerable<string> GetStrings(
+        IDictionary<string, object> metadata,
+        string key) =>
+        metadata.TryGetValue(key, out object? value)
+            ? value switch
+            {
+                string text => [text],
+                IEnumerable<string> values => values,
+                _ => [],
+            }
+            : [];
 }

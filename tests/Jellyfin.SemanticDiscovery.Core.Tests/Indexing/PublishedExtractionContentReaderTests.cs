@@ -2,7 +2,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Jellyfin.SemanticDiscovery.Core.Domain;
+using Jellyfin.SemanticDiscovery.Core.Embedding;
 using Jellyfin.SemanticDiscovery.Core.Indexing;
+using Jellyfin.SemanticDiscovery.Core.Ingestion;
 
 namespace Jellyfin.SemanticDiscovery.Core.Tests.Indexing;
 
@@ -115,6 +117,9 @@ public sealed class PublishedExtractionContentReaderTests : IDisposable
                 sourceSha256 = sourceHash,
                 extractionProfile = mode,
                 model = payloadModel,
+                tokenizerIdentity =
+                    ApplicationChunkTokenizer.IdentityHash,
+                chunkingIdentity = HeadingAwareChunker.Identity,
                 chunks = new[]
                 {
                     new
@@ -125,6 +130,7 @@ public sealed class PublishedExtractionContentReaderTests : IDisposable
                         sourceStart = 0,
                         sourceEnd = 14,
                         pageNumber = 1,
+                        tokenCount = 3,
                         provenance = ExpectedProvenance,
                     },
                 },

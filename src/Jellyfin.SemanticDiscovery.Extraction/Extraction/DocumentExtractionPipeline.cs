@@ -1,4 +1,5 @@
 using CommunityToolkit.DocumentExtraction.VisionLanguageModel;
+using Jellyfin.SemanticDiscovery.Core.Embedding;
 using Jellyfin.SemanticDiscovery.Extraction.Configuration;
 using Jellyfin.SemanticDiscovery.Extraction.Contracts;
 using Jellyfin.SemanticDiscovery.Extraction.Pdf;
@@ -79,16 +80,102 @@ public sealed class VisionLanguagePageExtractor(IChatClient chatClient) :
                 StringComparison.OrdinalIgnoreCase)
                 ? text
                 : null;
-            fragments.Add(new ExtractedFragment(
+            fragments.AddRange(ParseVisualText(
                 page.PageNumber,
                 text,
                 heading,
-                null,
-                null,
-                [$"visual:{model}"]));
+                model));
         }
 
         return fragments;
+    }
+
+    private static List<ExtractedFragment> ParseVisualText(
+        int pageNumber,
+        string text,
+        string? roleHeading,
+        string model)
+    {
+        string[] provenance = [$"visual:{model}"];
+        if (!string.IsNullOrWhiteSpace(roleHeading))
+        {
+            return
+            [
+                new(
+                    pageNumber,
+                    roleHeading,
+                    roleHeading,
+                    null,
+                    null,
+                    provenance),
+            ];
+        }
+
+        List<ExtractedFragment> fragments = [];
+        List<string> pending = [];
+        bool foundHeading = false;
+        foreach (string line in text
+                     .Replace("\r\n", "\n", StringComparison.Ordinal)
+                     .Replace('\r', '\n')
+                     .Split('\n'))
+        {
+            string trimmed = line.Trim();
+            int markerLength = trimmed
+                .TakeWhile(static character => character == '#')
+                .Count();
+            bool isHeading = markerLength is >= 1 and <= 6 &&
+                trimmed.Length > markerLength &&
+                char.IsWhiteSpace(trimmed[markerLength]);
+            if (!isHeading)
+            {
+                pending.Add(line);
+                continue;
+            }
+
+            CommitPending();
+            string heading = trimmed[(markerLength + 1)..].Trim();
+            if (heading.Length > 0)
+            {
+                foundHeading = true;
+                fragments.Add(new ExtractedFragment(
+                    pageNumber,
+                    heading,
+                    heading,
+                    null,
+                    null,
+                    provenance));
+            }
+        }
+
+        CommitPending();
+        return foundHeading
+            ? fragments
+            :
+            [
+                new(
+                    pageNumber,
+                    text,
+                    null,
+                    null,
+                    null,
+                    provenance),
+            ];
+
+        void CommitPending()
+        {
+            string content = string.Join('\n', pending).Trim();
+            pending.Clear();
+            if (content.Length > 0)
+            {
+                fragments.Add(new ExtractedFragment(
+                    pageNumber,
+                    content,
+                    null,
+                    null,
+                    null,
+                    provenance));
+            }
+        }
     }
 }
 
@@ -178,7 +265,8 @@ public sealed class DocumentExtractionPipeline(
     IPdfRasterizer rasterizer,
     IVisionPageExtractor visionExtractor,
     IProvenanceMerger provenanceMerger,
-    ExtractionOptions extractionOptions) : IDocumentExtractionPipeline
+    ExtractionOptions extractionOptions,
+    ApplicationChunkTokenizer tokenizer) : IDocumentExtractionPipeline
 {
     public async ValueTask<ExtractionArtifactBundle> ExtractAsync(
         ExtractionJob job,
@@ -235,23 +323,48 @@ public sealed class DocumentExtractionPipeline(
             }
         }
 
-        return IngestionArtifactBuilder.Build(
+        return await IngestionArtifactBuilder.BuildAsync(
             job,
             pages,
-            extractionOptions.MaximumChunkCharacters);
+            tokenizer,
+            cancellationToken).ConfigureAwait(false);
     }
 
-    private static IReadOnlyList<ExtractedFragment> CreateTextFragments(
+    private static List<ExtractedFragment> CreateTextFragments(
         IReadOnlyList<PdfTextPage> pages,
         int pageNumber)
     {
         PdfTextPage? page = pages.SingleOrDefault(
             candidate => candidate.PageNumber == pageNumber);
-        return page is null || string.IsNullOrWhiteSpace(page.Text)
-            ? []
-            :
+        if (page is null || string.IsNullOrWhiteSpace(page.Text))
+        {
+            return [];
+        }
+
+        string[] lines = page.Text
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries |
+                StringSplitOptions.TrimEntries);
+        if (lines.Length == 0)
+        {
+            return [];
+        }
+
+        string first = lines[0];
+        bool heading = first.Length <= 160 &&
+            first.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries).Length <= 18 &&
+            first.Any(char.IsLetter) &&
+            !first.EndsWith('.') &&
+            !first.EndsWith('?') &&
+            !first.EndsWith('!');
+        if (!heading)
+        {
+            return
             [
-                new ExtractedFragment(
+                new(
                     pageNumber,
                     page.Text,
                     null,
@@ -259,5 +372,30 @@ public sealed class DocumentExtractionPipeline(
                     null,
                     ["text-layer"]),
             ];
+        }
+
+        List<ExtractedFragment> fragments =
+        [
+            new(
+                pageNumber,
+                first,
+                first,
+                null,
+                null,
+                ["text-layer"]),
+        ];
+        string body = string.Join('\n', lines.Skip(1)).Trim();
+        if (body.Length > 0)
+        {
+            fragments.Add(new ExtractedFragment(
+                pageNumber,
+                body,
+                null,
+                null,
+                null,
+                ["text-layer"]));
+        }
+
+        return fragments;
     }
 }

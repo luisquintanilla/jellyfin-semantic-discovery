@@ -76,6 +76,8 @@ public sealed record ExtractionArtifact(
     string SourceSha256,
     ExtractionProfile ExtractionProfile,
     string Model,
+    string TokenizerIdentity,
+    string ChunkingIdentity,
     IReadOnlyList<ExtractionArtifactChunk> Chunks);
 
 public sealed record ExtractionArtifactChunk(
@@ -85,4 +87,5 @@ public sealed record ExtractionArtifactChunk(
     int? SourceStart,
     int? SourceEnd,
     int? PageNumber,
+    int TokenCount,
     IReadOnlyList<string> Provenance);

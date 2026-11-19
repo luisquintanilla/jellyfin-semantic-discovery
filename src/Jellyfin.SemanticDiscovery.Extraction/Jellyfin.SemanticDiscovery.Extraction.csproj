@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Jellyfin.SemanticDiscovery.Core\Jellyfin.SemanticDiscovery.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CommunityToolkit.DocumentExtraction.VisionLanguageModel" />
     <PackageReference Include="CommunityToolkit.DocumentExtraction.PdfPig" />
     <PackageReference Include="Microsoft.Extensions.AI" />

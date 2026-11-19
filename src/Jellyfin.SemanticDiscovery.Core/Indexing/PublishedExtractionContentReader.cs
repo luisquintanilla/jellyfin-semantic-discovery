@@ -2,7 +2,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Jellyfin.SemanticDiscovery.Core.Domain;
+using Jellyfin.SemanticDiscovery.Core.Embedding;
 using Jellyfin.SemanticDiscovery.Core.Identity;
+using Jellyfin.SemanticDiscovery.Core.Ingestion;
 
 namespace Jellyfin.SemanticDiscovery.Core.Indexing;
 
@@ -101,6 +103,14 @@ public sealed class PublishedExtractionContentReader(
             !string.Equals(
                 artifact.ExtractionProfile,
                 _extractionMode,
+                StringComparison.Ordinal) ||
+            !string.Equals(
+                artifact.TokenizerIdentity,
+                ApplicationChunkTokenizer.IdentityHash,
+                StringComparison.Ordinal) ||
+            !string.Equals(
+                artifact.ChunkingIdentity,
+                HeadingAwareChunker.Identity,
                 StringComparison.Ordinal))
         {
             throw new InvalidDataException(
@@ -174,6 +184,10 @@ public sealed class PublishedExtractionContentReader(
         public required string ExtractionProfile { get; init; }
 
         public required string Model { get; init; }
+
+        public required string TokenizerIdentity { get; init; }
+
+        public required string ChunkingIdentity { get; init; }
 
         public required PublishedChunk[] Chunks { get; init; }
     }

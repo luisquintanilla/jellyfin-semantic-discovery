@@ -4,14 +4,18 @@ using Microsoft.Extensions.DataIngestion;
 
 namespace Jellyfin.SemanticDiscovery.Core.Ingestion;
 
-internal sealed class HeadingAwareChunker : IngestionChunker<string>
+public sealed class HeadingAwareChunker : IngestionChunker<string>
 {
+    public const int MaximumTokens = 384;
+    public const string Identity =
+        "heading-aware-v2;max-tokens=384;overlap-tokens=32";
+
     private const int MaximumHeaderLevel = 10;
     private readonly ApplicationTokenBudget _tokenBudget;
 
     public HeadingAwareChunker(
         ITokenCounter tokenCounter,
-        int maximumTokens = ApplicationTokenBudget.MaximumInputTokens)
+        int maximumTokens = MaximumTokens)
     {
         _tokenBudget = new ApplicationTokenBudget(tokenCounter, maximumTokens);
     }
@@ -100,7 +104,7 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
         CancellationToken cancellationToken)
     {
         List<IngestionChunk<string>> chunks = [];
-        List<string> pending = [];
+        List<PendingElement> pending = [];
         foreach (IngestionDocumentElement element in elements)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -112,7 +116,7 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
 
             string candidateBody = string.Join(
                 "\n\n",
-                pending.Append(markdown));
+                pending.Select(static item => item.Markdown).Append(markdown));
             if (pending.Count > 0 &&
                 !_tokenBudget.Fits(
                     ApplicationTokenBudget.Combine(context, candidateBody)))
@@ -123,7 +127,7 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
             if (_tokenBudget.Fits(
                     ApplicationTokenBudget.Combine(context, markdown)))
             {
-                pending.Add(markdown);
+                pending.Add(new PendingElement(markdown, element));
                 continue;
             }
 
@@ -134,7 +138,11 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
             {
                 CommitPending();
                 string content = ApplicationTokenBudget.Combine(context, part);
-                chunks.Add(CreateChunk(document, context, content));
+                chunks.Add(CreateChunk(
+                    document,
+                    context,
+                    content,
+                    [element]));
             }
         }
 
@@ -148,9 +156,15 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
                 return;
             }
 
-            string body = string.Join("\n\n", pending);
+            string body = string.Join(
+                "\n\n",
+                pending.Select(static item => item.Markdown));
             string content = ApplicationTokenBudget.Combine(context, body);
-            chunks.Add(CreateChunk(document, context, content));
+            chunks.Add(CreateChunk(
+                document,
+                context,
+                content,
+                pending.Select(static item => item.Source)));
             pending.Clear();
         }
     }
@@ -158,7 +172,8 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
     private IngestionChunk<string> CreateChunk(
         IngestionDocument document,
         string context,
-        string content)
+        string content,
+        IEnumerable<IngestionDocumentElement> sourceElements)
     {
         _tokenBudget.Validate(content);
         IngestionChunk<string> chunk = new(
@@ -167,7 +182,48 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
             context.Length == 0 ? null : context);
         chunk.Metadata[IngestionMetadata.TokenCount] =
             _tokenBudget.CountTokens(content);
+        IngestionDocumentElement[] sources = sourceElements.ToArray();
+        int[] pageNumbers = sources
+            .Select(static element => element.PageNumber)
+            .Where(static pageNumber => pageNumber.HasValue)
+            .Select(static pageNumber => pageNumber!.Value)
+            .Distinct()
+            .Order()
+            .ToArray();
+        if (pageNumbers.Length > 0)
+        {
+            chunk.Metadata["pageNumbers"] = pageNumbers;
+        }
+
+        string[] provenance = sources
+            .SelectMany(GetProvenance)
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        if (provenance.Length > 0)
+        {
+            chunk.Metadata["provenance"] = provenance;
+        }
+
         return chunk;
+    }
+
+    private static IEnumerable<string> GetProvenance(
+        IngestionDocumentElement element)
+    {
+        if (!element.Metadata.TryGetValue(
+                "provenance",
+                out object? value))
+        {
+            return [];
+        }
+
+        return value switch
+        {
+            string text => [text],
+            IEnumerable<string> values => values,
+            _ => [],
+        };
     }
 
     private IEnumerable<string> GetContextCandidates(string?[] headings)
@@ -255,4 +311,8 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
             .Replace('\r', '\n')
             .Trim() ?? string.Empty;
     }
+
+    private sealed record PendingElement(
+        string Markdown,
+        IngestionDocumentElement Source);
 }
