@@ -198,38 +198,80 @@ public sealed class ExtractionBootstrapper(
                     $"Demo asset '{asset.Id}' failed SHA-256 validation.");
             }
 
-            ValidateRelatedFile(
+            await ValidateRelatedFileAsync(
                 manifestRoot,
                 asset.Metadata,
+                asset.MetadataSha256,
                 asset.Id,
-                "metadata");
+                "metadata",
+                cancellationToken).ConfigureAwait(false);
             if (asset.MediaKind is "Movie" or "Audio")
             {
-                ValidateRelatedFile(
+                await ValidateRelatedFileAsync(
                     manifestRoot,
                     asset.Transcript,
+                    asset.TranscriptSha256,
                     asset.Id,
-                    "transcript");
-                ValidateRelatedFile(
-                    manifestRoot,
-                    asset.Artwork,
-                    asset.Id,
-                    "artwork");
+                    "transcript",
+                    cancellationToken).ConfigureAwait(false);
+                if (!string.IsNullOrWhiteSpace(asset.Artwork))
+                {
+                    await ValidateRelatedFileAsync(
+                        manifestRoot,
+                        asset.Artwork,
+                        null,
+                        asset.Id,
+                        "artwork",
+                        cancellationToken).ConfigureAwait(false);
+                }
             }
         }
     }
 
-    private static void ValidateRelatedFile(
+    private static async Task ValidateRelatedFileAsync(
         string manifestRoot,
         string? relativePath,
+        string? expectedSha256,
         string assetId,
-        string role)
+        string role,
+        CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(relativePath) ||
-            !File.Exists(ResolveContainedPath(manifestRoot, relativePath)))
+        if (string.IsNullOrWhiteSpace(relativePath))
         {
             throw new InvalidDataException(
                 $"Demo asset '{assetId}' is missing its {role} file.");
+        }
+
+        string path = ResolveContainedPath(manifestRoot, relativePath);
+        if (!File.Exists(path))
+        {
+            throw new InvalidDataException(
+                $"Demo asset '{assetId}' is missing its {role} file.");
+        }
+
+        if (string.IsNullOrWhiteSpace(expectedSha256))
+        {
+            return;
+        }
+
+        await using FileStream stream = new(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        string actualHash = Convert.ToHexStringLower(
+            await SHA256.HashDataAsync(
+                stream,
+                cancellationToken).ConfigureAwait(false));
+        if (!string.Equals(
+                actualHash,
+                expectedSha256,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException(
+                $"Demo asset '{assetId}' has a {role} SHA-256 mismatch.");
         }
     }
 
@@ -273,6 +315,8 @@ public sealed class ExtractionBootstrapper(
         string? Metadata,
         string? Artwork,
         string? Sha256,
+        string? TranscriptSha256,
+        string? MetadataSha256,
         long Bytes,
         string Authorship,
         string License);

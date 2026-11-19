@@ -65,6 +65,7 @@ public sealed class OllamaChatClient(
             requestedModel,
             requestMessages,
             Stream: false,
+            Think: false,
             format,
             CreateRequestOptions(options));
         using HttpResponseMessage response = await httpClient.PostAsJsonAsync(
@@ -178,28 +179,22 @@ public sealed class OllamaChatClient(
             images);
     }
 
-    private static OllamaRequestOptions? CreateRequestOptions(
-        ChatOptions? options)
-    {
-        if (options is null)
-        {
-            return null;
-        }
-
-        return new OllamaRequestOptions(
-            options.Temperature,
-            options.TopP,
-            options.TopK,
-            options.Seed,
-            options.MaxOutputTokens);
-    }
+    private static OllamaRequestOptions CreateRequestOptions(
+        ChatOptions? options) =>
+        new(
+            options?.Temperature ?? 0F,
+            options?.TopP,
+            options?.TopK,
+            options?.Seed ?? 42,
+            options?.MaxOutputTokens ?? 2048);
 
     private sealed record OllamaChatRequest(
         string Model,
         IReadOnlyList<OllamaMessage> Messages,
         bool Stream,
+        bool Think,
         object? Format,
-        OllamaRequestOptions? Options);
+        OllamaRequestOptions Options);
 
     private sealed record OllamaMessage(
         string Role,

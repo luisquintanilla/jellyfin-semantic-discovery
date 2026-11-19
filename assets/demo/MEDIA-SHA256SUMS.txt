@@ -1,0 +1,20 @@
+6462b298c4c37b774fbc62cce009feb5ee99bc1365c8198b75170283083b5b3c  Audio/Context Pipelines/context-pipelines.en.vtt
+20d594d06f16d1b738f7abb3bc6aa46396497e0ec5aeed28cb8b413f9e24c8fa  Audio/Context Pipelines/context-pipelines.flac
+9d8a6181db4be64637a35f8e9c4351359a98c813156ab2f2fabba5ad8b4754ad  Audio/Context Pipelines/context-pipelines.nfo
+a482b42b73f7a2fad7926ae6f264b443c84daa035dbca047fd45641f2556f375  Audio/Routing and Decisions/routing-and-decisions.en.vtt
+91c3a4a89e0cf47ed0a125ac98ec116ad18f3b54f3fc39981a466bafa9a11536  Audio/Routing and Decisions/routing-and-decisions.flac
+f5db6bb720426968f7d6a6431fa179201bd928c29feb251eb4048c8850a25c8e  Audio/Routing and Decisions/routing-and-decisions.nfo
+eda33ab2a11e7ff26e7cdbbe7ba3f26ceb661faac639da5948e638908876b2dc  Audio/Tools, Agents, and Human Control/tools-agents-human-control.en.vtt
+0db7b5f183dbb0245f4a15f8458eb81e414d7757e9def7af8731edd852550462  Audio/Tools, Agents, and Human Control/tools-agents-human-control.flac
+6f22e11c0cc80e4c728f2202a9d5eab94e47c9e43f52699bc7c912960ed2c92f  Audio/Tools, Agents, and Human Control/tools-agents-human-control.nfo
+005dc73a1ae6596779b323736e068a1b6d85bfb4d127ea239fa7183a771eb483  inventory.json
+883a4968d2fefcf894ad9765bae9720fef8a9c937bc582b50f8265c16bb35624  LICENSE-AUTHORSHIP.txt
+f101f510057497812e1079d5e9d55bd4dc97b54ca0fbf61b89e9ea768c325df3  Movies/Jellyfin, with a New Capability/jellyfin-new-capability.en.vtt
+b62d5268c8aa46a33c3422c690b75f39b7de64fc6e094a47208ba343fd911bbe  Movies/Jellyfin, with a New Capability/jellyfin-new-capability.mp4
+1b3356da57b9d72c6c0ad86533ea28afa09b9a5e8ab684c44a4b76a60e20db96  Movies/Jellyfin, with a New Capability/jellyfin-new-capability.nfo
+dd8fbbbbf2a81e075eb11082a6d42048467d9e747ac4cfd276e3b98b6bb5eea6  Movies/One Contract, Many Models/one-contract-many-models.en.vtt
+cb1d301b4a64a997cdf0d871267ac1eb6294731030643f244d300eeb5505c0f4  Movies/One Contract, Many Models/one-contract-many-models.mp4
+014713469ee1880e70a11d51398e72bb9880b5ba8dfbd304d66aaf82e9f21d3f  Movies/One Contract, Many Models/one-contract-many-models.nfo
+e172b24d4cfdfb77205b46c8614173c339b4f5362633eedd50c77d61c2b08baa  Movies/Tokens to Vectors/tokens-to-vectors.en.vtt
+44d1a795d87ceff88c0cbb42f3fdac2e0cd14eabbe2a4c75f082618db9ef07bc  Movies/Tokens to Vectors/tokens-to-vectors.mp4
+6c028ba95d67e353fe5bd53f661027f55ae1a768952cfa478258cf12811cd142  Movies/Tokens to Vectors/tokens-to-vectors.nfo

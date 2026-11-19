@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Xml;
+using System.Xml.Linq;
 using Jellyfin.Data.Enums;
 using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Core.Identity;
@@ -157,6 +159,7 @@ public sealed class JellyfinIndexSource(ILibraryManager libraryManager) : IIndex
                 : [],
             OfficialRating = item.OfficialRating,
         };
+        metadata = ApplyNfoMetadata(metadata, item.Path);
         if (string.IsNullOrWhiteSpace(item.Path))
         {
             return metadata;
@@ -232,6 +235,99 @@ public sealed class JellyfinIndexSource(ILibraryManager libraryManager) : IIndex
 
         return locked;
     }
+
+    internal static MetadataRecord ApplyNfoMetadata(
+        MetadataRecord metadata,
+        string? itemPath)
+    {
+        ArgumentNullException.ThrowIfNull(metadata);
+        if (string.IsNullOrWhiteSpace(itemPath))
+        {
+            return metadata;
+        }
+
+        string? directory = Path.GetDirectoryName(itemPath);
+        if (directory is null)
+        {
+            return metadata;
+        }
+
+        string path = Path.Combine(
+            directory,
+            $"{Path.GetFileNameWithoutExtension(itemPath)}.nfo");
+        FileInfo file = new(path);
+        if (!file.Exists)
+        {
+            return metadata;
+        }
+
+        if ((file.Attributes & FileAttributes.ReparsePoint) != 0 ||
+            file.Length is <= 0 or > 64 * 1024)
+        {
+            throw new InvalidDataException(
+                $"NFO metadata for '{metadata.Id}' is unsafe or exceeds its bound.");
+        }
+
+        using FileStream stream = new(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 4096,
+            FileOptions.SequentialScan);
+        using XmlReader reader = XmlReader.Create(
+            stream,
+            new XmlReaderSettings
+            {
+                DtdProcessing = DtdProcessing.Prohibit,
+                XmlResolver = null,
+            });
+        XDocument document = XDocument.Load(reader, LoadOptions.None);
+        XElement root = document.Root
+            ?? throw new InvalidDataException(
+                $"NFO metadata for '{metadata.Id}' is empty.");
+        string? plot = GetValue(root, "plot");
+        string? year = GetValue(root, "year");
+        return metadata with
+        {
+            Overview = string.IsNullOrWhiteSpace(plot)
+                ? metadata.Overview
+                : plot,
+            ProductionYear = int.TryParse(
+                year,
+                System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out int parsedYear)
+                ? parsedYear
+                : metadata.ProductionYear,
+            Genres = NormalizeValues(
+                metadata.Genres.Concat(GetValues(root, "genre"))),
+            Studios = NormalizeValues(
+                metadata.Studios.Concat(GetValues(root, "studio"))),
+        };
+    }
+
+    private static string? GetValue(XElement root, string name) =>
+        root.Elements()
+            .FirstOrDefault(element =>
+                string.Equals(
+                    element.Name.LocalName,
+                    name,
+                    StringComparison.OrdinalIgnoreCase))
+            ?.Value
+            .Trim();
+
+    private static IEnumerable<string> GetValues(
+        XElement root,
+        string name) =>
+        root.Elements()
+            .Where(element =>
+                string.Equals(
+                    element.Name.LocalName,
+                    name,
+                    StringComparison.OrdinalIgnoreCase))
+            .Select(static element => element.Value.Trim())
+            .Where(static value => value.Length > 0);
 
     internal static ContentSourceDescriptor[] DiscoverContent(
         BaseItem item,

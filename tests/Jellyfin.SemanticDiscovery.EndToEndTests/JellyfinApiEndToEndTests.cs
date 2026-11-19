@@ -30,6 +30,36 @@ public sealed class JellyfinApiEndToEndTests
             await SearchNamesAsync(
                 context.Admin,
                 "who decides correctness in a verifiable AI workflow?"));
+        Assert.Equal(
+            "Jellyfin, with a New Capability",
+            (await SearchNamesAsync(
+                context.Admin,
+                "official Jellyfin 12 experience remains intact")).First());
+        Assert.Equal(
+            "One Contract, Many Models",
+            (await SearchNamesAsync(
+                context.Admin,
+                "keyed dependency injection selects AI providers")).First());
+        Assert.Equal(
+            "Tokens to Vectors",
+            (await SearchNamesAsync(
+                context.Admin,
+                "attention masks mark real tokens and padding with zero")).First());
+        Assert.Equal(
+            "Context Pipelines",
+            (await SearchNamesAsync(
+                context.Admin,
+                "PdfPig reads the text layer and rendered pages")).First());
+        Assert.Equal(
+            "Routing and Decisions",
+            (await SearchNamesAsync(
+                context.Admin,
+                "confidence threshold rejects uncertain results")).First());
+        Assert.Equal(
+            "Tools, Agents, and Human Control",
+            (await SearchNamesAsync(
+                context.Admin,
+                "humans approve consequential work after validation")).First());
     }
 
     [EndToEndFact]

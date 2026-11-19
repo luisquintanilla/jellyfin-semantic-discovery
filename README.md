@@ -19,10 +19,9 @@ Prerequisites:
 - the final nine demo assets delivered according to
   `assets/demo/manifest.json`.
 
-The three final PDF books are checked in and hash-sealed. The three Movies and
-three Audio items are still pending. The complete demo intentionally fails
-closed while `deliveryStatus` is `pending-final-assets`, a required hash is
-empty, or a declared file is missing.
+All three PDF books, three Movies, and three Audio items are checked in and
+hash-sealed. Startup validates every declared media file and fails closed on a
+missing file, size mismatch, hash mismatch, or incomplete license record.
 
 ```powershell
 dotnet tool restore --configfile .\NuGet.Config
@@ -186,15 +185,10 @@ CC BY 4.0 PDFs, with hashes and authorship in
 `assets/demo/LICENSE-AUTHORSHIP.txt`. Its deterministic 8B/4B extraction and
 retrieval checks are declared in `assets/demo/extraction-benchmark.json`.
 
-Remaining Movie/Audio delivery must:
-
-1. Add ordinary checked-in MP4, FLAC, PDF, VTT, metadata, and artwork files at
-   the declared paths.
-2. Replace placeholder titles and fill exact SHA-256, byte count, PDF page
-   count, concise authorship, and license fields.
-3. Change `deliveryStatus` only after every declared file and hash validates.
-4. Add no prompts, storyboards, editable sources, PDF/media generators,
-   download caches, rights-refresh workflow, or production receipts.
+The approved Movie/Audio release is retained byte-for-byte with MP4/FLAC, VTT,
+and NFO sidecars. The approved Book release is retained byte-for-byte with
+PDFs and OPF metadata. No prompts, storyboards, editable sources, generators,
+download caches, rights-refresh workflow, or production receipts are included.
 
 Tiny synthetic CI/security fixtures remain under `assets/fixtures`, including
 Series coverage. They are test fixtures, not public demo media.

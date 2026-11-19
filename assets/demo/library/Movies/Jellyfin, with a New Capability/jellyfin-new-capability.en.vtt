@@ -1,0 +1,31 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:10.200
+Jellyfin stays the stable center: the
+official Jellyfin 12 experience remains
+intact. Semantic discovery adds capability
+without replacing the UI.
+
+2
+00:00:10.200 --> 00:00:20.550
+The plugin joins Jellyfin as an internal
+search provider and similar-items
+providers. It returns item IDs and
+scores—not passages—through native
+discovery.
+
+3
+00:00:20.567 --> 00:00:30.417
+Aspire 17 orchestrates the official
+Jellyfin container, the plugin, Ollama,
+and a .NET 11 ASP.NET Core document
+extraction service.
+
+4
+00:00:30.433 --> 00:00:41.983
+Ollama runs embeddinggemma plus
+qwen3-vl:8b, with an optional 4b profile,
+to read rendered PDF pages. The full
+capability runs locally with Ollama.
+

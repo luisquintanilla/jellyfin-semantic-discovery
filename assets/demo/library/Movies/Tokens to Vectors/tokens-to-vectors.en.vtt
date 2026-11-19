@@ -1,0 +1,29 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:08.300
+Text is normalized, tokenized, and wrapped
+with special tokens. The result is a
+sequence of token IDs—the first step
+toward vectors.
+
+2
+00:00:08.300 --> 00:00:16.000
+Attention masks mark real tokens with one
+and padding with zero, so padding cannot
+distort the later pooling step.
+
+3
+00:00:16.000 --> 00:00:25.150
+The model returns token vectors. Mean
+pooling combines only active positions
+into one 384-dimensional vector
+representing the input.
+
+4
+00:00:25.167 --> 00:00:35.417
+L2 normalization makes vector length
+consistent. Cosine similarity then
+compares direction, using the dot product
+and norms while rejecting invalid values.
+

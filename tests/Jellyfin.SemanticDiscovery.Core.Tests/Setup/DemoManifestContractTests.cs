@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace Jellyfin.SemanticDiscovery.Core.Tests.Setup;
@@ -5,20 +6,18 @@ namespace Jellyfin.SemanticDiscovery.Core.Tests.Setup;
 public sealed class DemoManifestContractTests
 {
     [Fact]
-    public void DemoManifestReservesExactlyThreeItemsPerPublicMediaKind()
+    public async Task DemoManifestContainsThreeValidatedItemsPerMediaKind()
     {
-        string path = Path.Combine(
-            FindRepositoryRoot(),
-            "assets",
-            "demo",
-            "manifest.json");
+        string repositoryRoot = FindRepositoryRoot();
+        string demoRoot = Path.Combine(repositoryRoot, "assets", "demo");
+        string path = Path.Combine(demoRoot, "manifest.json");
         using JsonDocument document =
             JsonDocument.Parse(File.ReadAllBytes(path));
         JsonElement root = document.RootElement;
 
         Assert.Equal("demo-v1", root.GetProperty("profileId").GetString());
         Assert.Equal(
-            "pending-final-assets",
+            "ready",
             root.GetProperty("deliveryStatus").GetString());
         JsonElement[] assets = root.GetProperty("assets")
             .EnumerateArray()
@@ -41,23 +40,44 @@ public sealed class DemoManifestContractTests
             Assert.False(asset.TryGetProperty("generator", out _));
             Assert.False(asset.TryGetProperty("receipt", out _));
         });
-        Assert.All(
-            assets.Where(asset =>
-                asset.GetProperty("mediaKind").GetString() is
-                    "Movie" or "Audio"),
-            static asset => Assert.Equal(
-                JsonValueKind.Null,
-                asset.GetProperty("sha256").ValueKind));
-        Assert.All(
-            assets.Where(asset =>
-                asset.GetProperty("mediaKind").GetString() == "Book"),
-            static asset =>
+        foreach (JsonElement asset in assets)
+        {
+            string mediaPath = Path.Combine(
+                demoRoot,
+                asset.GetProperty("media").GetString()!
+                    .Replace('/', Path.DirectorySeparatorChar));
+            FileInfo media = new(mediaPath);
+            Assert.True(media.Exists);
+            Assert.Equal(asset.GetProperty("bytes").GetInt64(), media.Length);
+            await using FileStream stream = media.OpenRead();
+            string hash = Convert.ToHexStringLower(
+                await SHA256.HashDataAsync(stream));
+            Assert.Equal(asset.GetProperty("sha256").GetString(), hash);
+            string metadataPath = Path.Combine(
+                demoRoot,
+                asset.GetProperty("metadata").GetString()!
+                    .Replace('/', Path.DirectorySeparatorChar));
+            Assert.True(File.Exists(metadataPath));
+            if (asset.GetProperty("mediaKind").GetString() is
+                "Movie" or "Audio")
             {
+                string transcriptPath = Path.Combine(
+                    demoRoot,
+                    asset.GetProperty("transcript").GetString()!
+                        .Replace('/', Path.DirectorySeparatorChar));
+                Assert.True(File.Exists(transcriptPath));
                 Assert.Equal(
-                    64,
-                    asset.GetProperty("sha256").GetString()!.Length);
+                    asset.GetProperty("metadataSha256").GetString(),
+                    await ComputeSha256Async(metadataPath));
+                Assert.Equal(
+                    asset.GetProperty("transcriptSha256").GetString(),
+                    await ComputeSha256Async(transcriptPath));
+            }
+            else
+            {
                 Assert.Equal(8, asset.GetProperty("pageCount").GetInt32());
-            });
+            }
+        }
 
         JsonElement[] libraries = root.GetProperty("libraries")
             .EnumerateArray()
@@ -71,6 +91,13 @@ public sealed class DemoManifestContractTests
         Assert.Equal(
             3,
             root.GetProperty("items").GetArrayLength());
+    }
+
+    private static async Task<string> ComputeSha256Async(string path)
+    {
+        await using FileStream stream = File.OpenRead(path);
+        return Convert.ToHexStringLower(
+            await SHA256.HashDataAsync(stream));
     }
 
     private static string FindRepositoryRoot()

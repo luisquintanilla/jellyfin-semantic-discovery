@@ -1,0 +1,34 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:11.950
+Let's explore how Microsoft.Extensions.AI
+uses IChatClient and IEmbeddingGenerator
+interfaces to abstract AI providers,
+enabling flexible integration in .NET
+applications.
+
+2
+00:00:11.967 --> 00:00:24.117
+Keyed dependency injection lets
+configuration select AI providers like
+Ollama, Azure OpenAI, Azure Foundry, or
+ONNX-backed implementations, each with
+distinct capabilities and costs.
+
+3
+00:00:24.133 --> 00:00:34.183
+Here's a concise example showing how to
+register multiple IChatClient
+implementations with keys and resolve them
+via DI, enabling easy swapping by
+configuration.
+
+4
+00:00:34.200 --> 00:00:44.900
+Application code depends on the
+IChatClient abstraction. Swapping
+providers requires no code changes, only
+configuration updates, illustrating
+provider-neutral design.
+

@@ -31,11 +31,15 @@ under the repository MIT license. They exist only for deterministic
 CI/security tests.
 
 Final public demo media includes concise authorship and license records in
-`assets/demo/manifest.json`. Movie and Audio license claims remain pending
-while that manifest remains `pending-final-assets`.
+`assets/demo/manifest.json`.
 
 The checked-in `Jellyfin Semantic Discovery PDF Corpus` books contain original
 writing and deterministic vector artwork, with AI-assisted drafting and
 critique. They are licensed CC BY 4.0 with suggested attribution
 `"Jellyfin Semantic Discovery PDF Corpus" (2026).` See
 `assets/demo/LICENSE-AUTHORSHIP.txt`.
+
+The checked-in Movie and Audio corpus is original work authored for
+The .NET AI Stack, copyright 2026 Luis Quintanilla, licensed CC BY 4.0.
+Narration was synthesized with Azure Speech. See
+`assets/demo/MEDIA-LICENSE-AUTHORSHIP.txt`.
