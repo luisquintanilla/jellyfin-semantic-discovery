@@ -17,6 +17,7 @@
     <PackageVersion Include="Jellyfin.Model" Version="12.0.0" />
     <PackageVersion Include="Markdig.Signed" Version="0.43.0" />
     <PackageVersion Include="MessagePack" Version="2.5.307" />
+    <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
     <PackageVersion Include="Microsoft.Extensions.AI" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DataIngestion" Version="11.0.0-preview.1.26560.3" />
