@@ -536,7 +536,7 @@ public sealed class HeadingAwareChunkerTests
             .SelectMany(chunk => chunk.Text.Split('\n', 2)[1]
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries))
             .ToArray();
-        Assert.Equal(["a", "b", "c"], recombinedBodyWords);
+        Assert.Equal(["a", "b", "a", "b\nc"], recombinedBodyWords);
     }
 
     [Fact]
@@ -548,8 +548,8 @@ public sealed class HeadingAwareChunkerTests
 
         Assert.Equal(3, chunks.Count);
         Assert.Equal("word1 word2 word3", chunks[0].Text);
-        Assert.Equal("word4 word5 word6", chunks[1].Text);
-        Assert.Equal("word7", chunks[2].Text);
+        Assert.Equal("word3\nword4 word5 word6", chunks[1].Text);
+        Assert.Equal("word4 word5 word6\nword7", chunks[2].Text);
         Assert.All(chunks, chunk => Assert.Null(chunk.Heading));
     }
 

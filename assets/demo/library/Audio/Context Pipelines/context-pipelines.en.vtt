@@ -1,0 +1,28 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:13.600
+A .NET 11 ASP.NET Core service uses
+Microsoft.Extensions.DocumentExtraction:
+PdfPig reads the text layer, while a
+VisionLanguageModel client reads rendered
+pages for tables, charts, and diagrams.
+
+2
+00:00:13.800 --> 00:00:29.900
+Those outputs bridge into
+Microsoft.Extensions.DataIngestion.
+Heading-aware chunking preserves
+structure, and Microsoft.ML.Tokenizers
+enforces real token limits for predictable
+model-sized chunks before embeddings are
+generated.
+
+3
+00:00:30.100 --> 00:00:44.100
+Extraction, normalization, chunking,
+embedding, and retrieval stay separate and
+reviewable. Provenance supports
+diagnostics for later inspection and
+troubleshooting, while search results open
+the Jellyfin item—not an answer citation.

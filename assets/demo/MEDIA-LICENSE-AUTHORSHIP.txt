@@ -1,0 +1,10 @@
+Original Jellyfin demo media authored for The .NET AI Stack.
+Copyright (c) 2026 Luis Quintanilla. Licensed under CC BY 4.0.
+Scripts and sanitized SVG directions were authored with Azure OpenAI assistance; narration was synthesized with Azure Speech.
+No third-party footage, music, logos, conference slides, or source media are included.
+
+Original additive library artwork for the Jellyfin .NET AI Stack demo.
+Copyright (c) 2026 Luis Quintanilla. Licensed under CC BY 4.0.
+Movie and audio artwork is original vector design derived from the approved explainer concepts.
+Book covers use only verbatim page-one text and cropped page-one illustrations from the checked-in original PDFs.
+No third-party logos, footage, music, conference slides, or invented book-cover claims are included.

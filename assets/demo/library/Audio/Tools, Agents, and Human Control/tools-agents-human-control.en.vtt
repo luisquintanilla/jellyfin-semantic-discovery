@@ -1,0 +1,25 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:10.550
+AI models generate proposals as bounded,
+structured actions that describe intended
+changes or tasks within a system, ensuring
+clarity and scope before any execution.
+
+2
+00:00:10.750 --> 00:00:21.250
+Deterministic .NET code validates these
+proposals by checking schemas, identities,
+permissions, budgets, and side effects to
+ensure they meet all system rules and
+constraints.
+
+3
+00:00:21.450 --> 00:00:34.500
+Humans approve consequential work after
+validation. Applying a proposal differs
+from production approval, and a successful
+build or render does not equal release
+approval, maintaining clear authority
+boundaries.

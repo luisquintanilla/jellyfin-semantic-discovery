@@ -20,13 +20,61 @@ public sealed class SemanticDiscoveryPaths
     public static SemanticDiscoveryPaths FromApplicationDataPath(string applicationDataPath) =>
         new(applicationDataPath);
 
-    public string GetModelDirectory(PluginConfiguration configuration)
+    public static Uri GetOllamaEndpoint(PluginConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        return new Uri(
+            FirstNonEmpty(
+                Environment.GetEnvironmentVariable(
+                    "SEMANTIC_DISCOVERY_OLLAMA_ENDPOINT"),
+                configuration.OllamaEndpoint,
+                "http://127.0.0.1:11434"),
+            UriKind.Absolute);
+    }
+
+    public static string GetEmbeddingModel(PluginConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         return FirstNonEmpty(
-            Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_MODEL_DIRECTORY"),
-            configuration.ModelDirectory,
-            Path.Combine(_dataPath, "models", "all-MiniLM-L6-v2"));
+            Environment.GetEnvironmentVariable(
+                "SEMANTIC_DISCOVERY_EMBEDDING_MODEL"),
+            configuration.EmbeddingModel,
+            Core.Embedding.OllamaEmbeddingOptions.DefaultModel);
+    }
+
+    public static string GetExtractionModel(PluginConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        return FirstNonEmpty(
+            Environment.GetEnvironmentVariable(
+                "SEMANTIC_DISCOVERY_EXTRACTION_MODEL"),
+            configuration.ExtractionModel,
+            "qwen3-vl:8b-instruct");
+    }
+
+    public static string GetExtractionMode(PluginConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        string mode = FirstNonEmpty(
+            Environment.GetEnvironmentVariable(
+                "SEMANTIC_DISCOVERY_EXTRACTION_MODE"),
+            configuration.ExtractionMode,
+            "Hybrid");
+        return mode is "Text" or "Vision" or "Hybrid"
+            ? mode
+            : throw new InvalidOperationException(
+                "Extraction mode must be Text, Vision, or Hybrid.");
+    }
+
+    public string GetExtractionArtifactRoot(PluginConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        return Path.GetFullPath(
+            FirstNonEmpty(
+                Environment.GetEnvironmentVariable(
+                    "SEMANTIC_DISCOVERY_EXTRACTION_ARTIFACT_ROOT"),
+                configuration.ExtractionArtifactRoot,
+                Path.Combine(_dataPath, "extractions", "published")));
     }
 
     public string GetSnapshotPath(PluginConfiguration configuration)
@@ -36,16 +84,6 @@ public sealed class SemanticDiscoveryPaths
             Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_SNAPSHOT_PATH"),
             configuration.SnapshotPath,
             Path.Combine(_dataPath, "index.json"));
-    }
-
-    public static Uri GetMarkItDownEndpoint(PluginConfiguration configuration)
-    {
-        ArgumentNullException.ThrowIfNull(configuration);
-        string value = FirstNonEmpty(
-            Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_MARKITDOWN_ENDPOINT"),
-            configuration.MarkItDownEndpoint,
-            "http://127.0.0.1:3001/mcp");
-        return new Uri(value, UriKind.Absolute);
     }
 
     private static string FirstNonEmpty(params string?[] candidates) =>

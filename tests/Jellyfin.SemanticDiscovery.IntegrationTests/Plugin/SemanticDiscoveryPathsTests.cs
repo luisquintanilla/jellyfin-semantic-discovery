@@ -15,16 +15,28 @@ public sealed class SemanticDiscoveryPathsTests
         PluginConfiguration configuration = new();
 
         Assert.Equal(
-            Path.Combine(
-                applicationDataPath,
-                "semantic-discovery",
-                "models",
-                "all-MiniLM-L6-v2"),
-            paths.GetModelDirectory(configuration));
+            new Uri("http://127.0.0.1:11434"),
+            SemanticDiscoveryPaths.GetOllamaEndpoint(configuration));
+        Assert.Equal(
+            "embeddinggemma:latest",
+            SemanticDiscoveryPaths.GetEmbeddingModel(configuration));
+        Assert.Equal(
+            "qwen3-vl:8b-instruct",
+            SemanticDiscoveryPaths.GetExtractionModel(configuration));
+        Assert.Equal(
+            "Hybrid",
+            SemanticDiscoveryPaths.GetExtractionMode(configuration));
         Assert.Equal(
             Path.Combine(applicationDataPath, "semantic-discovery", "index.json"),
             paths.GetSnapshotPath(configuration));
+        Assert.Equal(
+            Path.Combine(
+                applicationDataPath,
+                "semantic-discovery",
+                "extractions",
+                "published"),
+            paths.GetExtractionArtifactRoot(configuration));
         Assert.DoesNotContain("/config", configuration.SnapshotPath, StringComparison.Ordinal);
-        Assert.DoesNotContain("/models", configuration.ModelDirectory, StringComparison.Ordinal);
+        Assert.Empty(configuration.OllamaEndpoint);
     }
 }

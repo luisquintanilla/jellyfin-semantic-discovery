@@ -1,6 +1,7 @@
 using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Core.Identity;
 using Jellyfin.SemanticDiscovery.Core.Indexing;
+using Jellyfin.SemanticDiscovery.Core.Ingestion;
 using Jellyfin.SemanticDiscovery.Core.Projection;
 using Jellyfin.SemanticDiscovery.Core.Retrieval;
 using Jellyfin.SemanticDiscovery.Core.Snapshots;
@@ -102,10 +103,12 @@ public sealed class SemanticIndexBuilderTests
     }
 
     [Fact]
-    public async Task RebuildAsyncTruncatesOverBudgetMetadataProjectionTo256Tokens()
+    public async Task RebuildAsyncTruncatesOverBudgetMetadataProjection()
     {
         using SemanticIndexBuilderHarness harness = new();
-        string longOverview = string.Join(' ', Enumerable.Range(0, 300).Select(i => $"w{i}"));
+        string longOverview = string.Join(
+            ' ',
+            Enumerable.Range(0, 500).Select(i => $"w{i}"));
         MetadataRecord item = TestData.Movie(title: "Long", overview: longOverview);
         harness.Source.Items = [new IndexSourceItem { Metadata = item }];
         SemanticIndexBuilder builder = harness.CreateBuilder(TestData.Identity());
@@ -114,14 +117,19 @@ public sealed class SemanticIndexBuilderTests
 
         string embeddedText = Assert.Single(harness.Generator.Calls.SelectMany(static call => call));
         int embeddedTokenCount = harness.TokenCounter.CountTokens(embeddedText);
-        Assert.Equal(256, embeddedTokenCount);
+        Assert.Equal(
+            ApplicationTokenBudget.MaximumInputTokens,
+            embeddedTokenCount);
 
         string normalizedFullProjection =
             TextNormalization.NormalizeWhitespace(MetadataProjector.Project(item));
         string[] fullWords = normalizedFullProjection.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         string[] embeddedWords = embeddedText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        Assert.True(fullWords.Length > 256);
-        Assert.Equal(fullWords.Take(256), embeddedWords);
+        Assert.True(
+            fullWords.Length > ApplicationTokenBudget.MaximumInputTokens);
+        Assert.Equal(
+            fullWords.Take(ApplicationTokenBudget.MaximumInputTokens),
+            embeddedWords);
         IndexSnapshot snapshot =
             Assert.IsType<IndexSnapshot>(
                 await harness.CreateSnapshotStore().LoadAsync());
@@ -476,7 +484,10 @@ public sealed class SemanticIndexBuilderTests
         // subtitle reader is untouched and keeps succeeding.
         harness.BookReader.SetFailure(
             pdfDescriptor,
-            new ContentIngestionException("MarkItDown is unavailable.", "book.pdf", isTransient: true));
+            new ContentIngestionException(
+                "Extraction artifact is unavailable.",
+                "book.pdf",
+                isTransient: true));
         IndexBuildResult degraded = await builder.RebuildAsync();
 
         ContentIngestionError error = Assert.Single(degraded.Errors);

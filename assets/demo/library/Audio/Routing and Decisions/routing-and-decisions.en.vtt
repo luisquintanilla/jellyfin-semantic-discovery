@@ -1,0 +1,25 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:12.350
+In .NET AI systems, policy filters first
+screen options based on privacy rules,
+required capabilities, and resource limits
+like latency or cost, ensuring only
+eligible choices proceed.
+
+2
+00:00:12.550 --> 00:00:23.550
+After filtering, the AI model or decision
+component evaluates remaining options,
+returning a structured choice along with a
+confidence score indicating certainty in
+that selection.
+
+3
+00:00:23.750 --> 00:00:36.050
+A confidence threshold can reject
+uncertain results, triggering an explicit
+fallback process that is observable and
+never silently switches providers,
+maintaining transparency and control.

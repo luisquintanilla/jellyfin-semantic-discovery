@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "profileId": "demo-v1",
+  "deliveryStatus": "ready",
+  "artworkStatus": "ready",
+  "assets": [
+    {
+      "id": "jellyfin-new-capability",
+      "mediaKind": "Movie",
+      "title": "Jellyfin, with a New Capability",
+      "media": "library/Movies/Jellyfin, with a New Capability/jellyfin-new-capability.mp4",
+      "transcript": "library/Movies/Jellyfin, with a New Capability/jellyfin-new-capability.en.vtt",
+      "metadata": "library/Movies/Jellyfin, with a New Capability/jellyfin-new-capability.nfo",
+      "artwork": "library/Movies/Jellyfin, with a New Capability/poster.jpg",
+      "artworkSha256": "08bf5619724e98f9bb1bbdfd8c93d4c623f0fa2d9ef30efc8450a7e2452d9d75",
+      "backdrop": "library/Movies/Jellyfin, with a New Capability/backdrop.jpg",
+      "backdropSha256": "729fcf28842355fce7dbf32a1531fc01aa1b0517c647951ae4c03ba3460504a6",
+      "sha256": "b62d5268c8aa46a33c3422c690b75f39b7de64fc6e094a47208ba343fd911bbe",
+      "transcriptSha256": "f101f510057497812e1079d5e9d55bd4dc97b54ca0fbf61b89e9ea768c325df3",
+      "metadataSha256": "1b3356da57b9d72c6c0ad86533ea28afa09b9a5e8ab684c44a4b76a60e20db96",
+      "bytes": 858800,
+      "authorship": "Original Jellyfin demo media authored for The .NET AI Stack; copyright 2026 Luis Quintanilla; narration synthesized with Azure Speech",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "one-contract-many-models",
+      "mediaKind": "Movie",
+      "title": "One Contract, Many Models",
+      "media": "library/Movies/One Contract, Many Models/one-contract-many-models.mp4",
+      "transcript": "library/Movies/One Contract, Many Models/one-contract-many-models.en.vtt",
+      "metadata": "library/Movies/One Contract, Many Models/one-contract-many-models.nfo",
+      "artwork": "library/Movies/One Contract, Many Models/poster.jpg",
+      "artworkSha256": "166b3d62669911056645673ce1811bb74206cf37cf2c114f9f8a577a99aa72fd",
+      "backdrop": "library/Movies/One Contract, Many Models/backdrop.jpg",
+      "backdropSha256": "4854273a1d9a8ce80967bf88c58a81bba41a2a4b391ee4e17db976b6fbcaf676",
+      "sha256": "cb1d301b4a64a997cdf0d871267ac1eb6294731030643f244d300eeb5505c0f4",
+      "transcriptSha256": "dd8fbbbbf2a81e075eb11082a6d42048467d9e747ac4cfd276e3b98b6bb5eea6",
+      "metadataSha256": "014713469ee1880e70a11d51398e72bb9880b5ba8dfbd304d66aaf82e9f21d3f",
+      "bytes": 866102,
+      "authorship": "Original Jellyfin demo media authored for The .NET AI Stack; copyright 2026 Luis Quintanilla; narration synthesized with Azure Speech",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "tokens-to-vectors",
+      "mediaKind": "Movie",
+      "title": "Tokens to Vectors",
+      "media": "library/Movies/Tokens to Vectors/tokens-to-vectors.mp4",
+      "transcript": "library/Movies/Tokens to Vectors/tokens-to-vectors.en.vtt",
+      "metadata": "library/Movies/Tokens to Vectors/tokens-to-vectors.nfo",
+      "artwork": "library/Movies/Tokens to Vectors/poster.jpg",
+      "artworkSha256": "2db74a57a436a53888ddf95d4c1a76db68a27015a08a30b4bc78e52036e2e415",
+      "backdrop": "library/Movies/Tokens to Vectors/backdrop.jpg",
+      "backdropSha256": "300fdd239d9eacc0910033dfa030918e2bab62bd37258c3e1bad1e11171147f3",
+      "sha256": "44d1a795d87ceff88c0cbb42f3fdac2e0cd14eabbe2a4c75f082618db9ef07bc",
+      "transcriptSha256": "e172b24d4cfdfb77205b46c8614173c339b4f5362633eedd50c77d61c2b08baa",
+      "metadataSha256": "6c028ba95d67e353fe5bd53f661027f55ae1a768952cfa478258cf12811cd142",
+      "bytes": 655139,
+      "authorship": "Original Jellyfin demo media authored for The .NET AI Stack; copyright 2026 Luis Quintanilla; narration synthesized with Azure Speech",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "context-pipelines",
+      "mediaKind": "Audio",
+      "title": "Context Pipelines",
+      "media": "library/Audio/Context Pipelines/context-pipelines.flac",
+      "transcript": "library/Audio/Context Pipelines/context-pipelines.en.vtt",
+      "metadata": "library/Audio/Context Pipelines/context-pipelines.nfo",
+      "artwork": "library/Audio/Context Pipelines/folder.jpg",
+      "artworkSha256": "e5aa40437559fb3c296cef22cf2083c63d60a6c7180264b17ea4aeb6ba744520",
+      "backdrop": null,
+      "backdropSha256": null,
+      "sha256": "20d594d06f16d1b738f7abb3bc6aa46396497e0ec5aeed28cb8b413f9e24c8fa",
+      "transcriptSha256": "6462b298c4c37b774fbc62cce009feb5ee99bc1365c8198b75170283083b5b3c",
+      "metadataSha256": "9d8a6181db4be64637a35f8e9c4351359a98c813156ab2f2fabba5ad8b4754ad",
+      "bytes": 1652752,
+      "authorship": "Original Jellyfin demo media authored for The .NET AI Stack; copyright 2026 Luis Quintanilla; narration synthesized with Azure Speech",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "routing-and-decisions",
+      "mediaKind": "Audio",
+      "title": "Routing and Decisions",
+      "media": "library/Audio/Routing and Decisions/routing-and-decisions.flac",
+      "transcript": "library/Audio/Routing and Decisions/routing-and-decisions.en.vtt",
+      "metadata": "library/Audio/Routing and Decisions/routing-and-decisions.nfo",
+      "artwork": "library/Audio/Routing and Decisions/folder.jpg",
+      "artworkSha256": "cdd262cd33f8c285c49ac612682f1cc1a34726f92ab333755a2b0702e31b53a5",
+      "backdrop": null,
+      "backdropSha256": null,
+      "sha256": "91c3a4a89e0cf47ed0a125ac98ec116ad18f3b54f3fc39981a466bafa9a11536",
+      "transcriptSha256": "a482b42b73f7a2fad7926ae6f264b443c84daa035dbca047fd45641f2556f375",
+      "metadataSha256": "f5db6bb720426968f7d6a6431fa179201bd928c29feb251eb4048c8850a25c8e",
+      "bytes": 1381851,
+      "authorship": "Original Jellyfin demo media authored for The .NET AI Stack; copyright 2026 Luis Quintanilla; narration synthesized with Azure Speech",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "tools-agents-human-control",
+      "mediaKind": "Audio",
+      "title": "Tools, Agents, and Human Control",
+      "media": "library/Audio/Tools, Agents, and Human Control/tools-agents-human-control.flac",
+      "transcript": "library/Audio/Tools, Agents, and Human Control/tools-agents-human-control.en.vtt",
+      "metadata": "library/Audio/Tools, Agents, and Human Control/tools-agents-human-control.nfo",
+      "artwork": "library/Audio/Tools, Agents, and Human Control/folder.jpg",
+      "artworkSha256": "4a85215f84d4ab86121a42caf889f68a0dd4e8352b5a4c26506f0d16c1e5938b",
+      "backdrop": null,
+      "backdropSha256": null,
+      "sha256": "0db7b5f183dbb0245f4a15f8458eb81e414d7757e9def7af8731edd852550462",
+      "transcriptSha256": "eda33ab2a11e7ff26e7cdbbe7ba3f26ceb661faac639da5948e638908876b2dc",
+      "metadataSha256": "6f22e11c0cc80e4c728f2202a9d5eab94e47c9e43f52699bc7c912960ed2c92f",
+      "bytes": 1334187,
+      "authorship": "Original Jellyfin demo media authored for The .NET AI Stack; copyright 2026 Luis Quintanilla; narration synthesized with Azure Speech",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "tokenizers-field-guide",
+      "mediaKind": "Book",
+      "title": "Tokenizers Field Guide",
+      "media": "library/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf",
+      "transcript": null,
+      "metadata": "library/Books/Tokenizers - A Field Guide (2026)/metadata.opf",
+      "artwork": "library/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.jpg",
+      "artworkSha256": "83a11dfbd4c76c71b67de22b7cf13b33a5802a61d2711c0d027256dbdc680a93",
+      "backdrop": null,
+      "backdropSha256": null,
+      "sha256": "5121b1caaafe837048b50714bf606f2cc832f3099f1c53281d1720a30c3bafb1",
+      "bytes": 392959,
+      "pageCount": 8,
+      "authorship": "\"Jellyfin Semantic Discovery PDF Corpus\" (2026); original writing and deterministic vector artwork, with AI-assisted drafting and critique",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "tensors-for-embeddings",
+      "mediaKind": "Book",
+      "title": "Tensors for Embeddings",
+      "media": "library/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf",
+      "transcript": null,
+      "metadata": "library/Books/Tensors for Embeddings (2026)/metadata.opf",
+      "artwork": "library/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.jpg",
+      "artworkSha256": "efafbb2245bef265181cd86a4563edb6ef14981cfb72a602a02fe1617e723c24",
+      "backdrop": null,
+      "backdropSha256": null,
+      "sha256": "723d96ff116d41fad6f3f8b15290f2d008249bf530aca97c632f1752a7133261",
+      "bytes": 415503,
+      "pageCount": 8,
+      "authorship": "\"Jellyfin Semantic Discovery PDF Corpus\" (2026); original writing and deterministic vector artwork, with AI-assisted drafting and critique",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "verifiable-ai-systems",
+      "mediaKind": "Book",
+      "title": "Verifiable AI Systems",
+      "media": "library/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf",
+      "transcript": null,
+      "metadata": "library/Books/Verifiable AI Systems (2026)/metadata.opf",
+      "artwork": "library/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.jpg",
+      "artworkSha256": "2a2b4951fba115fe00aad3540030e07d2d9bdbde644b873b6f43fdb4b30904f7",
+      "backdrop": null,
+      "backdropSha256": null,
+      "sha256": "08bd2c03b19783468dafad82737972bd64d5a0052c403d119a0cbda878811f96",
+      "bytes": 383140,
+      "pageCount": 8,
+      "authorship": "\"Jellyfin Semantic Discovery PDF Corpus\" (2026); original writing and deterministic vector artwork, with AI-assisted drafting and critique",
+      "license": "CC BY 4.0"
+    }
+  ],
+  "items": [
+    {
+      "id": "tokenizers-field-guide",
+      "sourcePath": "library/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf",
+      "sourceSha256": "5121b1caaafe837048b50714bf606f2cc832f3099f1c53281d1720a30c3bafb1",
+      "sourceSizeBytes": 392959,
+      "pageCount": 8
+    },
+    {
+      "id": "tensors-for-embeddings",
+      "sourcePath": "library/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf",
+      "sourceSha256": "723d96ff116d41fad6f3f8b15290f2d008249bf530aca97c632f1752a7133261",
+      "sourceSizeBytes": 415503,
+      "pageCount": 8
+    },
+    {
+      "id": "verifiable-ai-systems",
+      "sourcePath": "library/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf",
+      "sourceSha256": "08bd2c03b19783468dafad82737972bd64d5a0052c403d119a0cbda878811f96",
+      "sourceSizeBytes": 383140,
+      "pageCount": 8
+    }
+  ],
+  "libraries": [
+    {
+      "name": "Semantic Movies",
+      "collectionType": "movies",
+      "itemType": "Movie",
+      "path": "/media/Movies",
+      "items": [
+        { "title": "Jellyfin, with a New Capability", "type": "Movie", "path": "/media/Movies/Jellyfin, with a New Capability/jellyfin-new-capability.mp4", "overview": "Aspire 17 orchestrates Jellyfin 12, its semantic-discovery plugin, Ollama, and a .NET 11 document extraction service without replacing the Jellyfin experience.", "genres": ["Technology"], "tags": [], "studios": [".NET AI Stack demo"], "officialRating": null },
+        { "title": "One Contract, Many Models", "type": "Movie", "path": "/media/Movies/One Contract, Many Models/one-contract-many-models.mp4", "overview": "Microsoft.Extensions.AI contracts and keyed dependency injection let ordinary .NET feature code select Ollama, Azure, or ONNX-backed providers through configuration.", "genres": ["Technology"], "tags": [], "studios": [".NET AI Stack demo"], "officialRating": null },
+        { "title": "Tokens to Vectors", "type": "Movie", "path": "/media/Movies/Tokens to Vectors/tokens-to-vectors.mp4", "overview": "A practical walkthrough of normalization, tokenization, attention masks, mean pooling, vector normalization, and cosine similarity.", "genres": ["Technology"], "tags": [], "studios": [".NET AI Stack demo"], "officialRating": null }
+      ]
+    },
+    {
+      "name": "Semantic Audio",
+      "collectionType": "music",
+      "itemType": "Audio",
+      "path": "/media/Audio",
+      "items": [
+        { "title": "Context Pipelines", "type": "Audio", "path": "/media/Audio/Context Pipelines/context-pipelines.flac", "overview": null, "genres": ["Technology"], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Routing and Decisions", "type": "Audio", "path": "/media/Audio/Routing and Decisions/routing-and-decisions.flac", "overview": null, "genres": ["Technology"], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Tools, Agents, and Human Control", "type": "Audio", "path": "/media/Audio/Tools, Agents, and Human Control/tools-agents-human-control.flac", "overview": null, "genres": ["Technology"], "tags": [], "studios": [], "officialRating": null }
+      ]
+    },
+    {
+      "name": "Semantic Books",
+      "collectionType": "books",
+      "itemType": "Book",
+      "path": "/media/Books",
+      "items": [
+        { "title": "Tokenizers Field Guide", "type": "Book", "path": "/media/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Tensors for Embeddings", "type": "Book", "path": "/media/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Verifiable AI Systems", "type": "Book", "path": "/media/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null }
+      ]
+    }
+  ]
+}

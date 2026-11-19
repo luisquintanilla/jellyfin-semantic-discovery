@@ -15,8 +15,8 @@ public static class PluginInstaller
         "Microsoft.Extensions.DataIngestion.Abstractions.dll",
         "Microsoft.Extensions.DataIngestion.Markdig.dll",
         "Microsoft.Extensions.VectorData.Abstractions.dll",
-        "Microsoft.ML.OnnxRuntime.dll",
         "Microsoft.ML.Tokenizers.dll",
+        "Microsoft.ML.Tokenizers.Data.O200kBase.dll",
         "System.Numerics.Tensors.dll",
     ];
 
@@ -24,10 +24,6 @@ public static class PluginInstaller
     [
         .. ExpectedManagedAssemblies,
         "meta.json",
-        "libonnxruntime.so",
-        "libonnxruntime_providers_shared.so",
-        "onnxruntime.dll",
-        "onnxruntime_providers_shared.dll",
     ];
 
     public static void Install(string sourceDirectory, string destinationDirectory)

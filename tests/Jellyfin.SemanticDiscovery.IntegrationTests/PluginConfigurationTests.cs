@@ -1,3 +1,5 @@
+using Jellyfin.Data.Enums;
+using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Plugin;
 using PluginClass = Jellyfin.SemanticDiscovery.Plugin.Plugin;
 
@@ -51,15 +53,9 @@ public sealed class PluginConfigurationTests
             EffectiveRecommendationFloor = 0.38F,
             ClientProcessCurrentWorkingSetBytes = 101,
             ClientProcessPeakWorkingSetBytes = 102,
-            LargestConversionSourceBytes = 103,
-            LargestSerializedRequestBytes = 104,
-            LargestRequestBeforeCurrentWorkingSetBytes = 105,
-            LargestRequestBeforePeakWorkingSetBytes = 106,
-            LargestRequestAfterCurrentWorkingSetBytes = 107,
-            LargestRequestAfterPeakWorkingSetBytes = 108,
             ExternalEgressCanaryBlocked = true,
-            MarkItDownReachable = true,
-            MarkItDownReachabilityProbe = "exact MCP tools/list",
+            OllamaReachable = true,
+            OllamaReachabilityProbe = "exact /api/tags",
             EgressEnforcement = "proxy-policy",
             EgressResidualLimitation = "direct sockets",
             LastRecommendationSourceItemId = "source-id",
@@ -80,17 +76,11 @@ public sealed class PluginConfigurationTests
         Assert.Equal(0.38F, merged.EffectiveRecommendationFloor);
         Assert.Equal(101, merged.ClientProcessCurrentWorkingSetBytes);
         Assert.Equal(102, merged.ClientProcessPeakWorkingSetBytes);
-        Assert.Equal(103, merged.LargestConversionSourceBytes);
-        Assert.Equal(104, merged.LargestSerializedRequestBytes);
-        Assert.Equal(105, merged.LargestRequestBeforeCurrentWorkingSetBytes);
-        Assert.Equal(106, merged.LargestRequestBeforePeakWorkingSetBytes);
-        Assert.Equal(107, merged.LargestRequestAfterCurrentWorkingSetBytes);
-        Assert.Equal(108, merged.LargestRequestAfterPeakWorkingSetBytes);
         Assert.True(merged.ExternalEgressCanaryBlocked);
-        Assert.True(merged.MarkItDownReachable);
+        Assert.True(merged.OllamaReachable);
         Assert.Equal(
-            "exact MCP tools/list",
-            merged.MarkItDownReachabilityProbe);
+            "exact /api/tags",
+            merged.OllamaReachabilityProbe);
         Assert.Equal("proxy-policy", merged.EgressEnforcement);
         Assert.Equal("direct sockets", merged.EgressResidualLimitation);
         Assert.Equal("source-id", merged.LastRecommendationSourceItemId);
@@ -107,9 +97,12 @@ public sealed class PluginConfigurationTests
         {
             Enabled = true,
             SearchLimit = 17,
-            ModelDirectory = "model-a",
+            OllamaEndpoint = "http://ollama-a:11434",
             SnapshotPath = "snapshot-a",
-            MarkItDownEndpoint = "http://markitdown-a/mcp",
+            EmbeddingModel = "embedding-a",
+            ExtractionModel = "vision-a",
+            ExtractionMode = "Hybrid",
+            ExtractionArtifactRoot = "artifacts-a",
         };
 
         PluginSettings captured =
@@ -117,15 +110,23 @@ public sealed class PluginConfigurationTests
                 configuration);
         configuration.Enabled = false;
         configuration.SearchLimit = 99;
-        configuration.ModelDirectory = "model-b";
+        configuration.OllamaEndpoint = "http://ollama-b:11434";
         configuration.SnapshotPath = "snapshot-b";
-        configuration.MarkItDownEndpoint = "http://markitdown-b/mcp";
+        configuration.EmbeddingModel = "embedding-b";
+        configuration.ExtractionModel = "vision-b";
+        configuration.ExtractionMode = "Text";
+        configuration.ExtractionArtifactRoot = "artifacts-b";
 
         Assert.True(captured.Enabled);
         Assert.Equal(17, captured.SearchLimit);
-        Assert.Equal("model-a", captured.ModelDirectory);
+        Assert.Equal(
+            "http://ollama-a:11434",
+            captured.OllamaEndpoint);
         Assert.Equal("snapshot-a", captured.SnapshotPath);
-        Assert.Equal("http://markitdown-a/mcp", captured.MarkItDownEndpoint);
+        Assert.Equal("embedding-a", captured.EmbeddingModel);
+        Assert.Equal("vision-a", captured.ExtractionModel);
+        Assert.Equal("Hybrid", captured.ExtractionMode);
+        Assert.Equal("artifacts-a", captured.ExtractionArtifactRoot);
     }
 
     [Fact]
@@ -139,5 +140,15 @@ public sealed class PluginConfigurationTests
                 Enumerable.Repeat(
                     "😀",
                     SemanticSearchProvider.MaximumQueryScalars + 1))));
+    }
+
+    [Fact]
+    public void TypedSearchIncludesAudio()
+    {
+        HashSet<MediaKind> kinds = SemanticSearchProvider.GetKinds(
+            [BaseItemKind.Audio],
+            []);
+
+        Assert.Equal([MediaKind.Audio], kinds);
     }
 }

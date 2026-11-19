@@ -107,13 +107,14 @@ public sealed class SemanticSearchProvider(SemanticDiscoveryRuntime runtime)
             .Take(MaximumQueryScalars + 1)
             .Count() <= MaximumQueryScalars;
 
-    private static HashSet<MediaKind> GetKinds(
+    internal static HashSet<MediaKind> GetKinds(
         BaseItemKind[] included,
         BaseItemKind[] excluded)
     {
         Dictionary<BaseItemKind, MediaKind> supported = new()
         {
             [BaseItemKind.Movie] = MediaKind.Movie,
+            [BaseItemKind.Audio] = MediaKind.Audio,
             [BaseItemKind.Series] = MediaKind.Series,
             [BaseItemKind.Book] = MediaKind.Book,
         };

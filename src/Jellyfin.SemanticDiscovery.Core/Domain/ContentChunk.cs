@@ -22,5 +22,13 @@ public sealed record ContentChunk
 
     public string? Heading { get; init; }
 
+    public int? SourceStart { get; init; }
+
+    public int? SourceEnd { get; init; }
+
+    public int? PageNumber { get; init; }
+
+    public string[] Provenance { get; init; } = [];
+
     public required string ContentHash { get; init; }
 }

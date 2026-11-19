@@ -21,6 +21,9 @@ public static class MetadataProjector
         AppendMany(builder, "tags", item.Tags);
         AppendMany(builder, "people", item.People);
         AppendMany(builder, "studios", item.Studios);
+        Append(builder, "album", item.Album);
+        AppendMany(builder, "artists", item.Artists);
+        AppendMany(builder, "album artists", item.AlbumArtists);
 
         return builder.ToString();
     }

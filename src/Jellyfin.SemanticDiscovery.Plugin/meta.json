@@ -1,7 +1,7 @@
 {
   "category": "General",
   "changelog": "Initial local semantic discovery demo.",
-  "description": "Local semantic metadata, subtitle, transcript, PDF, and EPUB discovery with content-based recommendations.",
+  "description": "Local semantic metadata, subtitle, transcript, and extracted PDF discovery with content-based recommendations.",
   "guid": "de965148-5789-4e8c-9774-6d1409ef3478",
   "name": "Semantic Discovery",
   "overview": "Native local semantic discovery for Jellyfin 12.",
@@ -21,8 +21,8 @@
     "Microsoft.Extensions.DataIngestion.Abstractions.dll",
     "Microsoft.Extensions.DataIngestion.Markdig.dll",
     "Microsoft.Extensions.VectorData.Abstractions.dll",
-    "Microsoft.ML.OnnxRuntime.dll",
     "Microsoft.ML.Tokenizers.dll",
+    "Microsoft.ML.Tokenizers.Data.O200kBase.dll",
     "System.Numerics.Tensors.dll"
   ]
 }

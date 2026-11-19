@@ -34,5 +34,11 @@ public sealed record MetadataRecord
 
     public string[] Studios { get; init; } = [];
 
+    public string? Album { get; init; }
+
+    public string[] Artists { get; init; } = [];
+
+    public string[] AlbumArtists { get; init; } = [];
+
     public string? OfficialRating { get; init; }
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<movie>
+  <title>Jellyfin, with a New Capability</title>
+  <plot>Aspire 17 orchestrates Jellyfin 12, its semantic-discovery plugin, Ollama, and a .NET 11 document extraction service without replacing the Jellyfin experience.</plot>
+  <genre>Technology</genre>
+  <studio>.NET AI Stack demo</studio>
+  <year>2026</year>
+</movie>

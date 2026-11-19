@@ -3,20 +3,31 @@
 param(
     [int] $TimeoutSeconds = 420,
     [ValidateSet("Debug", "Release")]
-    [string] $Configuration = "Debug"
+    [string] $Configuration = "Debug",
+    [string] $NuGetConfig = "",
+    [ValidateSet("ci", "demo")]
+    [string] $Profile = "ci",
+    [string] $SeedExtractionRoot = ""
 )
 
 $ErrorActionPreference = "Stop"
 $repoRoot = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
-$dataRoot = Join-Path $repoRoot ".data\e2e"
+$profileSuffix = if ($Profile -eq "ci") { "e2e" } else { "e2e-demo" }
+$dataRoot = Join-Path $repoRoot ".data\$profileSuffix"
 $credentialsPath = Join-Path $dataRoot "jellyfin-login.json"
-$artifactsRoot = Join-Path $repoRoot "artifacts\e2e"
+$artifactsRoot = Join-Path $repoRoot "artifacts\$profileSuffix"
 $appHost = Join-Path `
     $repoRoot `
     "src\Jellyfin.SemanticDiscovery.AppHost\Jellyfin.SemanticDiscovery.AppHost.csproj"
 $testProject = Join-Path `
     $repoRoot `
     "tests\Jellyfin.SemanticDiscovery.EndToEndTests\Jellyfin.SemanticDiscovery.EndToEndTests.csproj"
+$cleanupImage = "jellyfin/jellyfin@sha256:97150310f89f908abbf6fa9640ccc36f9bfa9e5e987775db310b3b70c2d11602"
+$effectiveNuGetConfig = if ($NuGetConfig) {
+    [System.IO.Path]::GetFullPath($NuGetConfig)
+} else {
+    Join-Path $repoRoot "NuGet.Config"
+}
 
 function Set-ContainerUserForCurrentHost {
     if ($IsWindows) {
@@ -132,8 +143,7 @@ function Get-ScopedContainerIds {
 
 function Reset-E2EData {
     $resolved = [System.IO.Path]::GetFullPath($dataRoot)
-    $expected = [System.IO.Path]::GetFullPath(
-        (Join-Path $repoRoot ".data\e2e"))
+    $expected = [System.IO.Path]::GetFullPath($dataRoot)
     if (-not $resolved.Equals(
             $expected,
             [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -141,14 +151,25 @@ function Reset-E2EData {
     }
 
     if (Test-Path -LiteralPath $resolved) {
+        if (-not $IsWindows) {
+            docker run `
+                --rm `
+                --entrypoint /bin/sh `
+                --mount "type=bind,source=$resolved,target=/cleanup" `
+                $cleanupImage `
+                -c "rm -rf -- /cleanup/* /cleanup/.[!.]* /cleanup/..?*"
+            if ($LASTEXITCODE -ne 0) {
+                throw "Container-side E2E data cleanup failed."
+            }
+        }
+
         Remove-Item -LiteralPath $resolved -Recurse -Force
     }
 }
 
 function Reset-E2EArtifacts {
     $resolved = [System.IO.Path]::GetFullPath($artifactsRoot)
-    $expected = [System.IO.Path]::GetFullPath(
-        (Join-Path $repoRoot "artifacts\e2e"))
+    $expected = [System.IO.Path]::GetFullPath($artifactsRoot)
     if (-not $resolved.Equals(
             $expected,
             [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -191,12 +212,15 @@ function ConvertTo-SanitizedResourceEvidence {
     param($Description)
 
     $controlledNames = @(
-            "model-setup",
+            "ollama",
+            "embedding-model",
+            "vision-model",
             "fixture-setup",
             "plugin-setup",
+            "document-extraction",
+            "extraction-setup",
             "jellyfin-bootstrap",
-            "jellyfin",
-            "markitdown")
+            "jellyfin")
     $resources = Get-Resources $Description
     return [ordered]@{
             resources = @($resources |
@@ -241,11 +265,14 @@ function Assert-ResourceStates {
     )
 
     $resources = Get-Resources $Description
-    foreach ($name in @(
-            "model-setup",
-            "fixture-setup",
-            "plugin-setup",
-            "jellyfin-bootstrap")) {
+    $completedResources = @(
+        "plugin-setup",
+        "extraction-setup",
+        "jellyfin-bootstrap")
+    if ($Profile -eq "ci") {
+        $completedResources = @("fixture-setup") + $completedResources
+    }
+    foreach ($name in $completedResources) {
         $resource = @($resources | Where-Object {
             ($_.displayName ?? $_.DisplayName) -eq $name
         })
@@ -261,7 +288,7 @@ function Assert-ResourceStates {
         }
     }
 
-    foreach ($name in @("jellyfin", "markitdown")) {
+    foreach ($name in @("jellyfin", "document-extraction")) {
         $resource = @($resources | Where-Object {
             ($_.displayName ?? $_.DisplayName) -eq $name
         })
@@ -336,7 +363,7 @@ function Start-And-Wait {
         --format Json `
         --non-interactive `
         --nologo
-    foreach ($name in @("jellyfin", "markitdown")) {
+    foreach ($name in @("jellyfin", "document-extraction")) {
         Invoke-Aspire wait $name `
             --status healthy `
             --timeout $TimeoutSeconds `
@@ -344,11 +371,14 @@ function Start-And-Wait {
             --non-interactive `
             --nologo
     }
-    foreach ($name in @(
-            "model-setup",
-            "fixture-setup",
-            "plugin-setup",
-            "jellyfin-bootstrap")) {
+    $completedResources = @(
+        "plugin-setup",
+        "extraction-setup",
+        "jellyfin-bootstrap")
+    if ($Profile -eq "ci") {
+        $completedResources = @("fixture-setup") + $completedResources
+    }
+    foreach ($name in $completedResources) {
         Invoke-Aspire wait $name `
             --status down `
             --timeout $TimeoutSeconds `
@@ -377,15 +407,26 @@ function Invoke-E2ETests {
 
     $env:JELLYFIN_E2E_CREDENTIALS_PATH = $credentialsPath
     $env:JELLYFIN_E2E_EVIDENCE_PATH = $EvidencePath
-    dotnet test $testProject `
-        --no-build `
-        --no-restore `
-        --configuration $Configuration `
-        --verbosity minimal
+    $testArguments = @(
+        "test",
+        $testProject,
+        "--no-build",
+        "--no-restore",
+        "--configuration",
+        $Configuration,
+        "--verbosity",
+        "minimal")
+    if ($Profile -eq "demo") {
+        $testArguments += @(
+            "--filter",
+            "FullyQualifiedName~Demo")
+    }
+    dotnet @testArguments
     if ($LASTEXITCODE -ne 0) {
         throw "Jellyfin end-to-end tests failed in '$Phase' phase."
     }
-    if (-not (Test-Path -LiteralPath $EvidencePath)) {
+    if ($Profile -eq "ci" -and
+        -not (Test-Path -LiteralPath $EvidencePath)) {
         throw "The '$Phase' E2E run did not write fresh runtime evidence."
     }
 }
@@ -394,13 +435,27 @@ Push-Location $repoRoot
 $primaryFailure = $null
 try {
     Set-ContainerUserForCurrentHost
-    dotnet tool restore --configfile NuGet.Config
+    dotnet tool restore --configfile $effectiveNuGetConfig
     if ($LASTEXITCODE -ne 0) {
         throw "Pinned Aspire CLI restore failed."
     }
     Stop-Demo
     Reset-E2EData
     Reset-E2EArtifacts
+    if ($SeedExtractionRoot) {
+        $seedRoot = [System.IO.Path]::GetFullPath($SeedExtractionRoot)
+        foreach ($name in @("jobs", "published")) {
+            $source = Join-Path $seedRoot $name
+            if (-not (Test-Path -LiteralPath $source -PathType Container)) {
+                throw "Seed extraction root is missing '$name'."
+            }
+            $destination = Join-Path $dataRoot "extractions\$name"
+            New-Item -ItemType Directory -Force $destination | Out-Null
+            Copy-Item -LiteralPath (Get-ChildItem -LiteralPath $source -File).FullName `
+                -Destination $destination `
+                -Force
+        }
+    }
     $initialEvidencePath = Join-Path $artifactsRoot "runtime-initial.json"
     $restartEvidencePath = Join-Path $artifactsRoot "runtime-restart.json"
     foreach ($path in @($initialEvidencePath, $restartEvidencePath)) {
@@ -410,9 +465,13 @@ try {
     }
     $env:SEMANTIC_DISCOVERY_DATA = $dataRoot
     $env:SEMANTIC_DISCOVERY_CONFIGURATION = $Configuration
+    $env:SEMANTIC_DISCOVERY_PROFILE = $Profile
+    $env:SEMANTIC_DISCOVERY_HARDWARE_PROFILE =
+        if ($Profile -eq "ci") { "lower-memory" } else { "standard" }
+    $env:JELLYFIN_E2E_PROFILE = $Profile
 
     dotnet restore Jellyfin.SemanticDiscovery.slnx `
-        --configfile NuGet.Config `
+        --configfile $effectiveNuGetConfig `
         --locked-mode `
         --nologo
     if ($LASTEXITCODE -ne 0) {
@@ -436,11 +495,12 @@ try {
     }
     Invoke-E2ETests "restart" $restartEvidencePath
 
-    $initialEvidence = Get-Content -Raw -LiteralPath $initialEvidencePath |
-        ConvertFrom-Json
-    $restartEvidence = Get-Content -Raw -LiteralPath $restartEvidencePath |
-        ConvertFrom-Json
-    if ([long]$restartEvidence.indexGeneration -le
+    if ($Profile -eq "ci") {
+        $initialEvidence = Get-Content -Raw -LiteralPath $initialEvidencePath |
+            ConvertFrom-Json
+        $restartEvidence = Get-Content -Raw -LiteralPath $restartEvidencePath |
+            ConvertFrom-Json
+        if ([long]$restartEvidence.indexGeneration -le
             [long]$initialEvidence.indexGeneration -or
         [long]$restartEvidence.metadataRecordCount -ne
             [long]$initialEvidence.metadataRecordCount -or
@@ -458,25 +518,26 @@ try {
             [long]$initialEvidence.ingestEmbeddingsTotal -or
         [long]$restartEvidence.queryEmbeddingsTotal -lt
             [long]$initialEvidence.queryEmbeddingsTotal) {
-        throw "Persistent restart evidence did not preserve identity/counts and advance generation monotonically."
+            throw "Persistent restart evidence did not preserve identity/counts and advance generation monotonically."
+        }
+
+        $restartLogs = & dotnet tool run aspire -- logs jellyfin `
+            --apphost $appHost `
+            --search "Semantic index ready" `
+            --format Json `
+            --non-interactive `
+            --nologo | Out-String
+        if ($LASTEXITCODE -ne 0 -or
+            $restartLogs -notmatch "embedded 0 items and 0 chunks") {
+            throw "Restart did not prove checksum-based vector reuse."
+        }
+        [System.IO.File]::WriteAllText(
+            (Join-Path $artifactsRoot "jellyfin-restart-index-log.json"),
+            $restartLogs,
+            [System.Text.UTF8Encoding]::new($false))
     }
 
-    $restartLogs = & dotnet tool run aspire -- logs jellyfin `
-        --apphost $appHost `
-        --search "Semantic index ready" `
-        --format Json `
-        --non-interactive `
-        --nologo | Out-String
-    if ($LASTEXITCODE -ne 0 -or
-        $restartLogs -notmatch "embedded 0 items and 0 chunks") {
-        throw "Restart did not prove checksum-based vector reuse."
-    }
-    [System.IO.File]::WriteAllText(
-        (Join-Path $artifactsRoot "jellyfin-restart-index-log.json"),
-        $restartLogs,
-        [System.Text.UTF8Encoding]::new($false))
-
-    Write-Host "Clean and persistent-restart Jellyfin E2E gates passed."
+    Write-Host "Clean and persistent-restart Jellyfin '$Profile' E2E gates passed."
 } catch {
     $primaryFailure = $_
     try {
@@ -505,6 +566,9 @@ try {
     Remove-Item Env:JELLYFIN_E2E_EVIDENCE_PATH -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_DATA -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_CONFIGURATION -ErrorAction SilentlyContinue
+    Remove-Item Env:SEMANTIC_DISCOVERY_PROFILE -ErrorAction SilentlyContinue
+    Remove-Item Env:SEMANTIC_DISCOVERY_HARDWARE_PROFILE -ErrorAction SilentlyContinue
+    Remove-Item Env:JELLYFIN_E2E_PROFILE -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_CONTAINER_USER -ErrorAction SilentlyContinue
     $stopConfirmed = $false
     try {

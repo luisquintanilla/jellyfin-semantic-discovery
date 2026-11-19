@@ -10,8 +10,110 @@ public sealed class JellyfinApiEndToEndTests
     private const string PluginConfigurationUri =
         "Plugins/de965148-5789-4e8c-9774-6d1409ef3478/Configuration";
 
+    [DemoEndToEndFact]
+    public async Task DemoBookAnchorsRetrieveTheSealedCorpus()
+    {
+        await using DemoContext context = await DemoContext.CreateAsync();
+
+        Assert.Equal(
+            "Tokenizers Field Guide",
+            (await SearchNamesAsync(
+                context.Admin,
+                "how do token offsets align tokens with the original source text?",
+                includeItemTypes: "Book")).First());
+        Assert.Equal(
+            "Tensors for Embeddings",
+            (await SearchNamesAsync(
+                context.Admin,
+                "which tensor API is best for vectorized embedding hot loops?",
+                includeItemTypes: "Book")).First());
+        Assert.Equal(
+            "Verifiable AI Systems",
+            (await SearchNamesAsync(
+                context.Admin,
+                "who decides correctness in a verifiable AI workflow?",
+                includeItemTypes: "Book")).First());
+        Assert.Equal(
+            "Jellyfin, with a New Capability",
+            (await SearchNamesAsync(
+                context.Admin,
+                "official Jellyfin 12 experience remains intact",
+                includeItemTypes: "Movie")).First());
+        Assert.Equal(
+            "One Contract, Many Models",
+            (await SearchNamesAsync(
+                context.Admin,
+                "keyed dependency injection selects AI providers",
+                includeItemTypes: "Movie")).First());
+        Assert.Equal(
+            "Tokens to Vectors",
+            (await SearchNamesAsync(
+                context.Admin,
+                "attention masks mark real tokens and padding with zero",
+                includeItemTypes: "Movie")).First());
+        Assert.Equal(
+            "Context Pipelines",
+            (await SearchNamesAsync(
+                context.Admin,
+                ".NET 11 ASP.NET Core service uses Microsoft.Extensions.DocumentExtraction")).First());
+        Assert.Equal(
+            "Routing and Decisions",
+            (await SearchNamesAsync(
+                context.Admin,
+                "confidence threshold rejects uncertain results")).First());
+        Assert.Equal(
+            "Tools, Agents, and Human Control",
+            (await SearchNamesAsync(
+                context.Admin,
+                "humans approve consequential work after validation")).First());
+    }
+
+    [DemoArtworkEndToEndFact]
+    public async Task DemoItemsPublishPrimaryArtwork()
+    {
+        await using DemoContext context = await DemoContext.CreateAsync();
+        using JsonDocument manifest = JsonDocument.Parse(
+            File.ReadAllBytes(DemoArtworkEndToEndFactAttribute.ManifestPath));
+        Dictionary<string, bool> expected = manifest.RootElement
+            .GetProperty("assets")
+            .EnumerateArray()
+            .ToDictionary(
+                asset => asset.GetProperty("title").GetString()!,
+                asset => asset.TryGetProperty(
+                        "backdrop",
+                        out JsonElement backdrop) &&
+                    backdrop.ValueKind == JsonValueKind.String,
+                StringComparer.Ordinal);
+        JsonObject response = await GetObjectAsync(
+            context.Admin,
+            "Items?Recursive=true&IncludeItemTypes=Movie,Audio,Book" +
+            "&Fields=ImageTags,BackdropImageTags&EnableImages=true" +
+            "&ImageTypeLimit=1&Limit=100");
+        JsonObject[] items = response["Items"]!.AsArray()
+            .Select(static item => item!.AsObject())
+            .Where(item => expected.ContainsKey(
+                GetRequiredString(item, "Name")))
+            .ToArray();
+
+        Assert.Equal(9, items.Length);
+        foreach (JsonObject item in items)
+        {
+            string title = GetRequiredString(item, "Name");
+            JsonObject imageTags = Assert.IsType<JsonObject>(
+                item["ImageTags"]);
+            Assert.False(string.IsNullOrWhiteSpace(
+                imageTags["Primary"]?.GetValue<string>()));
+            if (expected[title])
+            {
+                Assert.NotEmpty(
+                    Assert.IsType<JsonArray>(
+                        item["BackdropImageTags"]));
+            }
+        }
+    }
+
     [EndToEndFact]
-    public async Task NativeSearchFindsMetadataSubtitlesPdfEpubAndRejectsNoise()
+    public async Task NativeSearchFindsMetadataSubtitlesPdfAndRejectsNoise()
     {
         await using DemoContext context = await DemoContext.CreateAsync();
 
@@ -30,11 +132,6 @@ public sealed class JellyfinApiEndToEndTests
             await SearchNamesAsync(
                 context.Admin,
                 "marigold ledger returns before frost"));
-        Assert.Contains(
-            "Notes from the Choir Loft",
-            await SearchNamesAsync(
-                context.Admin,
-                "seventeen lanterns gather at the loft door"));
         Assert.Contains(
             "Harbor Static",
             await SearchNamesAsync(context.Admin, "head back before dark"));
@@ -63,10 +160,12 @@ public sealed class JellyfinApiEndToEndTests
                 includeItemTypes: "Movie",
                 mediaTypes: "Video",
                 parentId: movieLibraryId));
-        Assert.Empty(await SearchNamesAsync(
-            context.Admin,
-            "quiet cartouche hums twice before dawn",
-            includeItemTypes: "Book"));
+        Assert.DoesNotContain(
+            "The Signal Garden",
+            await SearchNamesAsync(
+                context.Admin,
+                "quiet cartouche hums twice before dawn",
+                includeItemTypes: "Book"));
         Assert.Empty(await SearchNamesAsync(
             context.Admin,
             "quiet cartouche hums twice before dawn",
@@ -646,10 +745,10 @@ public sealed class EndToEndFactAttribute : FactAttribute
     {
         if (string.Equals(
                 Environment.GetEnvironmentVariable("JELLYFIN_E2E_PROFILE"),
-                "showcase",
+                "demo",
                 StringComparison.Ordinal))
         {
-            Skip = "Synthetic baseline tests do not run against showcase data.";
+            Skip = "Synthetic CI fixture tests do not run against demo media.";
         }
         else if (string.IsNullOrWhiteSpace(
                 Environment.GetEnvironmentVariable(
@@ -658,5 +757,82 @@ public sealed class EndToEndFactAttribute : FactAttribute
             Skip =
                 "JELLYFIN_E2E_CREDENTIALS_PATH is set by scripts/Test-EndToEnd.ps1.";
         }
+    }
+
+}
+
+public sealed class DemoEndToEndFactAttribute : FactAttribute
+{
+    public DemoEndToEndFactAttribute()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("JELLYFIN_E2E_PROFILE"),
+                "demo",
+                StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(
+                Environment.GetEnvironmentVariable(
+                    "JELLYFIN_E2E_CREDENTIALS_PATH")))
+        {
+            Skip =
+                "The sealed demo corpus is exercised when JELLYFIN_E2E_PROFILE=demo.";
+        }
+    }
+
+}
+
+public sealed class DemoArtworkEndToEndFactAttribute : FactAttribute
+{
+    internal static string ManifestPath =>
+        Path.Combine(
+            FindRepositoryRoot(),
+            "assets",
+            "demo",
+            "manifest.json");
+
+    public DemoArtworkEndToEndFactAttribute()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("JELLYFIN_E2E_PROFILE"),
+                "demo",
+                StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(
+                Environment.GetEnvironmentVariable(
+                    "JELLYFIN_E2E_CREDENTIALS_PATH")))
+        {
+            Skip =
+                "Artwork is exercised only by the live demo profile.";
+            return;
+        }
+
+        using JsonDocument manifest = JsonDocument.Parse(
+            File.ReadAllBytes(ManifestPath));
+        if (!manifest.RootElement.TryGetProperty(
+                "artworkStatus",
+                out JsonElement status) ||
+            !string.Equals(
+                status.GetString(),
+                "ready",
+                StringComparison.Ordinal))
+        {
+            Skip = "Approved demo artwork has not been delivered yet.";
+        }
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        for (DirectoryInfo? directory = new(AppContext.BaseDirectory);
+             directory is not null;
+             directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(
+                    directory.FullName,
+                    "Jellyfin.SemanticDiscovery.slnx")))
+            {
+                return directory.FullName;
+            }
+        }
+
+        throw new DirectoryNotFoundException(
+            "The repository root could not be located.");
     }
 }

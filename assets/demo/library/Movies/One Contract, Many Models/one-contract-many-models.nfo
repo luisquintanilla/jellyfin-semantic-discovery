@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<movie>
+  <title>One Contract, Many Models</title>
+  <plot>Microsoft.Extensions.AI contracts and keyed dependency injection let ordinary .NET feature code select Ollama, Azure, or ONNX-backed providers through configuration.</plot>
+  <genre>Technology</genre>
+  <studio>.NET AI Stack demo</studio>
+  <year>2026</year>
+</movie>

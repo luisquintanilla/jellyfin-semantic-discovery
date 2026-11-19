@@ -1,6 +1,6 @@
 namespace Jellyfin.SemanticDiscovery.Core.Ingestion;
 
-internal static class IngestionMetadata
+public static class IngestionMetadata
 {
     public const string CueOrdinal = "jellyfin.cue.ordinal";
     public const string CueOrdinals = "jellyfin.cue.ordinals";

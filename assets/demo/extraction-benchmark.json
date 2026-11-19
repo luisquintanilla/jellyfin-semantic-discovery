@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Deterministic local comparison contract for qwen3-vl:8b-instruct and the explicit qwen3-vl:4b-instruct lower-memory profile. This file contains inputs and checks, not measured results.",
+  "profiles": [
+    "qwen3-vl:8b-instruct",
+    "qwen3-vl:4b-instruct"
+  ],
+  "checks": [
+    {
+      "manifestItemId": "tokenizers-field-guide",
+      "expectedPages": 8,
+      "textAnchor": "Source Offsets in Tokenization",
+      "retrievalQuery": "how do token offsets align tokens with the original source text?"
+    },
+    {
+      "manifestItemId": "tensors-for-embeddings",
+      "expectedPages": 8,
+      "textAnchor": "Computing Cosine Similarity in C#",
+      "retrievalQuery": "which tensor API is best for vectorized embedding hot loops?"
+    },
+    {
+      "manifestItemId": "verifiable-ai-systems",
+      "expectedPages": 8,
+      "textAnchor": "The Evidence Ladder Mechanism",
+      "retrievalQuery": "who decides correctness in a verifiable AI workflow?"
+    }
+  ],
+  "requiredComparisons": [
+    "page count",
+    "text-anchor retention",
+    "visual provenance count",
+    "chunk count",
+    "elapsed time as diagnostic only",
+    "peak working set as diagnostic only"
+  ]
+}

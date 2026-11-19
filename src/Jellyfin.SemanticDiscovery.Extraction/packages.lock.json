@@ -1,0 +1,191 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net11.0": {
+      "CommunityToolkit.DocumentExtraction.PdfPig": {
+        "type": "Direct",
+        "requested": "[1.0.0-preview, )",
+        "resolved": "1.0.0-preview",
+        "contentHash": "PP67NR9iWuAsfHC+cb6Q09r1112Pu813oddd8o9ZTtEadBCyqCOcHbPgK1iQ/SO/aJCc7KRROTnUYglIKQemSw==",
+        "dependencies": {
+          "Microsoft.Extensions.DocumentExtraction.Abstractions": "11.0.0-preview.1.26560.3",
+          "PdfPig": "0.1.15"
+        }
+      },
+      "CommunityToolkit.DocumentExtraction.VisionLanguageModel": {
+        "type": "Direct",
+        "requested": "[1.0.0-preview, )",
+        "resolved": "1.0.0-preview",
+        "contentHash": "vIAiVAgAj6WIxteqKWyIDQqvlGC05TQ1D4H+2UWdp6p0dVVW2AQe8s+u4rQJUHWdVjmaZ9NOwCOzxCbvszv5WA==",
+        "dependencies": {
+          "Microsoft.Extensions.DocumentExtraction.Abstractions": "11.0.0-preview.1.26560.3"
+        }
+      },
+      "Microsoft.Extensions.AI": {
+        "type": "Direct",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "Vn8jo7RCYS3+tD7XOYgwtAPtd6CZIfIpzE20wGkbehAezj+tRY0lZWnEgehP0bLEAno/L54aCa4GnretNoGkXQ==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "11.0.0",
+          "System.Numerics.Tensors": "11.0.0"
+        }
+      },
+      "Microsoft.Extensions.AI.Abstractions": {
+        "type": "Direct",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "UYZTudmTrGykWIRzcO/TKauTx/+L/h4MYpUBODCG7aIybRVkv2y6uhVwG6UHRS6uTzRqg0K8IJprC9/QhMZGsw=="
+      },
+      "Microsoft.Extensions.DataIngestion": {
+        "type": "Direct",
+        "requested": "[11.0.0-preview.1.26560.3, )",
+        "resolved": "11.0.0-preview.1.26560.3",
+        "contentHash": "fSrG8D9nf7e1xi2D4pEBreelt4EIzdP3OqxUSuoR3ZAXU5hON+up5Var926F6vGltEozwXQ+oRWxu/Y0dfrVxg==",
+        "dependencies": {
+          "Microsoft.Extensions.AI": "11.0.0",
+          "Microsoft.Extensions.DataIngestion.Abstractions": "11.0.0-preview.1.26560.3",
+          "Microsoft.Extensions.VectorData.Abstractions": "9.7.0",
+          "Microsoft.ML.Tokenizers": "1.0.1",
+          "System.Numerics.Tensors": "11.0.0"
+        }
+      },
+      "Microsoft.Extensions.DocumentExtraction": {
+        "type": "Direct",
+        "requested": "[11.0.0-preview.1.26560.3, )",
+        "resolved": "11.0.0-preview.1.26560.3",
+        "contentHash": "EYbB+by2Bx45TLi+1lFDjzCSKNRZ3OfAcW1Gzn58bU18Ql49DpIy/QwVSuDtwRRuOXEOAekTuJis7l67uaq6Ug==",
+        "dependencies": {
+          "Microsoft.Extensions.DocumentExtraction.Abstractions": "11.0.0-preview.1.26560.3"
+        }
+      },
+      "Google.Protobuf": {
+        "type": "Transitive",
+        "resolved": "3.30.2",
+        "contentHash": "Y2aOVLIt75yeeEWigg9V9YnjsEm53sADtLGq0gLhwaXpk3iu8tYSoauolyhenagA2sWno2TQ2WujI0HQd6s1Vw=="
+      },
+      "Microsoft.Bcl.AsyncInterfaces": {
+        "type": "Transitive",
+        "resolved": "9.0.4",
+        "contentHash": "9VGI5kxIvrNG2mqLQZnUR6y/3fcnygD8eNpHR+CqfbnIXvea6nehnYknDKQTxZVPMpzpNca+7DxLBmpdB3q0Bw=="
+      },
+      "Microsoft.Bcl.HashCode": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "GI4jcoi6eC9ZhNOQylIBaWOQjyGaR8T6N3tC1u8p3EXfndLCVNNWa+Zp+ocjvvS3kNBN09Zma2HXL0ezO0dRfw=="
+      },
+      "Microsoft.Extensions.Documents.Abstractions": {
+        "type": "Transitive",
+        "resolved": "11.0.0-preview.1.26560.3",
+        "contentHash": "t14U3aZO+SvW51PvJcLtKaKN4nE210Aw+HUkpZCjbrcPGTN44T5OGSwwqcZTi9cT1+vpA+tlTAJ8eNQaZ1bt7w==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "11.0.0"
+        }
+      },
+      "PdfPig": {
+        "type": "Transitive",
+        "resolved": "0.1.15",
+        "contentHash": "Bf0NO4o2ZSVnemMyj21KDU1sfSgmamFC0pD4aAv19CDNXQsoO1Z6O99gNqpiK/XWWZ5d5i7JkQoT7PUBxEPz5g=="
+      },
+      "jellyfin.semanticdiscovery.core": {
+        "type": "Project",
+        "dependencies": {
+          "CommunityToolkit.VectorData.InMemory": "[1.0.1, )",
+          "Markdig.Signed": "[0.43.0, )",
+          "Microsoft.Extensions.AI.Abstractions": "[11.0.0, )",
+          "Microsoft.Extensions.DataIngestion.Abstractions": "[11.0.0-preview.1.26560.3, )",
+          "Microsoft.Extensions.DataIngestion.Markdig": "[11.0.0-preview.1.26560.3, )",
+          "Microsoft.Extensions.VectorData.Abstractions": "[11.0.0, )",
+          "Microsoft.ML.Tokenizers": "[2.0.0, )",
+          "Microsoft.ML.Tokenizers.Data.O200kBase": "[2.0.0, )",
+          "System.Numerics.Tensors": "[11.0.0, )"
+        }
+      },
+      "CommunityToolkit.VectorData.InMemory": {
+        "type": "CentralTransitive",
+        "requested": "[1.0.1, )",
+        "resolved": "1.0.1",
+        "contentHash": "vsal3mLLG4DEr/PFC3SXTIfvKs1579tqP3nLU/cXxsO7qy6ZEx22vmfaxpoQBgruiMywmzZmC7kClEaeCIHwtw==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.8.3",
+          "Microsoft.Extensions.VectorData.Abstractions": "10.8.2",
+          "System.Numerics.Tensors": "10.0.10"
+        }
+      },
+      "Markdig.Signed": {
+        "type": "CentralTransitive",
+        "requested": "[0.43.0, )",
+        "resolved": "0.43.0",
+        "contentHash": "Ly5oB+iS5rA2GqLuv7KZNJWQnHXLb5oi7cmIpGrrCrsvU9oplSKO/Xo65tLUiC+bcMjhQ7ZHn97h6vcvF24FbQ=="
+      },
+      "Microsoft.Bcl.Memory": {
+        "type": "CentralTransitive",
+        "requested": "[9.0.14, )",
+        "resolved": "9.0.14",
+        "contentHash": "laQCcjTM2FnbyznkAu9hwBuQh3z2/OtJKwjGkJOUevylFpFXZIUVq/+MU2jM0HQm1n5wsjjwtLIDOiWJ6Nai3A=="
+      },
+      "Microsoft.Extensions.DataIngestion.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[11.0.0-preview.1.26560.3, )",
+        "resolved": "11.0.0-preview.1.26560.3",
+        "contentHash": "ure2Wznt5dpLm/Nmpfa+NAOxdbncU7JKbXaZzuWU/v5SzUOKc1O0M38P8FyidAC/LlZxj0/sNuiw2R6SUIlgSg=="
+      },
+      "Microsoft.Extensions.DataIngestion.Markdig": {
+        "type": "CentralTransitive",
+        "requested": "[11.0.0-preview.1.26560.3, )",
+        "resolved": "11.0.0-preview.1.26560.3",
+        "contentHash": "R6oJ6pJs/YACYgwH8EFNL37KfN5qKsW4aCmOyaamnqyJXhmP7xw94A1oBV5QKGaiasJnh3FhVaTQXxuB8DQjkA==",
+        "dependencies": {
+          "Markdig.Signed": "0.43.0",
+          "Microsoft.Extensions.DataIngestion.Abstractions": "11.0.0-preview.1.26560.3"
+        }
+      },
+      "Microsoft.Extensions.DocumentExtraction.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[11.0.0-preview.1.26560.3, )",
+        "resolved": "11.0.0-preview.1.26560.3",
+        "contentHash": "TGrxJJo0lcIkHYOYLnhWjMO+F4Llsr9aIafhoG+v2fDQZcj+DAvNRZgbZm4aM27zJWzxSCXFRbu0ndydjA2Cgw==",
+        "dependencies": {
+          "Microsoft.Extensions.Documents.Abstractions": "11.0.0-preview.1.26560.3"
+        }
+      },
+      "Microsoft.Extensions.VectorData.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "hZVGWv3AJhKDuEaRWOUia+XQQe/mViHh3xM3wdfKTFMWJxDUkjxFGPUDaFCq/WjBw8SC9PIFJzLyMoIfPYMA4w==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "11.0.0"
+        }
+      },
+      "Microsoft.ML.Tokenizers": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA==",
+        "dependencies": {
+          "Google.Protobuf": "3.30.2"
+        }
+      },
+      "Microsoft.ML.Tokenizers.Data.O200kBase": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "19G0KWrRnUZmc8vGdPNuBJqTruhAjzPLRY2nn6a/HiBXbEnE/Lx9L223jGlDzg1oAcCggo/8GlWw3ZLVuS76Ow==",
+        "dependencies": {
+          "Google.Protobuf": "3.30.2",
+          "Microsoft.Bcl.AsyncInterfaces": "9.0.4",
+          "Microsoft.Bcl.HashCode": "6.0.0",
+          "Microsoft.Bcl.Memory": "9.0.4",
+          "Microsoft.ML.Tokenizers": "2.0.0"
+        }
+      },
+      "System.Numerics.Tensors": {
+        "type": "CentralTransitive",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "thx6y1hMzB6LumB/aLcZoLHWq8wr+dbldk/FiNghyT+4ynxo9u2oCTFfb5iDMDG6hykDXLorXuaf4EPEij2BBg=="
+      }
+    }
+  }
+}

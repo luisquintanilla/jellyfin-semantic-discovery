@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<movie>
+  <title>Tokens to Vectors</title>
+  <plot>A practical walkthrough of normalization, tokenization, attention masks, mean pooling, vector normalization, and cosine similarity.</plot>
+  <genre>Technology</genre>
+  <studio>.NET AI Stack demo</studio>
+  <year>2026</year>
+</movie>

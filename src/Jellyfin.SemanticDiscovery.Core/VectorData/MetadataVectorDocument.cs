@@ -54,6 +54,15 @@ public sealed class MetadataVectorDocument
     public string[] Studios { get; init; } = [];
 
     [VectorStoreData]
+    public string? Album { get; init; }
+
+    [VectorStoreData]
+    public string[] Artists { get; init; } = [];
+
+    [VectorStoreData]
+    public string[] AlbumArtists { get; init; } = [];
+
+    [VectorStoreData]
     public string? OfficialRating { get; init; }
 
     [VectorStoreData]
@@ -82,6 +91,9 @@ public sealed class MetadataVectorDocument
         Tags = [.. Tags],
         People = [.. People],
         Studios = [.. Studios],
+        Album = Album,
+        Artists = [.. Artists],
+        AlbumArtists = [.. AlbumArtists],
         OfficialRating = OfficialRating,
     };
 
@@ -106,6 +118,9 @@ public sealed class MetadataVectorDocument
             Tags = [.. record.Tags],
             People = [.. record.People],
             Studios = [.. record.Studios],
+            Album = record.Album,
+            Artists = [.. record.Artists],
+            AlbumArtists = [.. record.AlbumArtists],
             OfficialRating = record.OfficialRating,
             ProjectionHash = projectionHash,
             Vector = vector.ToArray(),

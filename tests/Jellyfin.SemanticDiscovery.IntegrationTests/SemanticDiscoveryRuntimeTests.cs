@@ -379,21 +379,20 @@ public sealed class SemanticDiscoveryRuntimeTests
 
         public NetworkBoundaryStatus NetworkBoundary { get; init; } = new(
             ExternalEgressCanaryBlocked: false,
-            MarkItDownReachable: true,
-            MarkItDownReachabilityProbe: "test",
+            OllamaReachable: true,
+            OllamaReachabilityProbe: "test",
             Enforcement: "test",
             ResidualLimitation: "test");
-
-        public ClientRequestMemoryObservation? LargestClientRequestMemory =>
-            null;
 
         public int DisposeCount => Volatile.Read(ref _disposeCount);
 
         public Func<CancellationToken, ValueTask<IReadOnlyList<SemanticSearchResult>>>?
-            Search { get; init; }
+            Search
+        { get; init; }
 
         public Func<int, CancellationToken, ValueTask<IndexBuildResult>>?
-            Rebuild { get; init; }
+            Rebuild
+        { get; init; }
 
         public ValueTask<IReadOnlyList<SemanticSearchResult>> SearchAsync(
             string query,

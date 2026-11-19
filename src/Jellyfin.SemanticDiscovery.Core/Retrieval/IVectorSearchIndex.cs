@@ -31,4 +31,25 @@ public interface IVectorSearchReadSession
     ValueTask<ReadOnlyMemory<float>?> GetMetadataVectorAsync(
         Guid itemId,
         CancellationToken cancellationToken);
+
+    async ValueTask<IReadOnlyDictionary<Guid, ReadOnlyMemory<float>>>
+        GetMetadataVectorsAsync(
+            IEnumerable<Guid> itemIds,
+            CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(itemIds);
+        Dictionary<Guid, ReadOnlyMemory<float>> vectors = [];
+        foreach (Guid itemId in itemIds.Distinct())
+        {
+            ReadOnlyMemory<float>? vector =
+                await GetMetadataVectorAsync(itemId, cancellationToken)
+                    .ConfigureAwait(false);
+            if (vector.HasValue)
+            {
+                vectors.Add(itemId, vector.Value);
+            }
+        }
+
+        return vectors;
+    }
 }

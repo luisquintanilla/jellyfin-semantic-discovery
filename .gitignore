@@ -3,7 +3,7 @@
 .vs/
 .vscode/
 .idea/
-artifacts/
+/artifacts/
 coverage/
 TestResults/
 *.user
@@ -13,9 +13,7 @@ TestResults/
 __pycache__/
 *.pyc
 
-# Runtime state and downloaded reproducible assets.
+# Runtime state.
 .aspire/
 .data/
 .testagent/
-assets/model/
-assets/media/generated/
