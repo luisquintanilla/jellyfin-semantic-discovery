@@ -3,7 +3,7 @@
 .vs/
 .vscode/
 .idea/
-artifacts/
+/artifacts/
 coverage/
 TestResults/
 *.user
