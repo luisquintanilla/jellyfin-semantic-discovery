@@ -3,7 +3,8 @@
 param(
     [int] $TimeoutSeconds = 420,
     [ValidateSet("Debug", "Release")]
-    [string] $Configuration = "Debug"
+    [string] $Configuration = "Debug",
+    [string] $NuGetConfig = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,6 +18,11 @@ $appHost = Join-Path `
 $testProject = Join-Path `
     $repoRoot `
     "tests\Jellyfin.SemanticDiscovery.EndToEndTests\Jellyfin.SemanticDiscovery.EndToEndTests.csproj"
+$effectiveNuGetConfig = if ($NuGetConfig) {
+    [System.IO.Path]::GetFullPath($NuGetConfig)
+} else {
+    Join-Path $repoRoot "NuGet.Config"
+}
 
 function Set-ContainerUserForCurrentHost {
     if ($IsWindows) {
@@ -397,7 +403,7 @@ Push-Location $repoRoot
 $primaryFailure = $null
 try {
     Set-ContainerUserForCurrentHost
-    dotnet tool restore --configfile NuGet.Config
+    dotnet tool restore --configfile $effectiveNuGetConfig
     if ($LASTEXITCODE -ne 0) {
         throw "Pinned Aspire CLI restore failed."
     }
@@ -418,7 +424,7 @@ try {
     $env:JELLYFIN_E2E_PROFILE = "ci"
 
     dotnet restore Jellyfin.SemanticDiscovery.slnx `
-        --configfile NuGet.Config `
+        --configfile $effectiveNuGetConfig `
         --locked-mode `
         --nologo
     if ($LASTEXITCODE -ne 0) {
