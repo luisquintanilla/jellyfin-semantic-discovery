@@ -35,7 +35,7 @@ public sealed class InMemorySemanticVectorIndexTests
     [Theory]
     [InlineData(nameof(MetadataVectorDocument))]
     [InlineData(nameof(ContentVectorDocument))]
-    public void VectorAttributesDeclare384DimensionsAndCosineSimilarity(string typeName)
+    public void VectorAttributesDeclareConfiguredDimensionsAndCosineSimilarity(string typeName)
     {
         Type documentType = typeName == nameof(MetadataVectorDocument)
             ? typeof(MetadataVectorDocument)
@@ -45,7 +45,7 @@ public sealed class InMemorySemanticVectorIndexTests
             vectorProperty.GetCustomAttribute<VectorStoreVectorAttribute>()!;
 
         Assert.Equal(SemanticConstants.EmbeddingDimensions, attribute.Dimensions);
-        Assert.Equal(384, attribute.Dimensions);
+        Assert.Equal(SemanticConstants.EmbeddingDimensions, attribute.Dimensions);
         Assert.Equal(
             Microsoft.Extensions.VectorData.DistanceFunction.CosineSimilarity,
             attribute.DistanceFunction);
@@ -440,7 +440,11 @@ public sealed class InMemorySemanticVectorIndexTests
                     new HashSet<Guid>(),
                     CancellationToken.None).AsTask());
 
-        Assert.Contains("384", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            SemanticConstants.EmbeddingDimensions.ToString(
+                System.Globalization.CultureInfo.InvariantCulture),
+            exception.Message,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -457,7 +461,11 @@ public sealed class InMemorySemanticVectorIndexTests
                     new HashSet<Guid>(),
                     CancellationToken.None).AsTask());
 
-        Assert.Contains("384", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            SemanticConstants.EmbeddingDimensions.ToString(
+                System.Globalization.CultureInfo.InvariantCulture),
+            exception.Message,
+            StringComparison.Ordinal);
     }
 
     [Theory]

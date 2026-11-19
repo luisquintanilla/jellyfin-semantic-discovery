@@ -70,7 +70,7 @@ internal static class SemanticSourceIntegrity
                 StringComparison.Ordinal))
         {
             throw new InvalidDataException(
-                "Semantic source bytes do not match their validated showcase lock.");
+                "Semantic source bytes do not match their validated manifest.");
         }
     }
 }

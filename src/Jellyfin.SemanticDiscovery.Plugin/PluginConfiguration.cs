@@ -6,11 +6,17 @@ public sealed class PluginConfiguration : BasePluginConfiguration
 {
     public bool Enabled { get; set; } = true;
 
-    public string ModelDirectory { get; set; } = string.Empty;
+    public string OllamaEndpoint { get; set; } = string.Empty;
 
     public string SnapshotPath { get; set; } = string.Empty;
 
-    public string MarkItDownEndpoint { get; set; } = string.Empty;
+    public string EmbeddingModel { get; set; } = string.Empty;
+
+    public string ExtractionModel { get; set; } = string.Empty;
+
+    public string ExtractionMode { get; set; } = string.Empty;
+
+    public string ExtractionArtifactRoot { get; set; } = string.Empty;
 
     public int SearchLimit { get; set; } = 20;
 
@@ -52,23 +58,11 @@ public sealed class PluginConfiguration : BasePluginConfiguration
 
     public long ClientProcessPeakWorkingSetBytes { get; set; }
 
-    public long LargestConversionSourceBytes { get; set; }
-
-    public long LargestSerializedRequestBytes { get; set; }
-
-    public long LargestRequestBeforeCurrentWorkingSetBytes { get; set; }
-
-    public long LargestRequestBeforePeakWorkingSetBytes { get; set; }
-
-    public long LargestRequestAfterCurrentWorkingSetBytes { get; set; }
-
-    public long LargestRequestAfterPeakWorkingSetBytes { get; set; }
-
     public bool ExternalEgressCanaryBlocked { get; set; }
 
-    public bool MarkItDownReachable { get; set; }
+    public bool OllamaReachable { get; set; }
 
-    public string MarkItDownReachabilityProbe { get; set; } =
+    public string OllamaReachabilityProbe { get; set; } =
         "not-checked";
 
     public string EgressEnforcement { get; set; } = "not-configured";

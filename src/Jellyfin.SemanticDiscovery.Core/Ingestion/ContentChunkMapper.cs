@@ -8,13 +8,13 @@ namespace Jellyfin.SemanticDiscovery.Core.Ingestion;
 
 internal sealed class ContentChunkMapper
 {
-    private readonly MiniLmTokenBudget _tokenBudget;
+    private readonly ApplicationTokenBudget _tokenBudget;
 
     public ContentChunkMapper(
         ITokenCounter tokenCounter,
-        int maximumTokens = MiniLmTokenBudget.MaximumInputTokens)
+        int maximumTokens = ApplicationTokenBudget.MaximumInputTokens)
     {
-        _tokenBudget = new MiniLmTokenBudget(tokenCounter, maximumTokens);
+        _tokenBudget = new ApplicationTokenBudget(tokenCounter, maximumTokens);
     }
 
     public async ValueTask<IReadOnlyList<ContentChunk>> MapAsync(

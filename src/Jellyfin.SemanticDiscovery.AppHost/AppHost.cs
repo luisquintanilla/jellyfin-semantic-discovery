@@ -1,88 +1,83 @@
+using System.Globalization;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using System.Globalization;
+using Aspire.Hosting.Dotnet;
+using CommunityToolkit.Aspire.Hosting.Ollama;
 
-IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
+IDistributedApplicationBuilder builder =
+    DistributedApplication.CreateBuilder(args);
 
 string repositoryRoot = Path.GetFullPath(
     Path.Combine(builder.AppHostDirectory, "..", ".."));
 string dataRoot = Path.GetFullPath(
     Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_DATA")
     ?? Path.Combine(repositoryRoot, ".data"));
-Directory.CreateDirectory(dataRoot);
 string profile = (
     Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_PROFILE")
-    ?? "synthetic").ToLowerInvariant();
-if (profile is not ("synthetic" or "showcase"))
+    ?? "demo").ToLowerInvariant();
+if (profile is not ("demo" or "ci"))
 {
     throw new InvalidOperationException(
-        "SEMANTIC_DISCOVERY_PROFILE must be synthetic or showcase.");
+        "SEMANTIC_DISCOVERY_PROFILE must be 'demo' or 'ci'.");
 }
-bool useShowcase = profile == "showcase";
-string modelDirectory = Path.Combine(dataRoot, "models", "all-MiniLM-L6-v2");
-string showcaseRoot = Path.GetFullPath(
-    Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_SHOWCASE_ROOT")
-    ?? Path.Combine(dataRoot, "showcase"));
-string fixtureOutput = useShowcase
-    ? showcaseRoot
-    : Path.Combine(dataRoot, "media");
-string mediaDirectory = Path.Combine(fixtureOutput, "library");
-string jellyfinConfigDirectory = Path.Combine(dataRoot, "jellyfin", "config");
-string jellyfinCacheDirectory = Path.Combine(dataRoot, "jellyfin", "cache");
-string jellyfinPluginsDirectory = Path.Combine(
-    jellyfinConfigDirectory,
-    "plugins");
+
+string hardwareProfile = (
+    Environment.GetEnvironmentVariable(
+        "SEMANTIC_DISCOVERY_HARDWARE_PROFILE")
+    ?? "standard").ToLowerInvariant();
+string visionModel = hardwareProfile switch
+{
+    "standard" => "qwen3-vl:8b",
+    "lower-memory" => "qwen3-vl:4b",
+    _ => throw new InvalidOperationException(
+        "SEMANTIC_DISCOVERY_HARDWARE_PROFILE must be " +
+        "'standard' or 'lower-memory'."),
+};
+
+string manifestPath = profile == "demo"
+    ? Path.Combine(repositoryRoot, "assets", "demo", "manifest.json")
+    : Path.Combine(
+        repositoryRoot,
+        "assets",
+        "fixtures",
+        "extraction-manifest.json");
+string fixtureOutput = Path.Combine(dataRoot, "fixtures");
+string mediaDirectory = profile == "demo"
+    ? Path.Combine(repositoryRoot, "assets", "demo", "library")
+    : Path.Combine(fixtureOutput, "library");
+string extractionState = Path.Combine(dataRoot, "extractions");
+string extractionPublished = Path.Combine(
+    extractionState,
+    "published");
+string jellyfinConfigDirectory = Path.Combine(
+    dataRoot,
+    "jellyfin",
+    "config");
+string jellyfinCacheDirectory = Path.Combine(
+    dataRoot,
+    "jellyfin",
+    "cache");
+string pluginDirectory = Path.Combine(
+    dataRoot,
+    "plugin",
+    "Semantic Discovery_0.1.0.0");
 string buildConfiguration =
-    Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_CONFIGURATION")
+    Environment.GetEnvironmentVariable(
+        "SEMANTIC_DISCOVERY_CONFIGURATION")
     ?? "Debug";
 if (buildConfiguration is not ("Debug" or "Release"))
 {
     throw new InvalidOperationException(
         "SEMANTIC_DISCOVERY_CONFIGURATION must be Debug or Release.");
 }
-string? containerUser = Environment.GetEnvironmentVariable(
-    "SEMANTIC_DISCOVERY_CONTAINER_USER");
-if (!string.IsNullOrWhiteSpace(containerUser))
-{
-    containerUser = containerUser.Trim();
-    string[] userParts = containerUser.Split(':');
-    if (userParts.Length != 2 ||
-        !uint.TryParse(
-            userParts[0],
-            NumberStyles.None,
-            CultureInfo.InvariantCulture,
-            out _) ||
-        !uint.TryParse(
-            userParts[1],
-            NumberStyles.None,
-            CultureInfo.InvariantCulture,
-            out _))
-    {
-        throw new InvalidOperationException(
-            "SEMANTIC_DISCOVERY_CONTAINER_USER must be a numeric uid:gid pair.");
-    }
-}
-else
-{
-    containerUser = null;
-}
 
-Directory.CreateDirectory(fixtureOutput);
+Directory.CreateDirectory(dataRoot);
+Directory.CreateDirectory(extractionState);
+Directory.CreateDirectory(extractionPublished);
 Directory.CreateDirectory(jellyfinConfigDirectory);
 Directory.CreateDirectory(jellyfinCacheDirectory);
-Directory.CreateDirectory(jellyfinPluginsDirectory);
-string pluginOutput = Path.Combine(
-    repositoryRoot,
-    "src",
-    "Jellyfin.SemanticDiscovery.Plugin",
-    "bin",
-    buildConfiguration,
-    "net10.0");
-string pluginDirectory = Path.Combine(
-    dataRoot,
-    "plugin",
-    "Semantic Discovery_0.1.0.0");
-string credentialsPath = Path.Combine(dataRoot, "jellyfin-login.json");
+Directory.CreateDirectory(pluginDirectory);
+
 IResourceBuilder<ParameterResource> adminPassword = builder.AddParameter(
     "jellyfin-admin-password",
     new GenerateParameterDefault
@@ -99,37 +94,25 @@ IResourceBuilder<ParameterResource> adminPassword = builder.AddParameter(
     secret: true,
     persist: true);
 
-IResourceBuilder<ProjectResource> modelSetup = builder
-    .AddProject<Projects.Jellyfin_SemanticDiscovery_Setup>("model-setup")
-    .WithArgs("model", "--model-dir", modelDirectory)
-    .ExcludeFromManifest();
+IResourceBuilder<OllamaResource> ollama = builder
+    .AddOllama("ollama")
+    .WithDataVolume();
+IResourceBuilder<OllamaModelResource> embeddingModel =
+    ollama.AddModel("embedding-model", "embeddinggemma:latest");
+IResourceBuilder<OllamaModelResource> extractionModel =
+    ollama.AddModel("vision-model", visionModel);
 
 IResourceBuilder<ContainerResource>? fixtureSetup = null;
-IResourceBuilder<ProjectResource>? showcaseSetup = null;
-if (useShowcase)
-{
-    showcaseSetup = builder
-        .AddProject<Projects.Jellyfin_SemanticDiscovery_Setup>(
-            "showcase-setup")
-        .WithArgs(
-            "showcase",
-            "--source-lock",
-            Path.Combine(
-                repositoryRoot,
-                "assets",
-                "showcase",
-                "sources.lock.json"),
-            "--output",
-            fixtureOutput)
-        .ExcludeFromManifest();
-}
-else
+if (profile == "ci")
 {
     fixtureSetup = builder
         .AddDockerfile(
             "fixture-setup",
             repositoryRoot,
-            Path.Combine("containers", "fixture-generator", "Dockerfile"))
+            Path.Combine(
+                "containers",
+                "fixture-generator",
+                "Dockerfile"))
         .WithBindMount(fixtureOutput, "/output")
         .WithArgs(
             "-ManifestPath",
@@ -139,16 +122,20 @@ else
             "-Mode",
             "Generate")
         .ExcludeFromManifest();
-    if (containerUser is not null)
-    {
-        fixtureSetup
-            .WithContainerRuntimeArgs("--user", containerUser)
-            .WithEnvironment("HOME", "/tmp");
-    }
 }
 
-IResourceBuilder<ProjectResource> pluginSetup = builder
-    .AddProject<Projects.Jellyfin_SemanticDiscovery_Setup>("plugin-setup")
+string pluginOutput = Path.Combine(
+    repositoryRoot,
+    "src",
+    "Jellyfin.SemanticDiscovery.Plugin",
+    "bin",
+    buildConfiguration,
+    "net10.0");
+IResourceBuilder<DotnetProjectResource> pluginSetup = builder
+    .AddDotnetProject(
+        "plugin-setup",
+        "../Jellyfin.SemanticDiscovery.Setup/" +
+        "Jellyfin.SemanticDiscovery.Setup.csproj")
     .WithArgs(
         "plugin",
         "--source",
@@ -157,30 +144,41 @@ IResourceBuilder<ProjectResource> pluginSetup = builder
         pluginDirectory)
     .ExcludeFromManifest();
 
-IResourceBuilder<ContainerResource> markItDown = builder
-    .AddDockerfile(
-        "markitdown",
-        Path.Combine(repositoryRoot, "containers", "markitdown"))
-    .WithHttpEndpoint(targetPort: 8080, name: "http")
-    .WithHttpHealthCheck("/health")
+IResourceBuilder<DotnetProjectResource> extraction = builder
+    .AddDotnetProject(
+        "document-extraction",
+        "../Jellyfin.SemanticDiscovery.Extraction/" +
+        "Jellyfin.SemanticDiscovery.Extraction.csproj")
+    .WithHttpEndpoint(name: "http")
+    .WithHttpHealthCheck("/health/ready")
+    .WithReference(extractionModel)
+    .WithEnvironment("Extraction__ManifestPath", manifestPath)
+    .WithEnvironment("Extraction__StateRoot", extractionState)
+    .WithEnvironment("Extraction__ArtifactRoot", extractionPublished)
+    .WithEnvironment("Extraction__Concurrency", "1")
+    .WithEnvironment("Ollama__Model", visionModel)
+    .WaitFor(extractionModel);
+if (fixtureSetup is not null)
+{
+    extraction.WaitForCompletion(fixtureSetup);
+}
+
+IResourceBuilder<DotnetProjectResource> extractionSetup = builder
+    .AddDotnetProject(
+        "extraction-setup",
+        "../Jellyfin.SemanticDiscovery.Setup/" +
+        "Jellyfin.SemanticDiscovery.Setup.csproj")
+    .WithArgs(
+        "extract",
+        "--manifest",
+        manifestPath,
+        "--profile",
+        profile == "ci" ? "Text" : "Hybrid")
     .WithEnvironment(
-        "MAX_DOCUMENT_BYTES",
-        (useShowcase ? 32 * 1024 * 1024 : 8 * 1024 * 1024)
-            .ToString(CultureInfo.InvariantCulture))
-    .WithEnvironment(
-        "MAX_REQUEST_BYTES",
-        (useShowcase ? 48 * 1024 * 1024 : 12 * 1024 * 1024)
-            .ToString(CultureInfo.InvariantCulture))
-    .WithEnvironment(
-        "MAX_CONCURRENT_CONVERSIONS",
-        useShowcase ? "1" : "2")
-    .WithEnvironment("HTTP_PROXY", string.Empty)
-    .WithEnvironment("HTTPS_PROXY", string.Empty)
-    .WithEnvironment("ALL_PROXY", string.Empty)
-    .WithEnvironment("NO_PROXY", "*")
-    .WithEnvironment("OPENAI_API_KEY", string.Empty)
-    .WithEnvironment("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", string.Empty)
-    .WithEnvironment("AZURE_DOCUMENT_INTELLIGENCE_KEY", string.Empty);
+        "EXTRACTION_ENDPOINT",
+        extraction.GetEndpoint("http"))
+    .WaitFor(extraction)
+    .ExcludeFromManifest();
 
 IResourceBuilder<ContainerResource> jellyfin = builder
     .AddContainer(
@@ -197,78 +195,62 @@ IResourceBuilder<ContainerResource> jellyfin = builder
         pluginDirectory,
         "/config/plugins/Semantic Discovery_0.1.0.0",
         isReadOnly: false)
-    .WithBindMount(
-        Path.GetDirectoryName(modelDirectory)!,
-        "/models",
-        isReadOnly: true)
     .WithBindMount(mediaDirectory, "/media", isReadOnly: true)
-    .WithEnvironment("SEMANTIC_DISCOVERY_STARTUP_SMOKE", "true")
-    .WithEnvironment("SEMANTIC_DISCOVERY_MODEL_DIRECTORY", "/models/all-MiniLM-L6-v2")
+    .WithBindMount(
+        extractionPublished,
+        "/semantic-extractions",
+        isReadOnly: true)
     .WithEnvironment(
-        "SEMANTIC_DISCOVERY_MARKITDOWN_ENDPOINT",
-        "http://markitdown:8080/mcp")
+        "SEMANTIC_DISCOVERY_OLLAMA_ENDPOINT",
+        "http://ollama:11434")
     .WithEnvironment(
-        "SEMANTIC_DISCOVERY_MAX_DOCUMENT_BYTES",
-        (useShowcase ? 32 * 1024 * 1024 : 8 * 1024 * 1024)
-            .ToString(CultureInfo.InvariantCulture))
+        "SEMANTIC_DISCOVERY_EMBEDDING_MODEL",
+        "embeddinggemma:latest")
     .WithEnvironment(
-        "SEMANTIC_DISCOVERY_MAX_REQUEST_BYTES",
-        (useShowcase ? 48 * 1024 * 1024 : 12 * 1024 * 1024)
-            .ToString(CultureInfo.InvariantCulture))
+        "SEMANTIC_DISCOVERY_EXTRACTION_MODEL",
+        visionModel)
     .WithEnvironment(
-        "SEMANTIC_DISCOVERY_MARKITDOWN_TIMEOUT_SECONDS",
-        useShowcase ? "600" : "120")
+        "SEMANTIC_DISCOVERY_EXTRACTION_MODE",
+        profile == "ci" ? "Text" : "Hybrid")
+    .WithEnvironment(
+        "SEMANTIC_DISCOVERY_EXTRACTION_ARTIFACT_ROOT",
+        "/semantic-extractions")
     .WithEnvironment(
         "SEMANTIC_DISCOVERY_RECOMMENDATION_FLOOR",
-        useShowcase ? "0.38" : "0.5")
+        "0.50")
     .WithEnvironment(
         "SEMANTIC_DISCOVERY_INGEST_BATCH_SIZE",
-        useShowcase ? "32" : "8")
-    .WithEnvironment(
-        "SEMANTIC_DISCOVERY_ONNX_INTRA_OP_THREADS",
-        useShowcase ? "2" : "1")
-    .WithEnvironment("HTTP_PROXY", "http://127.0.0.1:9")
-    .WithEnvironment("HTTPS_PROXY", "http://127.0.0.1:9")
-    .WithEnvironment("ALL_PROXY", "http://127.0.0.1:9")
-    .WithEnvironment("NO_PROXY", "markitdown,localhost,127.0.0.1")
-    .WithEnvironment(
-        "SEMANTIC_DISCOVERY_EGRESS_CANARY_URL",
-        "https://example.com/")
-    .WaitFor(markItDown)
-    .WaitForCompletion(modelSetup)
+        "8")
+    .WaitFor(embeddingModel)
+    .WaitForCompletion(extractionSetup)
     .WaitForCompletion(pluginSetup);
-if (containerUser is not null)
+if (fixtureSetup is not null)
 {
-    jellyfin
-        .WithContainerRuntimeArgs("--user", containerUser)
-        .WithEnvironment("HOME", "/tmp");
-}
-if (useShowcase)
-{
-    jellyfin.WaitForCompletion(showcaseSetup!);
-}
-else
-{
-    jellyfin.WaitForCompletion(fixtureSetup!);
+    jellyfin.WaitForCompletion(fixtureSetup);
 }
 
-IResourceBuilder<ProjectResource> bootstrap = builder
-    .AddProject<Projects.Jellyfin_SemanticDiscovery_Setup>("jellyfin-bootstrap")
+string credentialsPath = Path.Combine(
+    dataRoot,
+    "jellyfin-login.json");
+IResourceBuilder<DotnetProjectResource> bootstrap = builder
+    .AddDotnetProject(
+        "jellyfin-bootstrap",
+        "../Jellyfin.SemanticDiscovery.Setup/" +
+        "Jellyfin.SemanticDiscovery.Setup.csproj")
     .WithArgs("jellyfin")
     .WithEnvironment("JELLYFIN_URL", jellyfin.GetEndpoint("http"))
     .WithEnvironment("JELLYFIN_ADMIN_PASSWORD", adminPassword)
     .WithEnvironment("JELLYFIN_CREDENTIALS_PATH", credentialsPath)
     .WithEnvironment(
-        "JELLYFIN_READY_TIMEOUT_SECONDS",
-        useShowcase ? "1800" : "180")
-    .WaitFor(jellyfin)
-    .WaitFor(markItDown)
-    .ExcludeFromManifest();
-if (useShowcase)
-{
-    bootstrap.WithEnvironment(
         "JELLYFIN_LIBRARY_MANIFEST",
-        Path.Combine(fixtureOutput, "jellyfin-library.json"));
-}
+        manifestPath)
+    .WithEnvironment(
+        "JELLYFIN_READY_TIMEOUT_SECONDS",
+        profile == "demo"
+            ? 600.ToString(CultureInfo.InvariantCulture)
+            : 180.ToString(CultureInfo.InvariantCulture))
+    .WaitFor(jellyfin)
+    .WaitFor(extraction)
+    .ExcludeFromManifest();
 
 builder.Build().Run();

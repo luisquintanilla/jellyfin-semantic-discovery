@@ -2,10 +2,11 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Jellyfin.Data.Enums;
 using Jellyfin.SemanticDiscovery.Core.Domain;
-using Jellyfin.SemanticDiscovery.Core.Indexing;
 using Jellyfin.SemanticDiscovery.Core.Identity;
+using Jellyfin.SemanticDiscovery.Core.Indexing;
 using Jellyfin.SemanticDiscovery.Core.Projection;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
@@ -19,7 +20,13 @@ public sealed class JellyfinIndexSource(ILibraryManager libraryManager) : IIndex
         PropertyNameCaseInsensitive = true,
     };
     private static readonly BaseItemKind[] IndexedKinds =
-        [BaseItemKind.Movie, BaseItemKind.Series, BaseItemKind.Book, BaseItemKind.Episode];
+        [
+            BaseItemKind.Movie,
+            BaseItemKind.Audio,
+            BaseItemKind.Series,
+            BaseItemKind.Book,
+            BaseItemKind.Episode,
+        ];
     private static readonly HashSet<string> SubtitleModifiers = new(
         [
             "default",
@@ -53,6 +60,7 @@ public sealed class JellyfinIndexSource(ILibraryManager libraryManager) : IIndex
             {
                 Episode episode when episode.SeriesId != Guid.Empty => episode.SeriesId,
                 Movie => item.Id,
+                Audio => item.Id,
                 Book => item.Id,
                 _ => null,
             };
@@ -73,7 +81,7 @@ public sealed class JellyfinIndexSource(ILibraryManager libraryManager) : IIndex
         }
 
         foreach (BaseItem item in items
-                     .Where(static item => item is Movie or Series or Book)
+                     .Where(static item => item is Movie or Audio or Series or Book)
                      .OrderBy(static item => item.Id))
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -100,6 +108,7 @@ public sealed class JellyfinIndexSource(ILibraryManager libraryManager) : IIndex
     private static MediaKind? MapKind(BaseItem item) => item switch
     {
         Movie => MediaKind.Movie,
+        Audio => MediaKind.Audio,
         Series => MediaKind.Series,
         Book => MediaKind.Book,
         _ => null,
@@ -139,6 +148,13 @@ public sealed class JellyfinIndexSource(ILibraryManager libraryManager) : IIndex
                 .Distinct(StringComparer.Ordinal)
                 .ToArray(),
             Studios = NormalizeValues(item.Studios),
+            Album = item.Album,
+            Artists = item is Audio audio
+                ? NormalizeValues(audio.Artists)
+                : [],
+            AlbumArtists = item is Audio audioWithAlbum
+                ? NormalizeValues(audioWithAlbum.AlbumArtists)
+                : [],
             OfficialRating = item.OfficialRating,
         };
         if (string.IsNullOrWhiteSpace(item.Path))

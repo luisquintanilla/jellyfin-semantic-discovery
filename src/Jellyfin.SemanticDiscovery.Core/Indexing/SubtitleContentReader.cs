@@ -13,7 +13,7 @@ public sealed class SubtitleContentReader : IContentReader
     public SubtitleContentReader(
         ITokenCounter tokenCounter,
         long maximumDocumentBytes = 2 * 1024 * 1024,
-        int maximumTokens = MiniLmTokenBudget.MaximumInputTokens)
+        int maximumTokens = ApplicationTokenBudget.MaximumInputTokens)
     {
         ArgumentNullException.ThrowIfNull(tokenCounter);
         _chunker = new SubtitleChunker(tokenCounter, maximumTokens);
@@ -48,10 +48,16 @@ public sealed class SubtitleContentReader : IContentReader
                 FileShare.ReadWrite,
                 bufferSize: 32 * 1024,
                 FileOptions.Asynchronous | FileOptions.SequentialScan);
-            byte[] bytes = await MarkItDownMcpReader.ReadBoundedDocumentAsync(
-                stream,
-                _maximumDocumentBytes,
-                cancellationToken).ConfigureAwait(false);
+            if (stream.Length > _maximumDocumentBytes)
+            {
+                throw new InvalidDataException(
+                    $"Timed text '{source.Path}' exceeds the " +
+                    $"{_maximumDocumentBytes}-byte limit.");
+            }
+
+            byte[] bytes = new byte[checked((int)stream.Length)];
+            await stream.ReadExactlyAsync(bytes, cancellationToken)
+                .ConfigureAwait(false);
             SemanticSourceIntegrity.ValidateIfPresent(
                 source.Path,
                 source.Kind,

@@ -8,7 +8,7 @@ namespace Jellyfin.SemanticDiscovery.Core.Tests.TestSupport;
 
 /// <summary>
 /// A deterministic, in-process embedding generator: the same input text
-/// always produces the same 384-dimension unit vector (derived from a SHA-256
+/// always produces the configured-dimension unit vector (derived from a SHA-256
 /// seeded PRNG), and different text produces (with overwhelming probability)
 /// a different vector. Every call is recorded so tests can assert exactly
 /// which texts were embedded and how many calls were made — the core

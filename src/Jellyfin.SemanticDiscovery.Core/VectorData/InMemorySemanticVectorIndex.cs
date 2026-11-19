@@ -143,6 +143,8 @@ public sealed class InMemorySemanticVectorIndex : IVectorSearchIndex
             Tags = [.. record.Tags],
             People = [.. record.People],
             Studios = [.. record.Studios],
+            Artists = [.. record.Artists],
+            AlbumArtists = [.. record.AlbumArtists],
         };
 
         private static State CreateEmpty()
@@ -302,5 +304,7 @@ public sealed class InMemorySemanticVectorIndex : IVectorSearchIndex
         Tags = [.. record.Tags],
         People = [.. record.People],
         Studios = [.. record.Studios],
+        Artists = [.. record.Artists],
+        AlbumArtists = [.. record.AlbumArtists],
     };
 }

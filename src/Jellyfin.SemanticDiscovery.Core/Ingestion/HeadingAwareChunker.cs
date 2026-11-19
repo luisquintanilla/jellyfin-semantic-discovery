@@ -7,13 +7,13 @@ namespace Jellyfin.SemanticDiscovery.Core.Ingestion;
 internal sealed class HeadingAwareChunker : IngestionChunker<string>
 {
     private const int MaximumHeaderLevel = 10;
-    private readonly MiniLmTokenBudget _tokenBudget;
+    private readonly ApplicationTokenBudget _tokenBudget;
 
     public HeadingAwareChunker(
         ITokenCounter tokenCounter,
-        int maximumTokens = MiniLmTokenBudget.MaximumInputTokens)
+        int maximumTokens = ApplicationTokenBudget.MaximumInputTokens)
     {
-        _tokenBudget = new MiniLmTokenBudget(tokenCounter, maximumTokens);
+        _tokenBudget = new ApplicationTokenBudget(tokenCounter, maximumTokens);
     }
 
     public override async IAsyncEnumerable<IngestionChunk<string>> ProcessAsync(
@@ -115,22 +115,25 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
                 pending.Append(markdown));
             if (pending.Count > 0 &&
                 !_tokenBudget.Fits(
-                    MiniLmTokenBudget.Combine(context, candidateBody)))
+                    ApplicationTokenBudget.Combine(context, candidateBody)))
             {
                 CommitPending();
             }
 
             if (_tokenBudget.Fits(
-                    MiniLmTokenBudget.Combine(context, markdown)))
+                    ApplicationTokenBudget.Combine(context, markdown)))
             {
                 pending.Add(markdown);
                 continue;
             }
 
-            foreach (string part in _tokenBudget.SplitMarkdown(markdown, context))
+            foreach (string part in _tokenBudget.SplitMarkdown(
+                         markdown,
+                         context,
+                         ApplicationTokenBudget.DefaultOverlapTokens))
             {
                 CommitPending();
-                string content = MiniLmTokenBudget.Combine(context, part);
+                string content = ApplicationTokenBudget.Combine(context, part);
                 chunks.Add(CreateChunk(document, context, content));
             }
         }
@@ -146,7 +149,7 @@ internal sealed class HeadingAwareChunker : IngestionChunker<string>
             }
 
             string body = string.Join("\n\n", pending);
-            string content = MiniLmTokenBudget.Combine(context, body);
+            string content = ApplicationTokenBudget.Combine(context, body);
             chunks.Add(CreateChunk(document, context, content));
             pending.Clear();
         }

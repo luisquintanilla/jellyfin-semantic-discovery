@@ -86,9 +86,12 @@ public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         ArgumentNullException.ThrowIfNull(configuration);
         return new PluginSettings(
             configuration.Enabled,
-            configuration.ModelDirectory,
+            configuration.OllamaEndpoint,
             configuration.SnapshotPath,
-            configuration.MarkItDownEndpoint,
+            configuration.EmbeddingModel,
+            configuration.ExtractionModel,
+            configuration.ExtractionMode,
+            configuration.ExtractionArtifactRoot,
             Math.Clamp(configuration.SearchLimit, 1, 100));
     }
 
@@ -101,9 +104,12 @@ public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         return new PluginConfiguration
         {
             Enabled = incoming.Enabled,
-            ModelDirectory = incoming.ModelDirectory,
+            OllamaEndpoint = incoming.OllamaEndpoint,
             SnapshotPath = incoming.SnapshotPath,
-            MarkItDownEndpoint = incoming.MarkItDownEndpoint,
+            EmbeddingModel = incoming.EmbeddingModel,
+            ExtractionModel = incoming.ExtractionModel,
+            ExtractionMode = incoming.ExtractionMode,
+            ExtractionArtifactRoot = incoming.ExtractionArtifactRoot,
             SearchLimit = Math.Clamp(incoming.SearchLimit, 1, 100),
             LastStatus = current.LastStatus,
             LastError = current.LastError,
@@ -127,23 +133,11 @@ public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                 current.ClientProcessCurrentWorkingSetBytes,
             ClientProcessPeakWorkingSetBytes =
                 current.ClientProcessPeakWorkingSetBytes,
-            LargestConversionSourceBytes =
-                current.LargestConversionSourceBytes,
-            LargestSerializedRequestBytes =
-                current.LargestSerializedRequestBytes,
-            LargestRequestBeforeCurrentWorkingSetBytes =
-                current.LargestRequestBeforeCurrentWorkingSetBytes,
-            LargestRequestBeforePeakWorkingSetBytes =
-                current.LargestRequestBeforePeakWorkingSetBytes,
-            LargestRequestAfterCurrentWorkingSetBytes =
-                current.LargestRequestAfterCurrentWorkingSetBytes,
-            LargestRequestAfterPeakWorkingSetBytes =
-                current.LargestRequestAfterPeakWorkingSetBytes,
             ExternalEgressCanaryBlocked =
                 current.ExternalEgressCanaryBlocked,
-            MarkItDownReachable = current.MarkItDownReachable,
-            MarkItDownReachabilityProbe =
-                current.MarkItDownReachabilityProbe,
+            OllamaReachable = current.OllamaReachable,
+            OllamaReachabilityProbe =
+                current.OllamaReachabilityProbe,
             EgressEnforcement = current.EgressEnforcement,
             EgressResidualLimitation =
                 current.EgressResidualLimitation,
@@ -159,17 +153,23 @@ public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
 internal sealed record PluginSettings(
     bool Enabled,
-    string ModelDirectory,
+    string OllamaEndpoint,
     string SnapshotPath,
-    string MarkItDownEndpoint,
+    string EmbeddingModel,
+    string ExtractionModel,
+    string ExtractionMode,
+    string ExtractionArtifactRoot,
     int SearchLimit)
 {
     internal PluginConfiguration ToConfiguration() => new()
     {
         Enabled = Enabled,
-        ModelDirectory = ModelDirectory,
+        OllamaEndpoint = OllamaEndpoint,
         SnapshotPath = SnapshotPath,
-        MarkItDownEndpoint = MarkItDownEndpoint,
+        EmbeddingModel = EmbeddingModel,
+        ExtractionModel = ExtractionModel,
+        ExtractionMode = ExtractionMode,
+        ExtractionArtifactRoot = ExtractionArtifactRoot,
         SearchLimit = SearchLimit,
     };
 }

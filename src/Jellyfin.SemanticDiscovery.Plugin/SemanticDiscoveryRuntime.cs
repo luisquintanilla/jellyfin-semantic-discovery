@@ -6,7 +6,6 @@ using Jellyfin.SemanticDiscovery.Core.Retrieval;
 using Jellyfin.SemanticDiscovery.Core.Snapshots;
 using Jellyfin.SemanticDiscovery.Core.VectorData;
 using Microsoft.Extensions.Logging;
-using Microsoft.ML.OnnxRuntime;
 
 namespace Jellyfin.SemanticDiscovery.Plugin;
 
@@ -21,8 +20,6 @@ internal interface ISemanticDiscoveryRuntimeState : IDisposable
     float RecommendationFloor { get; }
 
     NetworkBoundaryStatus NetworkBoundary { get; }
-
-    ClientRequestMemoryObservation? LargestClientRequestMemory { get; }
 
     ValueTask<IReadOnlyList<SemanticSearchResult>> SearchAsync(
         string query,
@@ -412,10 +409,7 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
         PluginConfiguration configuration =
             Plugin.Instance?.ReadSettings().ToConfiguration()
             ?? new PluginConfiguration();
-        string modelDirectory = paths.GetModelDirectory(configuration);
-        MiniLmEmbeddingGenerator? generator = null;
-        HttpClient? markItDownClient = null;
-        MarkItDownMcpReader? markItDown = null;
+        OllamaEmbeddingGenerator? generator = null;
         RuntimeState? state = null;
         try
         {
@@ -423,55 +417,34 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
                 "SEMANTIC_DISCOVERY_INGEST_BATCH_SIZE",
                 8,
                 32);
-            int onnxIntraOpThreads = GetBoundedEnvironmentInt(
-                "SEMANTIC_DISCOVERY_ONNX_INTRA_OP_THREADS",
-                1,
-                4);
-            generator = new MiniLmEmbeddingGenerator(
-                new MiniLmEmbeddingOptions
+            ApplicationChunkTokenizer tokenizer = new();
+            string extractionModel =
+                SemanticDiscoveryPaths.GetExtractionModel(configuration);
+            string extractionMode =
+                SemanticDiscoveryPaths.GetExtractionMode(configuration);
+            generator = await OllamaEmbeddingGenerator.CreateAsync(
+                new OllamaEmbeddingOptions
                 {
-                    ModelPath = Path.Combine(modelDirectory, "model.onnx"),
-                    VocabularyPath = Path.Combine(modelDirectory, "vocab.txt"),
-                    MaxBatchSize = ingestBatchSize,
-                    MaxInputsPerRequest = ingestBatchSize,
-                    IntraOpThreads = onnxIntraOpThreads,
-                });
+                    Endpoint = SemanticDiscoveryPaths.GetOllamaEndpoint(
+                        configuration),
+                    Model = SemanticDiscoveryPaths.GetEmbeddingModel(
+                        configuration),
+                    MaximumInputsPerRequest = ingestBatchSize,
+                },
+                tokenizer,
+                $"{extractionMode}:{extractionModel}",
+                cancellationToken: cancellationToken).ConfigureAwait(false);
             InMemorySemanticVectorIndex vectorIndex = new();
-            int maximumDocumentBytes = GetBoundedEnvironmentInt(
-                "SEMANTIC_DISCOVERY_MAX_DOCUMENT_BYTES",
-                8 * 1024 * 1024,
-                MarkItDownMcpReader.AbsoluteMaximumDocumentBytes);
-            int markItDownTimeoutSeconds = GetBoundedEnvironmentInt(
-                "SEMANTIC_DISCOVERY_MARKITDOWN_TIMEOUT_SECONDS",
-                120,
-                900);
-            int maximumRequestBytes = GetBoundedEnvironmentInt(
-                "SEMANTIC_DISCOVERY_MAX_REQUEST_BYTES",
-                12 * 1024 * 1024,
-                MarkItDownMcpReader.AbsoluteMaximumRequestBytes);
-            markItDownClient = MarkItDownMcpReader.CreateHttpClient(
-                TimeSpan.FromSeconds(markItDownTimeoutSeconds));
-            Uri markItDownEndpoint =
-                SemanticDiscoveryPaths.GetMarkItDownEndpoint(configuration);
-            NetworkBoundaryStatus networkBoundary =
-                await VerifyNetworkBoundaryAsync(
-                    markItDownClient,
-                    markItDownEndpoint,
-                    cancellationToken).ConfigureAwait(false);
-            markItDown = new MarkItDownMcpReader(
-                markItDownClient,
-                markItDownEndpoint,
-                generator,
-                maximumDocumentBytes,
-                maximumConcurrency: 1,
-                maximumRequestBytes: maximumRequestBytes);
             SemanticIndexBuilder builder = new(
                 generator,
-                generator,
+                tokenizer,
                 source,
                 [
-                    new SubtitleContentReader(generator),
-                    markItDown,
+                    new SubtitleContentReader(tokenizer),
+                    new PublishedExtractionContentReader(
+                        paths.GetExtractionArtifactRoot(configuration),
+                        extractionModel,
+                        extractionMode),
                 ],
                 new AtomicSnapshotStore(paths.GetSnapshotPath(configuration)),
                 vectorIndex,
@@ -488,10 +461,17 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
                 {
                     RecommendationFloor = recommendationFloor,
                 });
+            NetworkBoundaryStatus networkBoundary = new(
+                ExternalEgressCanaryBlocked: false,
+                OllamaReachable: true,
+                OllamaReachabilityProbe:
+                    "Required model resolved through Ollama /api/tags",
+                Enforcement: "Aspire private service references",
+                ResidualLimitation:
+                    "Jellyfin and extraction use the local Ollama HTTP endpoint; " +
+                    "container runtime egress policy remains host-managed.");
             state = new RuntimeState(
                 generator,
-                markItDown,
-                markItDownClient,
                 builder,
                 discovery,
                 recommendationFloor,
@@ -510,8 +490,6 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
                 }
                 else
                 {
-                    markItDown?.Dispose();
-                    markItDownClient?.Dispose();
                     generator?.Dispose();
                 }
             }
@@ -616,25 +594,11 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
                     Environment.WorkingSet;
                 configuration.ClientProcessPeakWorkingSetBytes =
                     process.PeakWorkingSet64;
-                if (state.LargestClientRequestMemory is { } requestMemory)
-                {
-                    configuration.LargestConversionSourceBytes =
-                        requestMemory.SourceBytes;
-                    configuration.LargestSerializedRequestBytes =
-                        requestMemory.SerializedRequestBytes;
-                    configuration.LargestRequestBeforeCurrentWorkingSetBytes =
-                        requestMemory.BeforeCurrentWorkingSetBytes;
-                    configuration.LargestRequestBeforePeakWorkingSetBytes =
-                        requestMemory.BeforePeakWorkingSetBytes;
-                    configuration.LargestRequestAfterCurrentWorkingSetBytes =
-                        requestMemory.AfterCurrentWorkingSetBytes;
-                    configuration.LargestRequestAfterPeakWorkingSetBytes =
-                        requestMemory.AfterPeakWorkingSetBytes;
-                }
                 ApplyNetworkBoundary(
                     configuration,
                     state.NetworkBoundary);
-                configuration.ModelStatus = "Pinned model and tokenizer validated";
+                configuration.ModelStatus =
+                    "Required Ollama model and application tokenizer validated";
             });
         }
 
@@ -700,86 +664,13 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
     {
         configuration.ExternalEgressCanaryBlocked =
             boundary.ExternalEgressCanaryBlocked;
-        configuration.MarkItDownReachable =
-            boundary.MarkItDownReachable;
-        configuration.MarkItDownReachabilityProbe =
-            boundary.MarkItDownReachabilityProbe;
+        configuration.OllamaReachable =
+            boundary.OllamaReachable;
+        configuration.OllamaReachabilityProbe =
+            boundary.OllamaReachabilityProbe;
         configuration.EgressEnforcement = boundary.Enforcement;
         configuration.EgressResidualLimitation =
             boundary.ResidualLimitation;
-    }
-
-    private static async Task<NetworkBoundaryStatus> VerifyNetworkBoundaryAsync(
-        HttpClient markItDownClient,
-        Uri markItDownEndpoint,
-        CancellationToken cancellationToken)
-    {
-        await MarkItDownMcpReader.ProbeAsync(
-            markItDownClient,
-            markItDownEndpoint,
-            cancellationToken).ConfigureAwait(false);
-
-        string? canaryUrl = Environment.GetEnvironmentVariable(
-            "SEMANTIC_DISCOVERY_EGRESS_CANARY_URL");
-        if (string.IsNullOrWhiteSpace(canaryUrl))
-        {
-            return new NetworkBoundaryStatus(
-                ExternalEgressCanaryBlocked: false,
-                MarkItDownReachable: true,
-                MarkItDownReachabilityProbe:
-                    "JSON-RPC tools/list at the exact configured MCP endpoint",
-                Enforcement: "not-configured",
-                ResidualLimitation:
-                    "No proxy canary was configured; direct socket egress was not tested.");
-        }
-
-        Uri canary = new(canaryUrl, UriKind.Absolute);
-        if (canary.Scheme is not ("http" or "https"))
-        {
-            throw new InvalidOperationException(
-                "The egress canary must use HTTP or HTTPS.");
-        }
-
-        bool blocked;
-        using (HttpClient external = new()
-        {
-            Timeout = TimeSpan.FromSeconds(3),
-        })
-        {
-            try
-            {
-                using HttpResponseMessage response =
-                    await external.GetAsync(
-                        canary,
-                        cancellationToken).ConfigureAwait(false);
-                blocked = false;
-            }
-            catch (HttpRequestException)
-            {
-                blocked = true;
-            }
-            catch (TaskCanceledException)
-                when (!cancellationToken.IsCancellationRequested)
-            {
-                blocked = true;
-            }
-        }
-
-        if (!blocked)
-        {
-            throw new InvalidOperationException(
-                "The configured Jellyfin outbound HTTP canary was reachable.");
-        }
-
-        return new NetworkBoundaryStatus(
-            ExternalEgressCanaryBlocked: true,
-            MarkItDownReachable: true,
-            MarkItDownReachabilityProbe:
-                "JSON-RPC tools/list at the exact configured MCP endpoint",
-            Enforcement:
-                "black-hole HTTP_PROXY/HTTPS_PROXY/ALL_PROXY with NO_PROXY limited to the internal MarkItDown service",
-            ResidualLimitation:
-                "This constrains proxy-aware HTTP clients; the Aspire DCP container network still permits direct socket egress.");
     }
 
     private void TryPersistRecommendationDiagnostics(
@@ -857,7 +748,6 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
         exception is IOException
             or HttpRequestException
             or InvalidDataException
-            or OnnxRuntimeException
             or UnauthorizedAccessException;
 
     private static bool IsConfigurationPersistenceFailure(Exception exception) =>
@@ -868,10 +758,15 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
     private static string GetSafeError(Exception exception) =>
         $"{exception.GetType().Name}: operation failed; see server logs.";
 
-    private static bool WaitWithoutPropagating(Task task, TimeSpan timeout) =>
-        ReferenceEquals(
-            Task.WhenAny(task, Task.Delay(timeout)).GetAwaiter().GetResult(),
-            task);
+    private static bool WaitWithoutPropagating(Task task, TimeSpan timeout)
+    {
+        using CancellationTokenSource timeoutSource = new();
+        Task timeoutTask = Task.Delay(timeout, timeoutSource.Token);
+        Task completed =
+            Task.WhenAny(task, timeoutTask).GetAwaiter().GetResult();
+        timeoutSource.Cancel();
+        return ReferenceEquals(completed, task);
+    }
 
     private static int GetBoundedEnvironmentInt(
         string name,
@@ -957,9 +852,7 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
         string status);
 
     private sealed class RuntimeState(
-        MiniLmEmbeddingGenerator generator,
-        MarkItDownMcpReader markItDown,
-        HttpClient markItDownClient,
+        OllamaEmbeddingGenerator generator,
         SemanticIndexBuilder builder,
         SemanticDiscoveryService discovery,
         float recommendationFloor,
@@ -982,9 +875,6 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
 
         public NetworkBoundaryStatus NetworkBoundary { get; } =
             networkBoundary;
-
-        public ClientRequestMemoryObservation? LargestClientRequestMemory =>
-            markItDown.LargestRequestMemoryObservation;
 
         public ValueTask<IReadOnlyList<SemanticSearchResult>> SearchAsync(
             string query,
@@ -1013,32 +903,7 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
 
         public void Dispose()
         {
-            List<Exception> failures = [];
-            TryDispose(markItDown, failures);
-            TryDispose(markItDownClient, failures);
-            TryDispose(generator, failures);
-            if (failures.Count == 1)
-            {
-                System.Runtime.ExceptionServices.ExceptionDispatchInfo
-                    .Capture(failures[0])
-                    .Throw();
-            }
-            if (failures.Count > 1)
-            {
-                throw new AggregateException(failures);
-            }
-        }
-
-        private static void TryDispose(IDisposable value, List<Exception> failures)
-        {
-            try
-            {
-                value.Dispose();
-            }
-            catch (Exception exception)
-            {
-                failures.Add(exception);
-            }
+            generator.Dispose();
         }
 
     }
@@ -1046,7 +911,7 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
 
 internal sealed record NetworkBoundaryStatus(
     bool ExternalEgressCanaryBlocked,
-    bool MarkItDownReachable,
-    string MarkItDownReachabilityProbe,
+    bool OllamaReachable,
+    string OllamaReachabilityProbe,
     string Enforcement,
     string ResidualLimitation);

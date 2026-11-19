@@ -97,7 +97,7 @@ public sealed class AtomicSnapshotStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task SaveAsyncRejectsWhenMetadataVectorLengthIsNot384()
+    public async Task SaveAsyncRejectsWhenMetadataVectorLengthIsInvalid()
     {
         AtomicSnapshotStore store = new(SnapshotPath);
         IndexSnapshot invalid = CreateSnapshot(metadataVectorLength: 10);
@@ -107,7 +107,7 @@ public sealed class AtomicSnapshotStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task SaveAsyncRejectsWhenContentVectorLengthIsNot384()
+    public async Task SaveAsyncRejectsWhenContentVectorLengthIsInvalid()
     {
         AtomicSnapshotStore store = new(SnapshotPath);
         IndexSnapshot invalid = CreateSnapshot(contentVectorLength: 10);
@@ -117,7 +117,7 @@ public sealed class AtomicSnapshotStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task LoadAsyncRejectsWhenPersistedVectorLengthIsNot384()
+    public async Task LoadAsyncRejectsWhenPersistedVectorLengthIsInvalid()
     {
         Directory.CreateDirectory(_directory);
         IndexSnapshot corrupted = CreateSnapshot(metadataVectorLength: 3);
@@ -129,7 +129,11 @@ public sealed class AtomicSnapshotStoreTests : IDisposable
         InvalidDataException exception = await Assert.ThrowsAsync<InvalidDataException>(
             () => store.LoadAsync().AsTask());
 
-        Assert.Contains("384", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            SemanticConstants.EmbeddingDimensions.ToString(
+                System.Globalization.CultureInfo.InvariantCulture),
+            exception.Message,
+            StringComparison.Ordinal);
     }
 
     [Fact]

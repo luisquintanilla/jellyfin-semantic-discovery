@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Core.Identity;
 using Jellyfin.SemanticDiscovery.Core.Ingestion;
@@ -5,7 +6,6 @@ using Jellyfin.SemanticDiscovery.Core.Projection;
 using Jellyfin.SemanticDiscovery.Core.Snapshots;
 using Jellyfin.SemanticDiscovery.Core.VectorData;
 using Microsoft.Extensions.AI;
-using System.Text.Json;
 
 namespace Jellyfin.SemanticDiscovery.Core.Indexing;
 
@@ -22,7 +22,7 @@ public sealed class SemanticIndexBuilder(
     private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator =
         embeddingGenerator ?? throw new ArgumentNullException(nameof(embeddingGenerator));
 
-    private readonly MiniLmTokenBudget _tokenBudget =
+    private readonly ApplicationTokenBudget _tokenBudget =
         new(tokenCounter ?? throw new ArgumentNullException(nameof(tokenCounter)));
 
     private readonly IIndexSource _source =

@@ -20,7 +20,6 @@ public sealed class PluginInstallerTests : IDisposable
 
     [Theory]
     [InlineData("missing-managed")]
-    [InlineData("missing-native")]
     [InlineData("duplicate")]
     [InlineData("extra")]
     [InlineData("host-shared")]
@@ -38,9 +37,6 @@ public sealed class PluginInstallerTests : IDisposable
         {
             case "missing-managed":
                 File.Delete(Path.Combine(source, "Google.Protobuf.dll"));
-                break;
-            case "missing-native":
-                File.Delete(Path.Combine(source, "libonnxruntime.so"));
                 break;
             case "duplicate":
                 manifest["assemblies"]!.AsArray().Add(
@@ -78,13 +74,6 @@ public sealed class PluginInstallerTests : IDisposable
         Assert.Equal(
             PluginInstaller.ExpectedManagedAssemblies
                 .Append("meta.json")
-                .Concat(
-                [
-                    "libonnxruntime.so",
-                    "libonnxruntime_providers_shared.so",
-                    "onnxruntime.dll",
-                    "onnxruntime_providers_shared.dll",
-                ])
                 .Order(StringComparer.Ordinal),
             Directory.GetFiles(destination)
                 .Select(Path.GetFileName)
@@ -116,13 +105,7 @@ public sealed class PluginInstallerTests : IDisposable
     {
         string source = Path.Combine(_root, $"source-{Guid.NewGuid():N}");
         Directory.CreateDirectory(source);
-        foreach (string file in PluginInstaller.ExpectedManagedAssemblies.Concat(
-        [
-            "libonnxruntime.so",
-            "libonnxruntime_providers_shared.so",
-            "onnxruntime.dll",
-            "onnxruntime_providers_shared.dll",
-        ]))
+        foreach (string file in PluginInstaller.ExpectedManagedAssemblies)
         {
             File.WriteAllText(Path.Combine(source, file), file);
         }

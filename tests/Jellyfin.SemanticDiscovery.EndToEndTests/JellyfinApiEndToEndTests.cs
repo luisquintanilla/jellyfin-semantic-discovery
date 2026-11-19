@@ -10,8 +10,30 @@ public sealed class JellyfinApiEndToEndTests
     private const string PluginConfigurationUri =
         "Plugins/de965148-5789-4e8c-9774-6d1409ef3478/Configuration";
 
+    [DemoEndToEndFact]
+    public async Task DemoBookAnchorsRetrieveTheSealedCorpus()
+    {
+        await using DemoContext context = await DemoContext.CreateAsync();
+
+        Assert.Contains(
+            "Tokenizers Field Guide",
+            await SearchNamesAsync(
+                context.Admin,
+                "how do token offsets align tokens with the original source text?"));
+        Assert.Contains(
+            "Tensors for Embeddings",
+            await SearchNamesAsync(
+                context.Admin,
+                "which tensor API is best for vectorized embedding hot loops?"));
+        Assert.Contains(
+            "Verifiable AI Systems",
+            await SearchNamesAsync(
+                context.Admin,
+                "who decides correctness in a verifiable AI workflow?"));
+    }
+
     [EndToEndFact]
-    public async Task NativeSearchFindsMetadataSubtitlesPdfEpubAndRejectsNoise()
+    public async Task NativeSearchFindsMetadataSubtitlesPdfAndRejectsNoise()
     {
         await using DemoContext context = await DemoContext.CreateAsync();
 
@@ -30,11 +52,6 @@ public sealed class JellyfinApiEndToEndTests
             await SearchNamesAsync(
                 context.Admin,
                 "marigold ledger returns before frost"));
-        Assert.Contains(
-            "Notes from the Choir Loft",
-            await SearchNamesAsync(
-                context.Admin,
-                "seventeen lanterns gather at the loft door"));
         Assert.Contains(
             "Harbor Static",
             await SearchNamesAsync(context.Admin, "head back before dark"));
@@ -646,10 +663,10 @@ public sealed class EndToEndFactAttribute : FactAttribute
     {
         if (string.Equals(
                 Environment.GetEnvironmentVariable("JELLYFIN_E2E_PROFILE"),
-                "showcase",
+                "demo",
                 StringComparison.Ordinal))
         {
-            Skip = "Synthetic baseline tests do not run against showcase data.";
+            Skip = "Synthetic CI fixture tests do not run against demo media.";
         }
         else if (string.IsNullOrWhiteSpace(
                 Environment.GetEnvironmentVariable(
@@ -657,6 +674,25 @@ public sealed class EndToEndFactAttribute : FactAttribute
         {
             Skip =
                 "JELLYFIN_E2E_CREDENTIALS_PATH is set by scripts/Test-EndToEnd.ps1.";
+        }
+    }
+
+}
+
+public sealed class DemoEndToEndFactAttribute : FactAttribute
+{
+    public DemoEndToEndFactAttribute()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("JELLYFIN_E2E_PROFILE"),
+                "demo",
+                StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(
+                Environment.GetEnvironmentVariable(
+                    "JELLYFIN_E2E_CREDENTIALS_PATH")))
+        {
+            Skip =
+                "The sealed demo corpus is exercised when JELLYFIN_E2E_PROFILE=demo.";
         }
     }
 }

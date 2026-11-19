@@ -54,6 +54,25 @@ public static class TestData
             ParentId = Guid.NewGuid(),
         };
 
+    public static MetadataRecord Audio(
+        Guid? id = null,
+        string title = "Sample Audio",
+        string? album = null,
+        string[]? artists = null,
+        string[]? albumArtists = null) => new()
+        {
+            Id = id ?? Guid.NewGuid(),
+            Kind = MediaKind.Audio,
+            ItemType = "Audio",
+            MediaType = "Audio",
+            Title = title,
+            Album = album,
+            Artists = artists ?? [],
+            AlbumArtists = albumArtists ?? [],
+            LibraryId = Guid.NewGuid(),
+            ParentId = Guid.NewGuid(),
+        };
+
     public static ContentChunk Chunk(
         Guid ownerId,
         string sourcePath = "sample.srt",

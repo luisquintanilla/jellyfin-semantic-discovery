@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Jellyfin.SemanticDiscovery.Setup.Showcase;
 
 namespace Jellyfin.SemanticDiscovery.Setup;
 
@@ -1005,31 +1004,32 @@ public sealed class JellyfinBootstrapper(
         }
 
         string path = Path.GetFullPath(manifestPath);
-        ShowcaseLibraryManifest manifest =
-            JsonSerializer.Deserialize<ShowcaseLibraryManifest>(
+        DemoLibraryManifest manifest =
+            JsonSerializer.Deserialize<DemoLibraryManifest>(
                 File.ReadAllBytes(path),
                 ManifestJsonOptions)
             ?? throw new InvalidDataException(
-                "The showcase Jellyfin library manifest is empty.");
-        if (manifest.ProfileId != "showcase-v1" ||
-            manifest.Libraries is null ||
-            manifest.Libraries.Length != 2)
+                "The Jellyfin library manifest is empty.");
+        if (manifest.Libraries is null ||
+            !IsSupportedManifestShape(manifest))
         {
             throw new InvalidDataException(
-                "The showcase Jellyfin library manifest is invalid.");
+                "The Jellyfin library manifest is invalid.");
         }
 
         return manifest.Libraries.Select(static library =>
         {
             if (string.IsNullOrWhiteSpace(library.Name) ||
-                library.CollectionType is not ("movies" or "books") ||
-                library.ItemType is not ("Movie" or "Book") ||
+                library.CollectionType is not (
+                    "movies" or "music" or "tvshows" or "books") ||
+                library.ItemType is not (
+                    "Movie" or "Audio" or "Series" or "Book") ||
                 !library.Path.StartsWith("/media/", StringComparison.Ordinal) ||
                 library.Items is null ||
-                library.Items.Length != 3)
+                library.Items.Length == 0)
             {
                 throw new InvalidDataException(
-                    "A showcase Jellyfin library entry is invalid.");
+                    "A Jellyfin library entry is invalid.");
             }
 
             return new LibrarySpec(
@@ -1047,6 +1047,27 @@ public sealed class JellyfinBootstrapper(
                     item.Studios,
                     item.OfficialRating)).ToArray());
         }).ToArray();
+    }
+
+    private static bool IsSupportedManifestShape(
+        DemoLibraryManifest manifest)
+    {
+        if (manifest.ProfileId == "demo-v1")
+        {
+            return manifest.Libraries.Length == 3 &&
+                manifest.Libraries.All(static library =>
+                    library.Items.Length == 3) &&
+                manifest.Libraries.Select(static library =>
+                        library.ItemType)
+                    .Order(StringComparer.Ordinal)
+                    .SequenceEqual(
+                        ["Audio", "Book", "Movie"],
+                        StringComparer.Ordinal);
+        }
+
+        return manifest.ProfileId == "ci-fixtures-v1" &&
+            manifest.Libraries.Any(static library =>
+                library.ItemType == "Series");
     }
 
     private async Task WriteCredentialsAsync(CancellationToken cancellationToken)

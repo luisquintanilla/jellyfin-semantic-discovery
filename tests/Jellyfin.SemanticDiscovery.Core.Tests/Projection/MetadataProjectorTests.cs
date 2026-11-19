@@ -59,6 +59,35 @@ public sealed class MetadataProjectorTests
     }
 
     [Fact]
+    public void ProjectIncludesFirstClassAudioMetadata()
+    {
+        MetadataRecord record = TestData.Audio(
+            title: "Signal Song",
+            album: "Night Receiver",
+            artists: ["Ada Voice"],
+            albumArtists: ["The Receivers"]);
+
+        string projection = MetadataProjector.Project(record);
+
+        Assert.Contains(
+            "type: Audio",
+            projection,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "album: Night Receiver",
+            projection,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "artists: Ada Voice",
+            projection,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "album artists: The Receivers",
+            projection,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ProjectNormalizesWhitespaceAndUnicodeCompatibility()
     {
         // U+FF41 (fullwidth "a") normalizes under FormKC to U+0061 ("a"), and

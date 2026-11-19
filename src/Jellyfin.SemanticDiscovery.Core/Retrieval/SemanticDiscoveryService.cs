@@ -140,38 +140,58 @@ public sealed class SemanticDiscoveryService(
                 scope,
                 cancellationToken).ConfigureAwait(false);
 
-        int overFetch = Math.Max(
-            _calibration.MinimumOverFetch,
-            checked(limit * _calibration.OverFetchMultiplier));
-        IReadOnlyList<MetadataMatch> matches =
-            await readSession.SearchMetadataAsync(
-                sourceVector.Value,
-                overFetch,
-                accessible,
-                cancellationToken).ConfigureAwait(false);
-
-        MetadataMatch[] eligibleMatches = matches
-            .Where(match =>
-                float.IsFinite(match.Similarity) &&
-                match.Similarity > _calibration.RecommendationFloor)
+        MetadataRecord[] orderedCandidates = candidates
+            .Where(item => accessible.Contains(item.Id))
+            .OrderBy(static item => item.Id)
             .ToArray();
-        return eligibleMatches
-            .Where(match => accessible.Contains(match.Record.Id))
-            .Where(match =>
-                match.Record.Id != sourceItemId &&
-                match.Record.Kind == source.Kind &&
-                !excludedItemIds.Contains(match.Record.Id) &&
-                scope.MatchesStructure(match.Record))
-            .DistinctBy(static match => match.Record.Id)
-            .OrderByDescending(static match => match.Similarity)
-            .ThenBy(static match => match.Record.Title, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(static match => match.Record.Id)
+        IReadOnlyDictionary<Guid, ReadOnlyMemory<float>> candidateVectors =
+            await readSession.GetMetadataVectorsAsync(
+                orderedCandidates.Select(static item => item.Id),
+                cancellationToken).ConfigureAwait(false);
+        Dictionary<Guid, MetadataRecord> records =
+            orderedCandidates.ToDictionary(static item => item.Id);
+        IReadOnlyList<(Guid ItemId, float Similarity)> scores;
+        if (candidateVectors.Count == orderedCandidates.Length)
+        {
+            RecommendationMatrix matrix = RecommendationMatrix.Create(
+                orderedCandidates,
+                candidateVectors);
+            scores = matrix.Score(sourceVector.Value.Span);
+        }
+        else
+        {
+            int overFetch = Math.Max(
+                _calibration.MinimumOverFetch,
+                checked(limit * _calibration.OverFetchMultiplier));
+            IReadOnlyList<MetadataMatch> matches =
+                await readSession.SearchMetadataAsync(
+                    sourceVector.Value,
+                    overFetch,
+                    accessible,
+                    cancellationToken).ConfigureAwait(false);
+            scores = matches
+                .Where(match => records.ContainsKey(match.Record.Id))
+                .Select(static match => (
+                    match.Record.Id,
+                    match.Similarity))
+                .ToArray();
+        }
+
+        return scores
+            .Where(result =>
+                float.IsFinite(result.Similarity) &&
+                result.Similarity > _calibration.RecommendationFloor)
+            .OrderByDescending(static result => result.Similarity)
+            .ThenBy(
+                result => records[result.ItemId].Title,
+                StringComparer.OrdinalIgnoreCase)
+            .ThenBy(static result => result.ItemId)
             .Take(limit)
-            .Select(static match => new SimilarItemResult(
-                match.Record.Id,
-                match.Record.Kind,
-                match.Record.Title,
-                match.Similarity))
+            .Select(result => new SimilarItemResult(
+                result.ItemId,
+                records[result.ItemId].Kind,
+                records[result.ItemId].Title,
+                result.Similarity))
             .ToArray();
     }
 }

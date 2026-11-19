@@ -13,11 +13,9 @@ public sealed class ServiceRegistrator : IPluginServiceRegistrator
         ArgumentNullException.ThrowIfNull(serviceCollection);
         ArgumentNullException.ThrowIfNull(applicationHost);
 
-        NativeOnnxRuntimeResolver.Install();
         serviceCollection.AddSingleton<SemanticDiscoveryPaths>();
         serviceCollection.AddSingleton<JellyfinIndexSource>();
         serviceCollection.AddSingleton<JellyfinMediaAccessPolicy>();
         serviceCollection.AddSingleton<SemanticDiscoveryRuntime>();
-        serviceCollection.AddHostedService<OnnxStartupSmokeService>();
     }
 }
