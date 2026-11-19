@@ -59,35 +59,79 @@ public sealed class VisionLanguagePageExtractor(IChatClient chatClient) :
             new() { ExtractorName = model },
             cancellationToken).ConfigureAwait(false);
         List<ExtractedFragment> fragments = [];
-        foreach (ExtractionDocumentTextElement element in
-                 document.EnumerateContent()
-                     .OfType<ExtractionDocumentTextElement>())
+        if (document.Content is TextContent rootContent)
         {
-            if (element.Content is not TextContent content)
-            {
-                continue;
-            }
-
-            string text = content.Text.Trim();
-            if (text.Length == 0)
-            {
-                continue;
-            }
-
-            string? heading = string.Equals(
-                element.Role,
-                "heading",
-                StringComparison.OrdinalIgnoreCase)
-                ? text
-                : null;
             fragments.AddRange(ParseVisualText(
                 page.PageNumber,
-                text,
-                heading,
+                rootContent.Text.Trim(),
+                roleHeading: null,
                 model));
         }
 
+        foreach (ExtractionDocumentSection section in document.Sections)
+        {
+            AddElement(section, depth: 0);
+        }
+
         return fragments;
+
+        void AddElement(
+            ExtractionDocumentElement element,
+            int depth)
+        {
+            if (depth > 32)
+            {
+                throw new InvalidDataException(
+                    "The visual extraction graph is too deeply nested.");
+            }
+
+            if (element is ExtractionDocumentTextElement textElement &&
+                textElement.Content is TextContent textContent)
+            {
+                string text = textContent.Text.Trim();
+                if (text.Length > 0)
+                {
+                    fragments.AddRange(ParseVisualText(
+                        page.PageNumber,
+                        text,
+                        textElement.HeadingLevel.HasValue
+                            ? text
+                            : null,
+                        model));
+                }
+
+                return;
+            }
+
+            if (element.Content is TextContent content &&
+                !string.IsNullOrWhiteSpace(content.Text))
+            {
+                fragments.AddRange(ParseVisualText(
+                    page.PageNumber,
+                    content.Text.Trim(),
+                    roleHeading: null,
+                    model));
+            }
+
+            if (element is ExtractionDocumentSection nestedSection)
+            {
+                foreach (ExtractionDocumentElement child in
+                         nestedSection.Elements)
+                {
+                    AddElement(child, depth + 1);
+                }
+            }
+            else if (element is ExtractionDocumentTableElement table)
+            {
+                foreach (var cell in table.Cells)
+                {
+                    if (cell?.Content is { } cellContent)
+                    {
+                        AddElement(cellContent, depth + 1);
+                    }
+                }
+            }
+        }
     }
 
     private static List<ExtractedFragment> ParseVisualText(
