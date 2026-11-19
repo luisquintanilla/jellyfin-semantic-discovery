@@ -8,19 +8,41 @@ namespace Jellyfin.SemanticDiscovery.Extraction.Tests;
 public sealed class OllamaChatClientTests
 {
     [Fact]
+    public async Task ReturnsAssistantText()
+    {
+        using HttpClient httpClient = new(new JsonHandler(
+            """
+            {
+              "model": "qwen3-vl:8b-instruct",
+              "created_at": "2026-11-18T00:00:00Z",
+              "message": { "content": "# Heading\nVisual text" }
+            }
+            """));
+        using OllamaChatClient client = new(
+            httpClient,
+            new Uri("http://ollama/"),
+            "qwen3-vl:8b-instruct");
+
+        ChatResponse response = await client.GetResponseAsync(
+            [new ChatMessage(ChatRole.User, "extract")]);
+
+        Assert.Equal("# Heading\nVisual text", response.Text);
+    }
+
+    [Fact]
     public async Task RejectsModelOverride()
     {
         using HttpClient httpClient = new(new JsonHandler("{}"));
         using OllamaChatClient client = new(
             httpClient,
             new Uri("http://ollama/"),
-            "qwen3-vl:8b");
+            "qwen3-vl:8b-instruct");
 
         InvalidOperationException exception =
             await Assert.ThrowsAsync<InvalidOperationException>(
                 () => client.GetResponseAsync(
                     [new ChatMessage(ChatRole.User, "extract")],
-                    new ChatOptions { ModelId = "qwen3-vl:4b" }));
+                    new ChatOptions { ModelId = "qwen3-vl:4b-instruct" }));
 
         Assert.Contains(
             "No model fallback or override is permitted",
@@ -34,7 +56,7 @@ public sealed class OllamaChatClientTests
         using HttpClient httpClient = new(new JsonHandler(
             """
             {
-              "model": "qwen3-vl:4b",
+              "model": "qwen3-vl:4b-instruct",
               "created_at": "2026-11-18T00:00:00Z",
               "message": { "content": "text" }
             }
@@ -42,7 +64,7 @@ public sealed class OllamaChatClientTests
         using OllamaChatClient client = new(
             httpClient,
             new Uri("http://ollama/"),
-            "qwen3-vl:8b");
+            "qwen3-vl:8b-instruct");
 
         InvalidDataException exception =
             await Assert.ThrowsAsync<InvalidDataException>(

@@ -27,8 +27,8 @@ string hardwareProfile = (
     ?? "standard").ToLowerInvariant();
 string visionModel = hardwareProfile switch
 {
-    "standard" => "qwen3-vl:8b",
-    "lower-memory" => "qwen3-vl:4b",
+    "standard" => "qwen3-vl:8b-instruct",
+    "lower-memory" => "qwen3-vl:4b-instruct",
     _ => throw new InvalidOperationException(
         "SEMANTIC_DISCOVERY_HARDWARE_PROFILE must be " +
         "'standard' or 'lower-memory'."),

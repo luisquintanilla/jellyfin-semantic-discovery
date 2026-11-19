@@ -28,7 +28,7 @@ public sealed class OllamaEmbeddingGeneratorTests
                     Dimensions = 3,
                 },
                 tokenizer,
-                "qwen3-vl:8b",
+                "qwen3-vl:8b-instruct",
                 client);
 
         float[] vector = (await generator.GenerateAsync(["text"]))
@@ -39,7 +39,7 @@ public sealed class OllamaEmbeddingGeneratorTests
         Assert.Equal([0.6F, 0.8F, 0F], vector);
         Assert.Equal("abc123", generator.Identity.ModelHash);
         Assert.Contains(
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             generator.Identity.IndexingPipelineVersion,
             StringComparison.Ordinal);
     }
@@ -63,7 +63,7 @@ public sealed class OllamaEmbeddingGeneratorTests
                         Endpoint = client.BaseAddress,
                     },
                     new ApplicationChunkTokenizer(),
-                    "qwen3-vl:8b",
+                    "qwen3-vl:8b-instruct",
                     client));
 
         Assert.Contains(

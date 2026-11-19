@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "purpose": "Deterministic local comparison contract for qwen3-vl:8b and the explicit qwen3-vl:4b lower-memory profile. This file contains inputs and checks, not measured results.",
+  "purpose": "Deterministic local comparison contract for qwen3-vl:8b-instruct and the explicit qwen3-vl:4b-instruct lower-memory profile. This file contains inputs and checks, not measured results.",
   "profiles": [
-    "qwen3-vl:8b",
-    "qwen3-vl:4b"
+    "qwen3-vl:8b-instruct",
+    "qwen3-vl:4b-instruct"
   ],
   "checks": [
     {

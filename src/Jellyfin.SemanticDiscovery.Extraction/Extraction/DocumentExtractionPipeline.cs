@@ -73,6 +73,24 @@ public sealed class VisionLanguagePageExtractor(IChatClient chatClient) :
             AddElement(section, depth: 0);
         }
 
+        if (fragments.Count == 0 &&
+            document.RawRepresentation is ChatResponse response &&
+            !string.IsNullOrWhiteSpace(response.Text))
+        {
+            fragments.AddRange(ParseVisualText(
+                page.PageNumber,
+                response.Text,
+                roleHeading: null,
+                model));
+        }
+
+        if (fragments.Count == 0)
+        {
+            throw new InvalidDataException(
+                $"The vision model returned no extractable text for page " +
+                $"{page.PageNumber}.");
+        }
+
         return fragments;
 
         void AddElement(

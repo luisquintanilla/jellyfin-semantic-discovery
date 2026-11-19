@@ -24,18 +24,18 @@ public sealed class QueueReconciliationTests
             "book",
             new string('a', 64),
             ExtractionProfile.Hybrid,
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             CancellationToken.None);
         ExtractionJob fourB = await repository.GetOrCreateAsync(
             "book",
             new string('a', 64),
             ExtractionProfile.Hybrid,
-            "qwen3-vl:4b",
+            "qwen3-vl:4b-instruct",
             CancellationToken.None);
 
         Assert.NotEqual(eightB.JobId, fourB.JobId);
-        Assert.Equal("qwen3-vl:8b", eightB.Model);
-        Assert.Equal("qwen3-vl:4b", fourB.Model);
+        Assert.Equal("qwen3-vl:8b-instruct", eightB.Model);
+        Assert.Equal("qwen3-vl:4b-instruct", fourB.Model);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class QueueReconciliationTests
             "book",
             new string('a', 64),
             ExtractionProfile.Hybrid,
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             CancellationToken.None);
 
         ExtractionJob?[] claims = await Task.WhenAll(
@@ -75,13 +75,13 @@ public sealed class QueueReconciliationTests
             "pending",
             new string('a', 64),
             ExtractionProfile.Text,
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             CancellationToken.None);
         ExtractionJob running = await repository.GetOrCreateAsync(
             "running",
             new string('b', 64),
             ExtractionProfile.Hybrid,
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             CancellationToken.None);
         await repository.UpdateAsync(
             running.JobId,
@@ -91,7 +91,7 @@ public sealed class QueueReconciliationTests
             "cancelling",
             new string('c', 64),
             ExtractionProfile.Vision,
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             CancellationToken.None);
         await repository.UpdateAsync(
             cancelling.JobId,

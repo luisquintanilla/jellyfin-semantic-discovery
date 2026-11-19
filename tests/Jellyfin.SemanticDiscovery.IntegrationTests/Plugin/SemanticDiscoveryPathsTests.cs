@@ -21,7 +21,7 @@ public sealed class SemanticDiscoveryPathsTests
             "embeddinggemma:latest",
             SemanticDiscoveryPaths.GetEmbeddingModel(configuration));
         Assert.Equal(
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             SemanticDiscoveryPaths.GetExtractionModel(configuration));
         Assert.Equal(
             "Hybrid",

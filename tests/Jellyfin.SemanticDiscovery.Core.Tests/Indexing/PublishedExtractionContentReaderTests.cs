@@ -11,7 +11,7 @@ namespace Jellyfin.SemanticDiscovery.Core.Tests.Indexing;
 public sealed class PublishedExtractionContentReaderTests : IDisposable
 {
     private static readonly string[] ExpectedProvenance =
-        ["text-layer", "visual:qwen3-vl:8b"];
+        ["text-layer", "visual:qwen3-vl:8b-instruct"];
 
     private readonly string _root = Path.Combine(
         Path.GetTempPath(),
@@ -33,11 +33,11 @@ public sealed class PublishedExtractionContentReaderTests : IDisposable
             artifactRoot,
             hash,
             "Hybrid",
-            "qwen3-vl:8b",
-            "qwen3-vl:8b");
+            "qwen3-vl:8b-instruct",
+            "qwen3-vl:8b-instruct");
         PublishedExtractionContentReader reader = new(
             artifactRoot,
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             "Hybrid");
 
         ContentChunk chunk = Assert.Single(
@@ -70,11 +70,11 @@ public sealed class PublishedExtractionContentReaderTests : IDisposable
             artifactRoot,
             hash,
             "Hybrid",
-            "qwen3-vl:4b",
-            payloadModel: "qwen3-vl:8b");
+            "qwen3-vl:4b-instruct",
+            payloadModel: "qwen3-vl:8b-instruct");
         PublishedExtractionContentReader reader = new(
             artifactRoot,
-            "qwen3-vl:4b",
+            "qwen3-vl:4b-instruct",
             "Hybrid");
 
         await Assert.ThrowsAsync<InvalidDataException>(

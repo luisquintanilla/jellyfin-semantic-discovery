@@ -55,8 +55,8 @@ executable path before starting Aspire.
 
 | Profile | Vision model | Use |
 | --- | --- | --- |
-| `standard` | `qwen3-vl:8b` | Default; higher-quality visual extraction |
-| `lower-memory` | `qwen3-vl:4b` | Explicit lower-memory option |
+| `standard` | `qwen3-vl:8b-instruct` | Default; bounded non-thinking 8B visual extraction |
+| `lower-memory` | `qwen3-vl:4b-instruct` | Explicit bounded non-thinking 4B option |
 
 Set `SEMANTIC_DISCOVERY_HARDWARE_PROFILE` before starting Aspire. There is no
 silent model fallback: startup or extraction fails if the exact configured

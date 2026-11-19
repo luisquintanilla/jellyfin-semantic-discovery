@@ -49,7 +49,7 @@ public sealed class SemanticDiscoveryPaths
             Environment.GetEnvironmentVariable(
                 "SEMANTIC_DISCOVERY_EXTRACTION_MODEL"),
             configuration.ExtractionModel,
-            "qwen3-vl:8b");
+            "qwen3-vl:8b-instruct");
     }
 
     public static string GetExtractionMode(PluginConfiguration configuration)

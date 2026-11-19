@@ -26,7 +26,7 @@ public sealed class ApiContractTests
             "manifest-item",
             new string('a', 64),
             ExtractionProfile.Hybrid,
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             ExtractionJobState.Pending,
             now,
             now);
@@ -62,7 +62,7 @@ public sealed class ApiContractTests
             "manifest-item",
             new string('a', 64),
             ExtractionProfile.Text,
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             ExtractionJobState.Pending,
             now,
             now);
@@ -96,7 +96,7 @@ public sealed class ApiContractTests
             "manifest-item",
             new string('a', 64),
             ExtractionProfile.Vision,
-            "qwen3-vl:8b",
+            "qwen3-vl:8b-instruct",
             ExtractionJobState.Running,
             now,
             now);

@@ -104,7 +104,7 @@ public sealed class BookCorpusExtractionTests
                 itemId,
                 sourceHash,
                 ExtractionProfile.Text,
-                "qwen3-vl:8b",
+                "qwen3-vl:8b-instruct",
                 ExtractionJobState.Running,
                 now,
                 now);
