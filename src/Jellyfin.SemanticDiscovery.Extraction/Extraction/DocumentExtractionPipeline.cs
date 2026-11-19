@@ -216,6 +216,7 @@ public sealed class ProvenanceMerger : IProvenanceMerger
                     ExtractedFragment existing = merged[existingIndex];
                     merged[existingIndex] = existing with
                     {
+                        Heading = existing.Heading ?? fragment.Heading,
                         Provenance = existing.Provenance
                             .Concat(fragment.Provenance)
                             .Distinct(StringComparer.Ordinal)
