@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "profileId": "ci-fixtures-v1",
+  "items": [
+    {
+      "id": "book-field-notes-on-static",
+      "sourcePath": "generated/library/Books/Field Notes on Static (2024)/Field Notes on Static (2024).pdf",
+      "sourceSha256": "365bc30539bf926c6a967f9d232d989e20bbe12ee2b2c108002da53c6c31835d",
+      "sourceSizeBytes": 1080,
+      "pageCount": 2
+    }
+  ],
+  "libraries": [
+    {
+      "name": "Semantic Movies",
+      "collectionType": "movies",
+      "itemType": "Movie",
+      "path": "/media/Movies",
+      "items": [
+        { "title": "The Signal Garden", "type": "Movie", "path": "/media/Movies/The Signal Garden (2024)/The Signal Garden (2024).mp4", "overview": "At a remote listening post, an aurora cartographer maps the silence between orbits, cataloguing faint signals that no one else has thought to name.", "genres": ["Science Fiction"], "tags": ["restricted-semantic"], "studios": ["Silver Engine Fixtures"], "officialRating": "R" },
+        { "title": "Orbit Almanac", "type": "Movie", "path": "/media/Movies/Orbit Almanac (2024)/Orbit Almanac (2024).mp4", "overview": "A polar radio keeper charts aurora transmissions between silent orbital stations and preserves each signal in a hand-drawn almanac.", "genres": ["Documentary"], "tags": [], "studios": ["Northern Almanac Workshop"], "officialRating": "G" }
+      ]
+    },
+    {
+      "name": "Semantic Series",
+      "collectionType": "tvshows",
+      "itemType": "Series",
+      "path": "/media/Series",
+      "items": [
+        { "title": "Harbor Static", "type": "Series", "path": "/media/Series/Harbor Static (2024)", "overview": "A quiet coastal town goes about its ordinary business near the harbor.", "genres": ["Drama"], "tags": [], "studios": ["Silver Engine Fixtures"], "officialRating": null },
+        { "title": "Tidal Register", "type": "Series", "path": "/media/Series/Tidal Register (2024)", "overview": "A dockworker records ordinary tide schedules and quiet morning arrivals in a harbor ledger.", "genres": ["Documentary"], "tags": [], "studios": ["Tidal Register Workshop"], "officialRating": null }
+      ]
+    },
+    {
+      "name": "Semantic Books",
+      "collectionType": "books",
+      "itemType": "Book",
+      "path": "/media/Books",
+      "items": [
+        { "title": "Field Notes on Static", "type": "Book", "path": "/media/Books/Field Notes on Static (2024)/Field Notes on Static (2024).pdf", "overview": "An original synthetic field log used only as a repository fixture for retrieval demos.", "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Notes from the Choir Loft", "type": "Book", "path": "/media/Books/Notes from the Choir Loft (2024)/Notes from the Choir Loft (2024).epub", "overview": "An original synthetic short story used only as a repository fixture for retrieval demos.", "genres": [], "tags": [], "studios": [], "officialRating": null }
+      ]
+    }
+  ]
+}

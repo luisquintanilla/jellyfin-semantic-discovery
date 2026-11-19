@@ -191,12 +191,15 @@ function ConvertTo-SanitizedResourceEvidence {
     param($Description)
 
     $controlledNames = @(
-            "model-setup",
+            "ollama",
+            "embedding-model",
+            "vision-model",
             "fixture-setup",
             "plugin-setup",
+            "document-extraction",
+            "extraction-setup",
             "jellyfin-bootstrap",
-            "jellyfin",
-            "markitdown")
+            "jellyfin")
     $resources = Get-Resources $Description
     return [ordered]@{
             resources = @($resources |
@@ -242,9 +245,9 @@ function Assert-ResourceStates {
 
     $resources = Get-Resources $Description
     foreach ($name in @(
-            "model-setup",
             "fixture-setup",
             "plugin-setup",
+            "extraction-setup",
             "jellyfin-bootstrap")) {
         $resource = @($resources | Where-Object {
             ($_.displayName ?? $_.DisplayName) -eq $name
@@ -261,7 +264,7 @@ function Assert-ResourceStates {
         }
     }
 
-    foreach ($name in @("jellyfin", "markitdown")) {
+    foreach ($name in @("jellyfin", "document-extraction")) {
         $resource = @($resources | Where-Object {
             ($_.displayName ?? $_.DisplayName) -eq $name
         })
@@ -336,7 +339,7 @@ function Start-And-Wait {
         --format Json `
         --non-interactive `
         --nologo
-    foreach ($name in @("jellyfin", "markitdown")) {
+    foreach ($name in @("jellyfin", "document-extraction")) {
         Invoke-Aspire wait $name `
             --status healthy `
             --timeout $TimeoutSeconds `
@@ -345,9 +348,9 @@ function Start-And-Wait {
             --nologo
     }
     foreach ($name in @(
-            "model-setup",
             "fixture-setup",
             "plugin-setup",
+            "extraction-setup",
             "jellyfin-bootstrap")) {
         Invoke-Aspire wait $name `
             --status down `
@@ -410,6 +413,9 @@ try {
     }
     $env:SEMANTIC_DISCOVERY_DATA = $dataRoot
     $env:SEMANTIC_DISCOVERY_CONFIGURATION = $Configuration
+    $env:SEMANTIC_DISCOVERY_PROFILE = "ci"
+    $env:SEMANTIC_DISCOVERY_HARDWARE_PROFILE = "lower-memory"
+    $env:JELLYFIN_E2E_PROFILE = "ci"
 
     dotnet restore Jellyfin.SemanticDiscovery.slnx `
         --configfile NuGet.Config `
@@ -505,6 +511,9 @@ try {
     Remove-Item Env:JELLYFIN_E2E_EVIDENCE_PATH -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_DATA -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_CONFIGURATION -ErrorAction SilentlyContinue
+    Remove-Item Env:SEMANTIC_DISCOVERY_PROFILE -ErrorAction SilentlyContinue
+    Remove-Item Env:SEMANTIC_DISCOVERY_HARDWARE_PROFILE -ErrorAction SilentlyContinue
+    Remove-Item Env:JELLYFIN_E2E_PROFILE -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_CONTAINER_USER -ErrorAction SilentlyContinue
     $stopConfirmed = $false
     try {

@@ -1,0 +1,18 @@
+Jellyfin Semantic Discovery PDF Corpus
+
+Authorship
+These three books contain original writing and original deterministic vector artwork created for
+the Jellyfin semantic-discovery demonstration. Drafting and critique were AI-assisted; layout,
+code validation, mechanical checks, and release preparation were deterministic local steps. The
+technical source repositories are linked in each book and informed the subject matter; their text,
+illustrations, and layouts were not copied wholesale.
+
+License
+The original educational text and artwork in these PDFs are licensed under the Creative Commons
+Attribution 4.0 International License (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/
+
+Suggested attribution:
+"Jellyfin Semantic Discovery PDF Corpus" (2026).
+
+Third-party project names and trademarks remain the property of their respective owners.

@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "profileId": "demo-v1",
+  "deliveryStatus": "pending-final-assets",
+  "assets": [
+    {
+      "id": "movie-01",
+      "mediaKind": "Movie",
+      "media": "library/Movies/movie-01/movie-01.mp4",
+      "transcript": "library/Movies/movie-01/movie-01.en.vtt",
+      "metadata": "library/Movies/movie-01/movie.nfo",
+      "artwork": "library/Movies/movie-01/poster.jpg",
+      "sha256": null,
+      "authorship": "Pending final asset delivery",
+      "license": "Pending final asset delivery"
+    },
+    {
+      "id": "movie-02",
+      "mediaKind": "Movie",
+      "media": "library/Movies/movie-02/movie-02.mp4",
+      "transcript": "library/Movies/movie-02/movie-02.en.vtt",
+      "metadata": "library/Movies/movie-02/movie.nfo",
+      "artwork": "library/Movies/movie-02/poster.jpg",
+      "sha256": null,
+      "authorship": "Pending final asset delivery",
+      "license": "Pending final asset delivery"
+    },
+    {
+      "id": "movie-03",
+      "mediaKind": "Movie",
+      "media": "library/Movies/movie-03/movie-03.mp4",
+      "transcript": "library/Movies/movie-03/movie-03.en.vtt",
+      "metadata": "library/Movies/movie-03/movie.nfo",
+      "artwork": "library/Movies/movie-03/poster.jpg",
+      "sha256": null,
+      "authorship": "Pending final asset delivery",
+      "license": "Pending final asset delivery"
+    },
+    {
+      "id": "audio-01",
+      "mediaKind": "Audio",
+      "media": "library/Music/audio-01/audio-01.flac",
+      "transcript": "library/Music/audio-01/audio-01.en.vtt",
+      "metadata": "library/Music/audio-01/audio-01.nfo",
+      "artwork": "library/Music/audio-01/cover.jpg",
+      "sha256": null,
+      "authorship": "Pending final asset delivery",
+      "license": "Pending final asset delivery"
+    },
+    {
+      "id": "audio-02",
+      "mediaKind": "Audio",
+      "media": "library/Music/audio-02/audio-02.flac",
+      "transcript": "library/Music/audio-02/audio-02.en.vtt",
+      "metadata": "library/Music/audio-02/audio-02.nfo",
+      "artwork": "library/Music/audio-02/cover.jpg",
+      "sha256": null,
+      "authorship": "Pending final asset delivery",
+      "license": "Pending final asset delivery"
+    },
+    {
+      "id": "audio-03",
+      "mediaKind": "Audio",
+      "media": "library/Music/audio-03/audio-03.flac",
+      "transcript": "library/Music/audio-03/audio-03.en.vtt",
+      "metadata": "library/Music/audio-03/audio-03.nfo",
+      "artwork": "library/Music/audio-03/cover.jpg",
+      "sha256": null,
+      "authorship": "Pending final asset delivery",
+      "license": "Pending final asset delivery"
+    },
+    {
+      "id": "tokenizers-field-guide",
+      "mediaKind": "Book",
+      "title": "Tokenizers Field Guide",
+      "media": "library/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf",
+      "transcript": null,
+      "metadata": "library/Books/Tokenizers - A Field Guide (2026)/metadata.opf",
+      "artwork": null,
+      "sha256": "5121b1caaafe837048b50714bf606f2cc832f3099f1c53281d1720a30c3bafb1",
+      "bytes": 392959,
+      "pageCount": 8,
+      "authorship": "\"Jellyfin Semantic Discovery PDF Corpus\" (2026); original writing and deterministic vector artwork, with AI-assisted drafting and critique",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "tensors-for-embeddings",
+      "mediaKind": "Book",
+      "title": "Tensors for Embeddings",
+      "media": "library/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf",
+      "transcript": null,
+      "metadata": "library/Books/Tensors for Embeddings (2026)/metadata.opf",
+      "artwork": null,
+      "sha256": "723d96ff116d41fad6f3f8b15290f2d008249bf530aca97c632f1752a7133261",
+      "bytes": 415503,
+      "pageCount": 8,
+      "authorship": "\"Jellyfin Semantic Discovery PDF Corpus\" (2026); original writing and deterministic vector artwork, with AI-assisted drafting and critique",
+      "license": "CC BY 4.0"
+    },
+    {
+      "id": "verifiable-ai-systems",
+      "mediaKind": "Book",
+      "title": "Verifiable AI Systems",
+      "media": "library/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf",
+      "transcript": null,
+      "metadata": "library/Books/Verifiable AI Systems (2026)/metadata.opf",
+      "artwork": null,
+      "sha256": "08bd2c03b19783468dafad82737972bd64d5a0052c403d119a0cbda878811f96",
+      "bytes": 383140,
+      "pageCount": 8,
+      "authorship": "\"Jellyfin Semantic Discovery PDF Corpus\" (2026); original writing and deterministic vector artwork, with AI-assisted drafting and critique",
+      "license": "CC BY 4.0"
+    }
+  ],
+  "items": [
+    {
+      "id": "tokenizers-field-guide",
+      "sourcePath": "library/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf",
+      "sourceSha256": "5121b1caaafe837048b50714bf606f2cc832f3099f1c53281d1720a30c3bafb1",
+      "sourceSizeBytes": 392959,
+      "pageCount": 8
+    },
+    {
+      "id": "tensors-for-embeddings",
+      "sourcePath": "library/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf",
+      "sourceSha256": "723d96ff116d41fad6f3f8b15290f2d008249bf530aca97c632f1752a7133261",
+      "sourceSizeBytes": 415503,
+      "pageCount": 8
+    },
+    {
+      "id": "verifiable-ai-systems",
+      "sourcePath": "library/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf",
+      "sourceSha256": "08bd2c03b19783468dafad82737972bd64d5a0052c403d119a0cbda878811f96",
+      "sourceSizeBytes": 383140,
+      "pageCount": 8
+    }
+  ],
+  "libraries": [
+    {
+      "name": "Semantic Movies",
+      "collectionType": "movies",
+      "itemType": "Movie",
+      "path": "/media/Movies",
+      "items": [
+        { "title": "__DELIVERY_PENDING_MOVIE_1__", "type": "Movie", "path": "/media/Movies/movie-01/movie-01.mp4", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "__DELIVERY_PENDING_MOVIE_2__", "type": "Movie", "path": "/media/Movies/movie-02/movie-02.mp4", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "__DELIVERY_PENDING_MOVIE_3__", "type": "Movie", "path": "/media/Movies/movie-03/movie-03.mp4", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null }
+      ]
+    },
+    {
+      "name": "Semantic Audio",
+      "collectionType": "music",
+      "itemType": "Audio",
+      "path": "/media/Music",
+      "items": [
+        { "title": "__DELIVERY_PENDING_AUDIO_1__", "type": "Audio", "path": "/media/Music/audio-01/audio-01.flac", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "__DELIVERY_PENDING_AUDIO_2__", "type": "Audio", "path": "/media/Music/audio-02/audio-02.flac", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "__DELIVERY_PENDING_AUDIO_3__", "type": "Audio", "path": "/media/Music/audio-03/audio-03.flac", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null }
+      ]
+    },
+    {
+      "name": "Semantic Books",
+      "collectionType": "books",
+      "itemType": "Book",
+      "path": "/media/Books",
+      "items": [
+        { "title": "Tokenizers Field Guide", "type": "Book", "path": "/media/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf", "overview": null, "genres": ["Technology"], "tags": ["tokenization", "semantic-discovery"], "studios": [], "officialRating": null },
+        { "title": "Tensors for Embeddings", "type": "Book", "path": "/media/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf", "overview": null, "genres": ["Technology"], "tags": ["tensors", "embeddings"], "studios": [], "officialRating": null },
+        { "title": "Verifiable AI Systems", "type": "Book", "path": "/media/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf", "overview": null, "genres": ["Technology"], "tags": ["verification", "ai-systems"], "studios": [], "officialRating": null }
+      ]
+    }
+  ]
+}
