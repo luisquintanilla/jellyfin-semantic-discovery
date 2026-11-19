@@ -166,9 +166,9 @@
       "itemType": "Movie",
       "path": "/media/Movies",
       "items": [
-        { "title": "Jellyfin, with a New Capability", "type": "Movie", "path": "/media/Movies/Jellyfin, with a New Capability/jellyfin-new-capability.mp4", "overview": "Aspire 17 orchestrates Jellyfin 12, its semantic-discovery plugin, Ollama, and a .NET 11 document extraction service without replacing the Jellyfin experience.", "genres": ["Technology"], "tags": ["jellyfin", "aspire", "ollama"], "studios": [".NET AI Stack demo"], "officialRating": null },
-        { "title": "One Contract, Many Models", "type": "Movie", "path": "/media/Movies/One Contract, Many Models/one-contract-many-models.mp4", "overview": "Microsoft.Extensions.AI contracts and keyed dependency injection let ordinary .NET feature code select Ollama, Azure, or ONNX-backed providers through configuration.", "genres": ["Technology"], "tags": ["microsoft-extensions-ai", "dependency-injection"], "studios": [".NET AI Stack demo"], "officialRating": null },
-        { "title": "Tokens to Vectors", "type": "Movie", "path": "/media/Movies/Tokens to Vectors/tokens-to-vectors.mp4", "overview": "A practical walkthrough of normalization, tokenization, attention masks, mean pooling, vector normalization, and cosine similarity.", "genres": ["Technology"], "tags": ["tokenizers", "tensors", "embeddings"], "studios": [".NET AI Stack demo"], "officialRating": null }
+        { "title": "Jellyfin, with a New Capability", "type": "Movie", "path": "/media/Movies/Jellyfin, with a New Capability/jellyfin-new-capability.mp4", "overview": "Aspire 17 orchestrates Jellyfin 12, its semantic-discovery plugin, Ollama, and a .NET 11 document extraction service without replacing the Jellyfin experience.", "genres": ["Technology"], "tags": [], "studios": [".NET AI Stack demo"], "officialRating": null },
+        { "title": "One Contract, Many Models", "type": "Movie", "path": "/media/Movies/One Contract, Many Models/one-contract-many-models.mp4", "overview": "Microsoft.Extensions.AI contracts and keyed dependency injection let ordinary .NET feature code select Ollama, Azure, or ONNX-backed providers through configuration.", "genres": ["Technology"], "tags": [], "studios": [".NET AI Stack demo"], "officialRating": null },
+        { "title": "Tokens to Vectors", "type": "Movie", "path": "/media/Movies/Tokens to Vectors/tokens-to-vectors.mp4", "overview": "A practical walkthrough of normalization, tokenization, attention masks, mean pooling, vector normalization, and cosine similarity.", "genres": ["Technology"], "tags": [], "studios": [".NET AI Stack demo"], "officialRating": null }
       ]
     },
     {
@@ -177,9 +177,9 @@
       "itemType": "Audio",
       "path": "/media/Audio",
       "items": [
-        { "title": "Context Pipelines", "type": "Audio", "path": "/media/Audio/Context Pipelines/context-pipelines.flac", "overview": "A structure-preserving .NET document pipeline using text and vision extraction, tokenizer-bounded chunks, and diagnostic provenance.", "genres": ["Technology"], "tags": ["document-extraction", "data-ingestion"], "studios": [".NET AI Stack demo"], "officialRating": null },
-        { "title": "Routing and Decisions", "type": "Audio", "path": "/media/Audio/Routing and Decisions/routing-and-decisions.flac", "overview": "Policy filters, typed model decisions, confidence thresholds, and explicit fallback in .NET AI systems.", "genres": ["Technology"], "tags": ["routing", "policy", "fallback"], "studios": [".NET AI Stack demo"], "officialRating": null },
-        { "title": "Tools, Agents, and Human Control", "type": "Audio", "path": "/media/Audio/Tools, Agents, and Human Control/tools-agents-human-control.flac", "overview": "Models propose bounded actions, deterministic .NET code validates them, and humans approve consequential work and release.", "genres": ["Technology"], "tags": ["agents", "tools", "human-control"], "studios": [".NET AI Stack demo"], "officialRating": null }
+        { "title": "Context Pipelines", "type": "Audio", "path": "/media/Audio/Context Pipelines/context-pipelines.flac", "overview": null, "genres": ["Technology"], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Routing and Decisions", "type": "Audio", "path": "/media/Audio/Routing and Decisions/routing-and-decisions.flac", "overview": null, "genres": ["Technology"], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Tools, Agents, and Human Control", "type": "Audio", "path": "/media/Audio/Tools, Agents, and Human Control/tools-agents-human-control.flac", "overview": null, "genres": ["Technology"], "tags": [], "studios": [], "officialRating": null }
       ]
     },
     {
@@ -188,9 +188,9 @@
       "itemType": "Book",
       "path": "/media/Books",
       "items": [
-        { "title": "Tokenizers Field Guide", "type": "Book", "path": "/media/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf", "overview": null, "genres": ["Technology"], "tags": ["tokenization", "semantic-discovery"], "studios": [], "officialRating": null },
-        { "title": "Tensors for Embeddings", "type": "Book", "path": "/media/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf", "overview": null, "genres": ["Technology"], "tags": ["tensors", "embeddings"], "studios": [], "officialRating": null },
-        { "title": "Verifiable AI Systems", "type": "Book", "path": "/media/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf", "overview": null, "genres": ["Technology"], "tags": ["verification", "ai-systems"], "studios": [], "officialRating": null }
+        { "title": "Tokenizers Field Guide", "type": "Book", "path": "/media/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Tensors for Embeddings", "type": "Book", "path": "/media/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Verifiable AI Systems", "type": "Book", "path": "/media/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null }
       ]
     }
   ]

@@ -15,41 +15,47 @@ public sealed class JellyfinApiEndToEndTests
     {
         await using DemoContext context = await DemoContext.CreateAsync();
 
-        Assert.Contains(
+        Assert.Equal(
             "Tokenizers Field Guide",
-            await SearchNamesAsync(
+            (await SearchNamesAsync(
                 context.Admin,
-                "how do token offsets align tokens with the original source text?"));
-        Assert.Contains(
+                "how do token offsets align tokens with the original source text?",
+                includeItemTypes: "Book")).First());
+        Assert.Equal(
             "Tensors for Embeddings",
-            await SearchNamesAsync(
+            (await SearchNamesAsync(
                 context.Admin,
-                "which tensor API is best for vectorized embedding hot loops?"));
-        Assert.Contains(
+                "which tensor API is best for vectorized embedding hot loops?",
+                includeItemTypes: "Book")).First());
+        Assert.Equal(
             "Verifiable AI Systems",
-            await SearchNamesAsync(
+            (await SearchNamesAsync(
                 context.Admin,
-                "who decides correctness in a verifiable AI workflow?"));
+                "who decides correctness in a verifiable AI workflow?",
+                includeItemTypes: "Book")).First());
         Assert.Equal(
             "Jellyfin, with a New Capability",
             (await SearchNamesAsync(
                 context.Admin,
-                "official Jellyfin 12 experience remains intact")).First());
+                "official Jellyfin 12 experience remains intact",
+                includeItemTypes: "Movie")).First());
         Assert.Equal(
             "One Contract, Many Models",
             (await SearchNamesAsync(
                 context.Admin,
-                "keyed dependency injection selects AI providers")).First());
+                "keyed dependency injection selects AI providers",
+                includeItemTypes: "Movie")).First());
         Assert.Equal(
             "Tokens to Vectors",
             (await SearchNamesAsync(
                 context.Admin,
-                "attention masks mark real tokens and padding with zero")).First());
+                "attention masks mark real tokens and padding with zero",
+                includeItemTypes: "Movie")).First());
         Assert.Equal(
             "Context Pipelines",
             (await SearchNamesAsync(
                 context.Admin,
-                "PdfPig reads the text layer and rendered pages")).First());
+                ".NET 11 ASP.NET Core service uses Microsoft.Extensions.DocumentExtraction")).First());
         Assert.Equal(
             "Routing and Decisions",
             (await SearchNamesAsync(

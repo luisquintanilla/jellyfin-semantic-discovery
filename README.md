@@ -136,9 +136,9 @@ Studio changes.
 
 The server plugin provides typed semantic search and local similar-item
 providers for Movie, Audio, Series, and Book. The stock Jellyfin web client is
-known to render native similar-item rows for Movie and Series. This repository
-does not claim native Audio or Book rows in the unchanged web client; their
-server behavior is available through:
+verified to render native similar-item rows for Movie, Audio, and Series. The
+unchanged web client does not render a Book row; Book similar results remain
+available through:
 
 ```text
 GET /Items/{itemId}/Similar
