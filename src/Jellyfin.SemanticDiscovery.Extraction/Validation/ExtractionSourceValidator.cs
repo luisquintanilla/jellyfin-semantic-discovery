@@ -121,8 +121,18 @@ public sealed class ExtractionSourceValidator(
 
     private static string ResolveContainedPath(string root, string relativePath)
     {
-        if (string.IsNullOrWhiteSpace(relativePath) ||
-            Path.IsPathRooted(relativePath))
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            throw new ExtractionValidationException(
+                "The manifest source path must be relative.");
+        }
+
+        string normalizedRelativePath = relativePath
+            .Replace('\\', Path.DirectorySeparatorChar)
+            .Replace('/', Path.DirectorySeparatorChar);
+        if (Path.IsPathRooted(normalizedRelativePath) ||
+            (normalizedRelativePath.Length >= 2 &&
+             normalizedRelativePath[1] == ':'))
         {
             throw new ExtractionValidationException(
                 "The manifest source path must be relative.");
@@ -130,7 +140,7 @@ public sealed class ExtractionSourceValidator(
 
         string fullRoot = Path.GetFullPath(root);
         string sourcePath = Path.GetFullPath(
-            Path.Combine(fullRoot, relativePath));
+            Path.Combine(fullRoot, normalizedRelativePath));
         string relative = Path.GetRelativePath(fullRoot, sourcePath);
         if (relative.Equals("..", StringComparison.Ordinal) ||
             relative.StartsWith(

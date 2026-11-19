@@ -43,6 +43,7 @@ public sealed class SourceValidationTests
 
     [Theory]
     [InlineData("..\\outside.pdf", "escapes")]
+    [InlineData("C:\\outside.pdf", "relative")]
     [InlineData("document.txt", "Only .pdf")]
     public async Task RejectsInvalidManifestPaths(
         string sourcePath,
