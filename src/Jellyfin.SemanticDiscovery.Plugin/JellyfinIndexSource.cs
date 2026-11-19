@@ -344,7 +344,6 @@ public sealed class JellyfinIndexSource(ILibraryManager libraryManager) : IIndex
             ContentSourceKind? sourceKind = extension.ToLowerInvariant() switch
             {
                 ".pdf" => ContentSourceKind.Pdf,
-                ".epub" => ContentSourceKind.Epub,
                 _ => null,
             };
 
