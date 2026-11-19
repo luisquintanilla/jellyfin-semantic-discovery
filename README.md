@@ -187,7 +187,9 @@ named volume; do not delete unrelated Docker volumes.
 three Book slots. The Book corpus is delivered as three original eight-page
 CC BY 4.0 PDFs, with hashes and authorship in
 `assets/demo/LICENSE-AUTHORSHIP.txt`. Its deterministic 8B/4B extraction and
-retrieval checks are declared in `assets/demo/extraction-benchmark.json`.
+retrieval checks are declared in `assets/demo/extraction-benchmark.json`, with
+measured hardware, timing, memory, chunk, heading, provenance, and anchor
+results in `assets/demo/extraction-benchmark-results.json`.
 
 The approved Movie/Audio release is retained byte-for-byte with MP4/FLAC, VTT,
 and NFO sidecars. The approved Book release is retained byte-for-byte with

@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "measuredUtc": "2026-11-19T06:00:00Z",
+  "methodology": {
+    "mode": "Hybrid",
+    "documents": 3,
+    "pagesPerDocument": 8,
+    "totalPages": 24,
+    "concurrency": 1,
+    "rasterDpi": 144,
+    "maximumOutputTokensPerPage": 768,
+    "modelState": "warm",
+    "notes": [
+      "Each model was resident before the measured three-document run.",
+      "Wall time includes source validation, PdfPig text extraction, local Poppler rasterization, VLM inference, provenance merging, token-aware chunking, and atomic artifact publication.",
+      "GPU memory is sampled from nvidia-smi during each document.",
+      "Service working set is the process peak reported after the run.",
+      "All anchors come from the sealed source PDFs and all published chunks are capped at 384 application-tokenizer tokens."
+    ]
+  },
+  "hardware": {
+    "computer": "Lenovo 20Y4S26400",
+    "operatingSystem": "Windows 11 build 26200",
+    "cpu": "11th Gen Intel(R) Core(TM) i9-11950H @ 2.60GHz",
+    "cpuCores": 8,
+    "cpuLogicalProcessors": 16,
+    "gpu": "NVIDIA GeForce RTX 3080 Laptop GPU",
+    "gpuMemoryMiB": 16384,
+    "ramGiB": 63.7
+  },
+  "models": [
+    {
+      "name": "embeddinggemma:latest",
+      "diskBytes": 621875917,
+      "digest": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1"
+    },
+    {
+      "name": "qwen3-vl:8b-instruct",
+      "diskBytes": 6190971795,
+      "digest": "70e58e37beb15464e19aa903dedb2cba828b89c0fb186f75ff2738c7347b96eb"
+    },
+    {
+      "name": "qwen3-vl:4b-instruct",
+      "diskBytes": 3337225651,
+      "digest": "84f7ed8042fa7cdbd902f7dcb7d0370e032095047cc3244179f263b77b5bc318"
+    }
+  ],
+  "runs": [
+    {
+      "model": "qwen3-vl:8b-instruct",
+      "elapsedSeconds": 1198.488,
+      "peakServiceWorkingSetBytes": 243101696,
+      "peakGpuMemoryMiB": 7546,
+      "documents": [
+        {
+          "manifestItemId": "tokenizers-field-guide",
+          "wallSeconds": 282.56,
+          "pages": 8,
+          "chunks": 36,
+          "maxTokenCount": 380,
+          "headingChunks": 36,
+          "distinctHeadings": 32,
+          "visualChunks": 32,
+          "textLayerChunks": 10,
+          "textAnchorRetained": true,
+          "artifactBytes": 32661
+        },
+        {
+          "manifestItemId": "tensors-for-embeddings",
+          "wallSeconds": 501.943,
+          "pages": 8,
+          "chunks": 29,
+          "maxTokenCount": 384,
+          "headingChunks": 29,
+          "distinctHeadings": 22,
+          "visualChunks": 23,
+          "textLayerChunks": 11,
+          "textAnchorRetained": true,
+          "artifactBytes": 30100
+        },
+        {
+          "manifestItemId": "verifiable-ai-systems",
+          "wallSeconds": 412.986,
+          "pages": 8,
+          "chunks": 31,
+          "maxTokenCount": 360,
+          "headingChunks": 31,
+          "distinctHeadings": 29,
+          "visualChunks": 31,
+          "textLayerChunks": 8,
+          "textAnchorRetained": true,
+          "artifactBytes": 29483
+        }
+      ]
+    },
+    {
+      "model": "qwen3-vl:4b-instruct",
+      "elapsedSeconds": 556.495,
+      "peakServiceWorkingSetBytes": 221892608,
+      "peakGpuMemoryMiB": 5070,
+      "documents": [
+        {
+          "manifestItemId": "tokenizers-field-guide",
+          "wallSeconds": 160.136,
+          "pages": 8,
+          "chunks": 37,
+          "maxTokenCount": 380,
+          "headingChunks": 37,
+          "distinctHeadings": 32,
+          "visualChunks": 33,
+          "textLayerChunks": 10,
+          "textAnchorRetained": true,
+          "artifactBytes": 33634
+        },
+        {
+          "manifestItemId": "tensors-for-embeddings",
+          "wallSeconds": 194.535,
+          "pages": 8,
+          "chunks": 37,
+          "maxTokenCount": 384,
+          "headingChunks": 37,
+          "distinctHeadings": 30,
+          "visualChunks": 31,
+          "textLayerChunks": 11,
+          "textAnchorRetained": true,
+          "artifactBytes": 30156
+        },
+        {
+          "manifestItemId": "verifiable-ai-systems",
+          "wallSeconds": 201.577,
+          "pages": 8,
+          "chunks": 29,
+          "maxTokenCount": 360,
+          "headingChunks": 29,
+          "distinctHeadings": 27,
+          "visualChunks": 29,
+          "textLayerChunks": 8,
+          "textAnchorRetained": true,
+          "artifactBytes": 32498
+        }
+      ]
+    }
+  ],
+  "comparison": {
+    "fourBElapsedReductionPercent": 53.57,
+    "fourBGpuMemoryReductionMiB": 2476,
+    "quality": "Both profiles retained all three anchors, covered all 24 pages, emitted visual provenance, preserved heading paths on every chunk, and stayed at or below the 384-token application budget. Chunk counts and heading segmentation differed by model."
+  }
+}
