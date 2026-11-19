@@ -22,6 +22,7 @@ $appHost = Join-Path `
 $testProject = Join-Path `
     $repoRoot `
     "tests\Jellyfin.SemanticDiscovery.EndToEndTests\Jellyfin.SemanticDiscovery.EndToEndTests.csproj"
+$cleanupImage = "jellyfin/jellyfin@sha256:97150310f89f908abbf6fa9640ccc36f9bfa9e5e987775db310b3b70c2d11602"
 $effectiveNuGetConfig = if ($NuGetConfig) {
     [System.IO.Path]::GetFullPath($NuGetConfig)
 } else {
@@ -150,6 +151,18 @@ function Reset-E2EData {
     }
 
     if (Test-Path -LiteralPath $resolved) {
+        if (-not $IsWindows) {
+            docker run `
+                --rm `
+                --entrypoint /bin/sh `
+                --mount "type=bind,source=$resolved,target=/cleanup" `
+                $cleanupImage `
+                -c "rm -rf -- /cleanup/* /cleanup/.[!.]* /cleanup/..?*"
+            if ($LASTEXITCODE -ne 0) {
+                throw "Container-side E2E data cleanup failed."
+            }
+        }
+
         Remove-Item -LiteralPath $resolved -Recurse -Force
     }
 }
