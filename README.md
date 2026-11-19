@@ -196,6 +196,26 @@ and NFO sidecars. The approved Book release is retained byte-for-byte with
 PDFs and OPF metadata. No prompts, storyboards, editable sources, generators,
 download caches, rights-refresh workflow, or production receipts are included.
 
+Approved artwork uses Jellyfin 12's verified local conventions:
+
+- Movie: `poster.jpg` and optional `backdrop.jpg` beside the MP4.
+- Audio: square `folder.jpg` beside the FLAC. Jellyfin 12 intentionally
+  excludes regular `Audio` items from `LocalImageProvider`, so bootstrap
+  uploads this local sidecar as the track's Primary image without modifying
+  the FLAC; the same file also decorates the one-track album folder.
+- Book: `<pdf-stem>.jpg` beside the PDF, which Jellyfin selects before generic
+  `poster`, `folder`, or `cover` names.
+
+`assets/demo/manifest.json` keeps SHA-256 fields for Primary artwork and
+optional Movie backdrops. Startup validates every supplied image. When
+`artworkStatus` changes to `ready`, all nine Primary images become mandatory
+and live E2E requires `ImageTags.Primary` for every item.
+
+The library options disable remote image fetchers and do not enable embedded
+title metadata. Jellyfin's local image provider remains active. Audio artwork
+uses the explicit local bootstrap upload above because preserving the released
+FLAC bytes rules out embedding cover art.
+
 Tiny synthetic CI/security fixtures remain under `assets/fixtures`, including
 Series coverage. They are test fixtures, not public demo media.
 

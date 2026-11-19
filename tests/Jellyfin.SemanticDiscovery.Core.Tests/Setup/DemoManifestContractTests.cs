@@ -19,6 +19,9 @@ public sealed class DemoManifestContractTests
         Assert.Equal(
             "ready",
             root.GetProperty("deliveryStatus").GetString());
+        Assert.Equal(
+            "pending-approved-files",
+            root.GetProperty("artworkStatus").GetString());
         JsonElement[] assets = root.GetProperty("assets")
             .EnumerateArray()
             .ToArray();
@@ -39,6 +42,12 @@ public sealed class DemoManifestContractTests
             Assert.False(asset.TryGetProperty("storyboard", out _));
             Assert.False(asset.TryGetProperty("generator", out _));
             Assert.False(asset.TryGetProperty("receipt", out _));
+            Assert.Equal(
+                JsonValueKind.Null,
+                asset.GetProperty("artwork").ValueKind);
+            Assert.Equal(
+                JsonValueKind.Null,
+                asset.GetProperty("artworkSha256").ValueKind);
         });
         foreach (JsonElement asset in assets)
         {

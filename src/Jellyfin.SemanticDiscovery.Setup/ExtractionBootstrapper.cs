@@ -51,6 +51,7 @@ public sealed class ExtractionBootstrapper(
         {
             await ValidateDemoAssetsAsync(
                 Path.GetDirectoryName(manifestPath)!,
+                manifest.ArtworkStatus,
                 manifest.Assets,
                 cancellationToken).ConfigureAwait(false);
         }
@@ -134,6 +135,7 @@ public sealed class ExtractionBootstrapper(
 
     private static async Task ValidateDemoAssetsAsync(
         string manifestRoot,
+        string? artworkStatus,
         BootstrapAsset[]? assets,
         CancellationToken cancellationToken)
     {
@@ -214,16 +216,40 @@ public sealed class ExtractionBootstrapper(
                     asset.Id,
                     "transcript",
                     cancellationToken).ConfigureAwait(false);
-                if (!string.IsNullOrWhiteSpace(asset.Artwork))
-                {
-                    await ValidateRelatedFileAsync(
-                        manifestRoot,
-                        asset.Artwork,
-                        null,
-                        asset.Id,
-                        "artwork",
-                        cancellationToken).ConfigureAwait(false);
-                }
+            }
+
+            bool artworkRequired = string.Equals(
+                artworkStatus,
+                "ready",
+                StringComparison.Ordinal);
+            if (artworkRequired &&
+                (string.IsNullOrWhiteSpace(asset.Artwork) ||
+                 string.IsNullOrWhiteSpace(asset.ArtworkSha256)))
+            {
+                throw new InvalidDataException(
+                    $"Demo asset '{asset.Id}' is missing approved artwork.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(asset.Artwork))
+            {
+                await ValidateRelatedFileAsync(
+                    manifestRoot,
+                    asset.Artwork,
+                    asset.ArtworkSha256,
+                    asset.Id,
+                    "artwork",
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            if (!string.IsNullOrWhiteSpace(asset.Backdrop))
+            {
+                await ValidateRelatedFileAsync(
+                    manifestRoot,
+                    asset.Backdrop,
+                    asset.BackdropSha256,
+                    asset.Id,
+                    "backdrop",
+                    cancellationToken).ConfigureAwait(false);
             }
         }
     }
@@ -252,6 +278,13 @@ public sealed class ExtractionBootstrapper(
         if (string.IsNullOrWhiteSpace(expectedSha256))
         {
             return;
+        }
+
+        if (expectedSha256.Length != 64 ||
+            expectedSha256.Any(character => !Uri.IsHexDigit(character)))
+        {
+            throw new InvalidDataException(
+                $"Demo asset '{assetId}' has an invalid {role} SHA-256.");
         }
 
         await using FileStream stream = new(
@@ -304,6 +337,7 @@ public sealed class ExtractionBootstrapper(
     private sealed record BootstrapManifest(
         int SchemaVersion,
         string? ProfileId,
+        string? ArtworkStatus,
         BootstrapAsset[]? Assets,
         BootstrapManifestItem[] Items);
 
@@ -317,6 +351,9 @@ public sealed class ExtractionBootstrapper(
         string? Sha256,
         string? TranscriptSha256,
         string? MetadataSha256,
+        string? ArtworkSha256,
+        string? Backdrop,
+        string? BackdropSha256,
         long Bytes,
         string Authorship,
         string License);

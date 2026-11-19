@@ -68,6 +68,50 @@ public sealed class JellyfinApiEndToEndTests
                 "humans approve consequential work after validation")).First());
     }
 
+    [DemoArtworkEndToEndFact]
+    public async Task DemoItemsPublishPrimaryArtwork()
+    {
+        await using DemoContext context = await DemoContext.CreateAsync();
+        using JsonDocument manifest = JsonDocument.Parse(
+            File.ReadAllBytes(DemoArtworkEndToEndFactAttribute.ManifestPath));
+        Dictionary<string, bool> expected = manifest.RootElement
+            .GetProperty("assets")
+            .EnumerateArray()
+            .ToDictionary(
+                asset => asset.GetProperty("title").GetString()!,
+                asset => asset.TryGetProperty(
+                        "backdrop",
+                        out JsonElement backdrop) &&
+                    backdrop.ValueKind == JsonValueKind.String,
+                StringComparer.Ordinal);
+        JsonObject response = await GetObjectAsync(
+            context.Admin,
+            "Items?Recursive=true&IncludeItemTypes=Movie,Audio,Book" +
+            "&Fields=ImageTags,BackdropImageTags&EnableImages=true" +
+            "&ImageTypeLimit=1&Limit=100");
+        JsonObject[] items = response["Items"]!.AsArray()
+            .Select(static item => item!.AsObject())
+            .Where(item => expected.ContainsKey(
+                GetRequiredString(item, "Name")))
+            .ToArray();
+
+        Assert.Equal(9, items.Length);
+        foreach (JsonObject item in items)
+        {
+            string title = GetRequiredString(item, "Name");
+            JsonObject imageTags = Assert.IsType<JsonObject>(
+                item["ImageTags"]);
+            Assert.False(string.IsNullOrWhiteSpace(
+                imageTags["Primary"]?.GetValue<string>()));
+            if (expected[title])
+            {
+                Assert.NotEmpty(
+                    Assert.IsType<JsonArray>(
+                        item["BackdropImageTags"]));
+            }
+        }
+    }
+
     [EndToEndFact]
     public async Task NativeSearchFindsMetadataSubtitlesPdfAndRejectsNoise()
     {
@@ -732,5 +776,63 @@ public sealed class DemoEndToEndFactAttribute : FactAttribute
             Skip =
                 "The sealed demo corpus is exercised when JELLYFIN_E2E_PROFILE=demo.";
         }
+    }
+
+}
+
+public sealed class DemoArtworkEndToEndFactAttribute : FactAttribute
+{
+    internal static string ManifestPath =>
+        Path.Combine(
+            FindRepositoryRoot(),
+            "assets",
+            "demo",
+            "manifest.json");
+
+    public DemoArtworkEndToEndFactAttribute()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("JELLYFIN_E2E_PROFILE"),
+                "demo",
+                StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(
+                Environment.GetEnvironmentVariable(
+                    "JELLYFIN_E2E_CREDENTIALS_PATH")))
+        {
+            Skip =
+                "Artwork is exercised only by the live demo profile.";
+            return;
+        }
+
+        using JsonDocument manifest = JsonDocument.Parse(
+            File.ReadAllBytes(ManifestPath));
+        if (!manifest.RootElement.TryGetProperty(
+                "artworkStatus",
+                out JsonElement status) ||
+            !string.Equals(
+                status.GetString(),
+                "ready",
+                StringComparison.Ordinal))
+        {
+            Skip = "Approved demo artwork has not been delivered yet.";
+        }
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        for (DirectoryInfo? directory = new(AppContext.BaseDirectory);
+             directory is not null;
+             directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(
+                    directory.FullName,
+                    "Jellyfin.SemanticDiscovery.slnx")))
+            {
+                return directory.FullName;
+            }
+        }
+
+        throw new DirectoryNotFoundException(
+            "The repository root could not be located.");
     }
 }

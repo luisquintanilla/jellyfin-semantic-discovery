@@ -125,6 +125,8 @@ public sealed class JellyfinBootstrapper(
 
     private readonly LibrarySpec[] _libraries =
         LoadLibraries(options?.LibraryManifestPath);
+    private readonly bool _artworkReady =
+        LoadArtworkReady(options?.LibraryManifestPath);
 
     public async Task BootstrapAsync(CancellationToken cancellationToken)
     {
@@ -205,6 +207,9 @@ public sealed class JellyfinBootstrapper(
 
         await RunLibraryScanAsync(cancellationToken).ConfigureAwait(false);
         await WaitForItemsAsync(libraryIds, cancellationToken).ConfigureAwait(false);
+        await ApplyAndVerifyArtworkAsync(
+            libraryIds,
+            cancellationToken).ConfigureAwait(false);
         long completedGeneration =
             await RunSemanticIndexTaskAsync(cancellationToken).ConfigureAwait(false);
         await VerifySemanticIndexStatusAsync(
@@ -498,6 +503,147 @@ public sealed class JellyfinBootstrapper(
             baselineResult,
             "Jellyfin library scan",
             cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task ApplyAndVerifyArtworkAsync(
+        IReadOnlyDictionary<string, Guid> libraryIds,
+        CancellationToken cancellationToken)
+    {
+        foreach (LibrarySpec library in _libraries)
+        {
+            ExpectedItem[] expectedWithArtwork = library.Items
+                .Where(static item =>
+                    !string.IsNullOrWhiteSpace(item.PrimaryImagePath))
+                .ToArray();
+            if (expectedWithArtwork.Length == 0)
+            {
+                continue;
+            }
+
+            Guid parentId = libraryIds[library.Name];
+            JsonElement[] items = await GetLibraryItemsAsync(
+                parentId,
+                library,
+                cancellationToken).ConfigureAwait(false);
+            foreach (ExpectedItem expected in expectedWithArtwork)
+            {
+                JsonElement actual = items.Single(item =>
+                    ItemMatches(item, expected));
+                if (library.ItemType == "Audio" &&
+                    !HasPrimaryImage(actual))
+                {
+                    await UploadPrimaryImageAsync(
+                        GetRequiredGuid(actual, "Id"),
+                        expected.PrimaryImagePath!,
+                        cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            if (!_artworkReady)
+            {
+                continue;
+            }
+
+            items = await GetLibraryItemsAsync(
+                parentId,
+                library,
+                cancellationToken).ConfigureAwait(false);
+            foreach (ExpectedItem expected in expectedWithArtwork)
+            {
+                JsonElement actual = items.Single(item =>
+                    ItemMatches(item, expected));
+                if (!HasPrimaryImage(actual))
+                {
+                    throw new InvalidDataException(
+                        $"Item '{expected.Title}' did not publish a Primary image.");
+                }
+
+                if (!string.IsNullOrWhiteSpace(expected.BackdropImagePath) &&
+                    !HasBackdropImage(actual))
+                {
+                    throw new InvalidDataException(
+                        $"Item '{expected.Title}' did not publish a Backdrop image.");
+                }
+            }
+        }
+    }
+
+    private async Task<JsonElement[]> GetLibraryItemsAsync(
+        Guid parentId,
+        LibrarySpec library,
+        CancellationToken cancellationToken)
+    {
+        using JsonDocument items = await GetJsonAsync(
+            $"Items?ParentId={parentId:N}&Recursive=true" +
+            $"&IncludeItemTypes={Uri.EscapeDataString(string.Join(',', library.Items.Select(static item => item.Type).Distinct(StringComparer.Ordinal)))}" +
+            "&Fields=Path,Overview,Genres,Tags,Studios,OfficialRating,ImageTags,BackdropImageTags" +
+            "&EnableImages=true&ImageTypeLimit=1&Limit=100",
+            cancellationToken).ConfigureAwait(false);
+        return items.RootElement.GetProperty("Items")
+            .EnumerateArray()
+            .Select(static item => item.Clone())
+            .ToArray();
+    }
+
+    private async Task UploadPrimaryImageAsync(
+        Guid itemId,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        await using FileStream stream = new(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        using StreamContent content = new(stream);
+        content.Headers.ContentType =
+            new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+        using HttpResponseMessage response = await _httpClient.PostAsync(
+            $"Items/{itemId:N}/Images/Primary",
+            content,
+            cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static bool HasPrimaryImage(JsonElement item) =>
+        TryGetPropertyIgnoreCase(
+            item,
+            "ImageTags",
+            out JsonElement tags) &&
+        tags.ValueKind == JsonValueKind.Object &&
+        TryGetPropertyIgnoreCase(
+            tags,
+            "Primary",
+            out JsonElement primary) &&
+        primary.ValueKind == JsonValueKind.String &&
+        !string.IsNullOrWhiteSpace(primary.GetString());
+
+    private static bool HasBackdropImage(JsonElement item) =>
+        TryGetPropertyIgnoreCase(
+            item,
+            "BackdropImageTags",
+            out JsonElement tags) &&
+        tags.ValueKind == JsonValueKind.Array &&
+        tags.GetArrayLength() > 0;
+
+    private static Guid GetRequiredGuid(
+        JsonElement item,
+        string property)
+    {
+        if (!TryGetPropertyIgnoreCase(
+                item,
+                property,
+                out JsonElement value) ||
+            value.ValueKind != JsonValueKind.String ||
+            !Guid.TryParse(value.GetString(), out Guid result))
+        {
+            throw new InvalidDataException(
+                $"Jellyfin item property '{property}' is missing.");
+        }
+
+        return result;
     }
 
 
@@ -1004,6 +1150,9 @@ public sealed class JellyfinBootstrapper(
         }
 
         string path = Path.GetFullPath(manifestPath);
+        string manifestRoot = Path.GetDirectoryName(path)
+            ?? throw new InvalidDataException(
+                "The Jellyfin library manifest has no parent directory.");
         DemoLibraryManifest manifest =
             JsonSerializer.Deserialize<DemoLibraryManifest>(
                 File.ReadAllBytes(path),
@@ -1017,7 +1166,12 @@ public sealed class JellyfinBootstrapper(
                 "The Jellyfin library manifest is invalid.");
         }
 
-        return manifest.Libraries.Select(static library =>
+        Dictionary<string, DemoAsset> assetsByMediaPath =
+            (manifest.Assets ?? [])
+                .ToDictionary(
+                    asset => ToJellyfinMediaPath(asset.Media),
+                    StringComparer.Ordinal);
+        return manifest.Libraries.Select(library =>
         {
             if (string.IsNullOrWhiteSpace(library.Name) ||
                 library.CollectionType is not (
@@ -1037,16 +1191,86 @@ public sealed class JellyfinBootstrapper(
                 library.CollectionType,
                 library.ItemType,
                 library.Path,
-                library.Items.Select(static item => new ExpectedItem(
-                    item.Title,
-                    item.Type,
-                    item.Path,
-                    item.Overview,
-                    item.Genres,
-                    item.Tags,
-                    item.Studios,
-                    item.OfficialRating)).ToArray());
+                library.Items.Select(item =>
+                {
+                    assetsByMediaPath.TryGetValue(
+                        item.Path,
+                        out DemoAsset? asset);
+                    return new ExpectedItem(
+                        item.Title,
+                        item.Type,
+                        item.Path,
+                        item.Overview,
+                        item.Genres,
+                        item.Tags,
+                        item.Studios,
+                        item.OfficialRating,
+                        ResolveOptionalManifestPath(
+                            manifestRoot,
+                            asset?.Artwork),
+                        ResolveOptionalManifestPath(
+                            manifestRoot,
+                            asset?.Backdrop));
+                }).ToArray());
         }).ToArray();
+    }
+
+    private static bool LoadArtworkReady(string? manifestPath)
+    {
+        if (string.IsNullOrWhiteSpace(manifestPath))
+        {
+            return false;
+        }
+
+        using JsonDocument document = JsonDocument.Parse(
+            File.ReadAllBytes(Path.GetFullPath(manifestPath)));
+        return document.RootElement.TryGetProperty(
+                "artworkStatus",
+                out JsonElement status) &&
+            string.Equals(
+                status.GetString(),
+                "ready",
+                StringComparison.Ordinal);
+    }
+
+    private static string ToJellyfinMediaPath(string relativePath)
+    {
+        const string prefix = "library/";
+        if (!relativePath.StartsWith(
+                prefix,
+                StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                "Demo media paths must be rooted under library/.");
+        }
+
+        return $"/media/{relativePath[prefix.Length..]}";
+    }
+
+    private static string? ResolveOptionalManifestPath(
+        string manifestRoot,
+        string? relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return null;
+        }
+
+        string root = Path.GetFullPath(manifestRoot);
+        string path = Path.GetFullPath(
+            Path.Combine(root, relativePath));
+        string relative = Path.GetRelativePath(root, path);
+        if (relative.Equals("..", StringComparison.Ordinal) ||
+            relative.StartsWith(
+                $"..{Path.DirectorySeparatorChar}",
+                StringComparison.Ordinal) ||
+            Path.IsPathRooted(relative))
+        {
+            throw new InvalidDataException(
+                "A demo artwork path escaped the manifest root.");
+        }
+
+        return path;
     }
 
     private static bool IsSupportedManifestShape(
@@ -1162,5 +1386,7 @@ public sealed class JellyfinBootstrapper(
         string[]? Genres = null,
         string[]? Tags = null,
         string[]? Studios = null,
-        string? OfficialRating = null);
+        string? OfficialRating = null,
+        string? PrimaryImagePath = null,
+        string? BackdropImagePath = null);
 }
