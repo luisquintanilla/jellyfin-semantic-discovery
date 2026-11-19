@@ -186,7 +186,7 @@ public sealed class OllamaChatClient(
             options?.TopP,
             options?.TopK,
             options?.Seed ?? 42,
-            options?.MaxOutputTokens ?? 2048);
+            options?.MaxOutputTokens ?? 768);
 
     private sealed record OllamaChatRequest(
         string Model,
