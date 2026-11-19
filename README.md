@@ -176,10 +176,10 @@ dotnet tool run aspire -- stop `
 Remove-Item -LiteralPath .\.data -Recurse -Force
 ```
 
-This does not remove the Aspire-managed Ollama Docker volume. Keep that volume
-to avoid downloading models again. To reset models, stop Aspire and remove
-only the Ollama volume identified for this AppHost in Docker Desktop or
-`docker volume ls`; do not delete unrelated Docker volumes.
+This does not remove the Aspire-managed
+`jellyfin-semantic-discovery-ollama` Docker volume. Keep that volume to avoid
+downloading models again. To reset models, stop Aspire and remove only that
+named volume; do not delete unrelated Docker volumes.
 
 ## Final asset delivery
 

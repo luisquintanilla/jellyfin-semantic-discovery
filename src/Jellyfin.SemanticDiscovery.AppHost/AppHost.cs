@@ -100,7 +100,7 @@ IResourceBuilder<ParameterResource> adminPassword = builder.AddParameter(
 
 IResourceBuilder<OllamaResource> ollama = builder
     .AddOllama("ollama")
-    .WithDataVolume();
+    .WithDataVolume("jellyfin-semantic-discovery-ollama");
 IResourceBuilder<OllamaModelResource> embeddingModel =
     ollama.AddModel("embedding-model", "embeddinggemma:latest");
 IResourceBuilder<OllamaModelResource> extractionModel =
