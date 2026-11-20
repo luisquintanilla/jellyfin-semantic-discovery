@@ -15,8 +15,4 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Jellyfin.SemanticDiscovery.Core\Jellyfin.SemanticDiscovery.Core.csproj" />
-  </ItemGroup>
-
 </Project>
