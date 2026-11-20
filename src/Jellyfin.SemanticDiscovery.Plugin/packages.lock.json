@@ -152,6 +152,18 @@
           "Microsoft.Extensions.Logging": "10.0.11"
         }
       },
+      "Microsoft.Extensions.AI": {
+        "type": "Transitive",
+        "resolved": "10.8.0",
+        "contentHash": "QfthL8e2X/Z6jRs4YyVS2+HTApJvhz725l35HYZ9cfwlEuQnpzY89NJoGNmpuNZn4LIvvQOQeZIbu3jggBXgUg==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.8.0",
+          "Microsoft.Extensions.Caching.Abstractions": "10.0.10",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "System.Numerics.Tensors": "10.0.10"
+        }
+      },
       "Microsoft.Extensions.Caching.Abstractions": {
         "type": "Transitive",
         "resolved": "10.0.11",
@@ -272,6 +284,7 @@
           "Microsoft.Extensions.VectorData.Abstractions": "[11.0.0, )",
           "Microsoft.ML.Tokenizers": "[2.0.0, )",
           "Microsoft.ML.Tokenizers.Data.O200kBase": "[2.0.0, )",
+          "OllamaSharp": "[5.5.2, )",
           "System.Numerics.Tensors": "[11.0.0, )"
         }
       },
@@ -350,6 +363,16 @@
           "Microsoft.Bcl.HashCode": "6.0.0",
           "Microsoft.Bcl.Memory": "9.0.4",
           "Microsoft.ML.Tokenizers": "2.0.0"
+        }
+      },
+      "OllamaSharp": {
+        "type": "CentralTransitive",
+        "requested": "[5.5.2, )",
+        "resolved": "5.5.2",
+        "contentHash": "oI/dJ5xk9X2eAUSv0kvN26LtN900muLdmyFAIQLUkzOJZi4blIfQzPdkHWH8i5/Tf9SQVoc2pxTz3Tjfrp7qlQ==",
+        "dependencies": {
+          "Microsoft.Extensions.AI": "10.8.0",
+          "Microsoft.Extensions.AI.Abstractions": "10.8.0"
         }
       },
       "System.Numerics.Tensors": {

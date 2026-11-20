@@ -30,7 +30,7 @@ public static class OllamaIndexIdentity
             IndexingPipelineVersion =
                 $"{SemanticConstants.IndexingPipelineVersion};" +
                 $"extraction={extractionProfile};" +
-                "chunking=heading-overlap-v2",
+                $"chunking={SemanticConstants.DocumentChunkingIdentity}",
             ProjectionVersion = SemanticConstants.ProjectionVersion,
             ProjectionHash =
                 ContentHash.Compute(SemanticConstants.ProjectionVersion),

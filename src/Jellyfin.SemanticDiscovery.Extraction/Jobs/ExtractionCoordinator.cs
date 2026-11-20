@@ -1,6 +1,6 @@
-using Jellyfin.SemanticDiscovery.Extraction.Configuration;
 using Jellyfin.SemanticDiscovery.Extraction.Contracts;
 using Jellyfin.SemanticDiscovery.Extraction.Validation;
+using Microsoft.Extensions.AI;
 
 namespace Jellyfin.SemanticDiscovery.Extraction.Jobs;
 
@@ -24,9 +24,17 @@ public sealed class ExtractionCoordinator(
     IExtractionJobRepository repository,
     IExtractionJobChannel queue,
     IExtractionCancellationRegistry cancellationRegistry,
-    OllamaOptions ollamaOptions) :
+    IChatClient chatClient) :
     IExtractionCoordinator
 {
+    private readonly string _model =
+        chatClient.GetService<ChatClientMetadata>()?.DefaultModelId is
+            { Length: > 0 } model
+            ? model
+            : throw new InvalidOperationException(
+                "ConnectionStrings:vision-model must specify Model; no " +
+                "qwen or other model fallback is used.");
+
     public async ValueTask<ExtractionJob> SubmitAsync(
         CreateExtractionRequest request,
         CancellationToken cancellationToken)
@@ -42,7 +50,7 @@ public sealed class ExtractionCoordinator(
             request.ManifestItemId,
             source.SourceSha256,
             request.ExtractionProfile,
-            ollamaOptions.Model,
+            _model,
             cancellationToken).ConfigureAwait(false);
         if (job.State is ExtractionJobState.Failed or
             ExtractionJobState.Cancelled)

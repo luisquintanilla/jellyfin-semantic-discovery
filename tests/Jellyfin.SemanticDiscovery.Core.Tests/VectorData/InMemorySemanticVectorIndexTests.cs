@@ -1,3 +1,4 @@
+using System.Numerics.Tensors;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Jellyfin.SemanticDiscovery.Core.Domain;
@@ -541,7 +542,7 @@ public sealed class InMemorySemanticVectorIndexTests
             vector[index] = weight;
         }
 
-        VectorMath.Normalize(vector);
+        TensorPrimitives.Divide(vector, TensorPrimitives.Norm(vector), vector);
         return vector;
     }
 

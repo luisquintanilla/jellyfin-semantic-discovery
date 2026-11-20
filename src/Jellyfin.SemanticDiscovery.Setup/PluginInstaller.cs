@@ -17,6 +17,7 @@ public static class PluginInstaller
         "Microsoft.Extensions.VectorData.Abstractions.dll",
         "Microsoft.ML.Tokenizers.dll",
         "Microsoft.ML.Tokenizers.Data.O200kBase.dll",
+        "OllamaSharp.dll",
         "System.Numerics.Tensors.dll",
     ];
 

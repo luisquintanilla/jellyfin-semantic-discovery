@@ -171,7 +171,6 @@ IResourceBuilder<DotnetProjectResource> extraction = builder
     .WithEnvironment(
         "Extraction__PdfRasterExecutable",
         pdfRasterExecutable)
-    .WithEnvironment("Ollama__Model", visionModel)
     .WaitFor(extractionModel);
 if (fixtureSetup is not null)
 {

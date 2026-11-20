@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Core.Embedding;
 using Jellyfin.SemanticDiscovery.Core.Ingestion;
 using Jellyfin.SemanticDiscovery.Extraction.Configuration;
@@ -124,7 +125,7 @@ public sealed class BookCorpusExtractionTests
                 Assert.InRange(
                     chunk.TokenCount,
                     1,
-                    HeadingAwareChunker.MaximumTokens);
+                    SemanticConstants.MaximumChunkTokens);
                 Assert.False(string.IsNullOrWhiteSpace(chunk.Heading));
                 Assert.NotNull(chunk.PageNumber);
                 Assert.Contains("text-layer", chunk.Provenance);

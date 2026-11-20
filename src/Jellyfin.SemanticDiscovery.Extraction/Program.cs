@@ -1,11 +1,9 @@
-using System.Data.Common;
 using System.Text.Json.Serialization;
 using Jellyfin.SemanticDiscovery.Core.Embedding;
 using Jellyfin.SemanticDiscovery.Extraction.Api;
 using Jellyfin.SemanticDiscovery.Extraction.Artifacts;
 using Jellyfin.SemanticDiscovery.Extraction.Configuration;
 using Jellyfin.SemanticDiscovery.Extraction.Extraction;
-using Jellyfin.SemanticDiscovery.Extraction.Infrastructure;
 using Jellyfin.SemanticDiscovery.Extraction.Jobs;
 using Jellyfin.SemanticDiscovery.Extraction.Manifest;
 using Jellyfin.SemanticDiscovery.Extraction.Pdf;
@@ -20,36 +18,18 @@ builder.Services.AddOptions<ExtractionOptions>()
     .Bind(builder.Configuration.GetSection(ExtractionOptions.SectionName))
     .ValidateDataAnnotations()
     .ValidateOnStart();
-builder.Services.AddOptions<OllamaOptions>()
-    .Bind(builder.Configuration.GetSection(OllamaOptions.SectionName))
-    .Configure(options =>
+builder.Services.ConfigureHttpClientDefaults(
+    httpClient => httpClient.ConfigureHttpClient(
+        client => client.Timeout = TimeSpan.FromMinutes(10)));
+builder.AddOllamaApiClient("vision-model")
+    .AddChatClient()
+    .ConfigureOptions(options =>
     {
-        string? connectionString =
-            builder.Configuration.GetConnectionString("vision-model");
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            return;
-        }
-
-        DbConnectionStringBuilder connection = new()
-        {
-            ConnectionString = connectionString,
-        };
-        if (connection["Endpoint"] is string endpoint)
-        {
-            options.Endpoint = new Uri(endpoint, UriKind.Absolute);
-        }
-
-        if (connection["Model"] is string model)
-        {
-            options.Model = model;
-        }
-    })
-    .ValidateDataAnnotations()
-    .Validate(
-        options => !string.IsNullOrWhiteSpace(options.Model),
-        "Ollama:Model is required; no qwen or other model fallback is used.")
-    .ValidateOnStart();
+        options.Temperature ??= 0F;
+        options.Seed ??= 42;
+        options.MaxOutputTokens ??= 768;
+        options.Reasoning ??= new() { Effort = ReasoningEffort.None };
+    });
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.UnmappedMemberHandling =
@@ -59,9 +39,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddSingleton(
     serviceProvider =>
         serviceProvider.GetRequiredService<IOptions<ExtractionOptions>>().Value);
-builder.Services.AddSingleton(
-    serviceProvider =>
-        serviceProvider.GetRequiredService<IOptions<OllamaOptions>>().Value);
 builder.Services.AddSingleton<IAtomicFileOperations, AtomicFileOperations>();
 builder.Services.AddSingleton<AtomicJsonFile>();
 builder.Services.AddSingleton<IExtractionManifestCatalog>(serviceProvider =>
@@ -99,27 +76,6 @@ builder.Services.AddSingleton<IPdfRasterizer>(serviceProvider =>
         serviceProvider.GetRequiredService<ExtractionOptions>();
     return new PopplerPdfRasterizer(options.PdfRasterExecutable);
 });
-builder.Services.AddHttpClient(
-    nameof(OllamaChatClient),
-    (serviceProvider, httpClient) =>
-    {
-        OllamaOptions options =
-            serviceProvider.GetRequiredService<OllamaOptions>();
-        httpClient.Timeout = TimeSpan.FromMinutes(
-            options.RequestTimeoutMinutes);
-    });
-builder.Services.AddSingleton<IChatClient>(serviceProvider =>
-{
-    OllamaOptions options =
-        serviceProvider.GetRequiredService<OllamaOptions>();
-    HttpClient httpClient = serviceProvider
-        .GetRequiredService<IHttpClientFactory>()
-        .CreateClient(nameof(OllamaChatClient));
-    return new OllamaChatClient(
-        httpClient,
-        options.Endpoint,
-        options.Model);
-});
 builder.Services.AddSingleton<IVisionPageExtractor,
     VisionLanguagePageExtractor>();
 builder.Services.AddSingleton<IProvenanceMerger, ProvenanceMerger>();
@@ -144,6 +100,7 @@ builder.Services.AddSingleton<IReadinessState>(
 builder.Services.AddHostedService<ExtractionWorker>();
 
 WebApplication app = builder.Build();
+_ = app.Services.GetRequiredService<IExtractionCoordinator>();
 app.MapExtractionEndpoints();
 await app.RunAsync().ConfigureAwait(false);
 

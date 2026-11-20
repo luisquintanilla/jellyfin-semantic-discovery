@@ -9,71 +9,6 @@ namespace Jellyfin.SemanticDiscovery.Core.Tests.Ingestion;
 public sealed class MediMigrationFixtureComparisonTests
 {
     [Fact]
-    public async Task StructuredMarkdownFixtureRecordsIntentionalMigrationDifferences()
-    {
-        const string markdown =
-            """
-            # Guide
-
-            Intro.
-
-            - first item
-            - second item
-
-            ```csharp
-            Console.WriteLine("hello");
-            ```
-            """;
-        FixtureChunk[] preMigration =
-        [
-            new("Guide\nIntro.", 1, "Guide", null, null, null),
-            new(
-                "Guide\n- first item - second item",
-                6,
-                "Guide",
-                null,
-                null,
-                null),
-            new(
-                "Guide\n```csharp Console.WriteLine(\"hello\"); ```",
-                3,
-                "Guide",
-                null,
-                null,
-                null),
-        ];
-        FixtureChunk[] expectedMedi =
-        [
-            new(
-                string.Join(
-                    '\n',
-                    [
-                        "Guide",
-                        "Intro.",
-                        string.Empty,
-                        "first item",
-                        "second item",
-                        string.Empty,
-                        "```csharp",
-                        "Console.WriteLine(\"hello\");",
-                        "```",
-                    ]),
-                3,
-                "Guide",
-                null,
-                null,
-                null),
-        ];
-
-        FixtureChunk[] actual = (await ChunkMarkdownAsync(markdown))
-            .Select(ToFixture)
-            .ToArray();
-
-        AssertFixtureEqual(expectedMedi, actual);
-        Assert.False(preMigration.SequenceEqual(actual));
-    }
-
-    [Fact]
     public async Task TimedTextFixtureMatchesPreMigrationTextCountsAndMetadata()
     {
         FixtureChunk[] preMigration =
@@ -87,29 +22,6 @@ public sealed class MediMigrationFixtureComparisonTests
             .ToArray();
 
         AssertFixtureEqual(preMigration, actual);
-    }
-
-    private static async Task<IReadOnlyList<ContentChunk>> ChunkMarkdownAsync(
-        string markdown)
-    {
-        WordCountTokenCounter counter = new();
-        ContentSourceDescriptor source = new()
-        {
-            OwnerId = Guid.Parse("96e3d636-b4ef-48a2-870d-42697a08c2c0"),
-            Kind = ContentSourceKind.Pdf,
-            Path = "fixture.pdf",
-        };
-        IngestionDocument document =
-            await new MarkdownIngestionDocumentAdapter().ReadAsync(
-                source,
-                markdown,
-                CancellationToken.None);
-        return await new ContentChunkMapper(counter, maximumTokens: 100)
-            .MapAsync(
-                source,
-                new HeadingAwareChunker(counter, maximumTokens: 100)
-                    .ProcessAsync(document),
-                CancellationToken.None);
     }
 
     private static async Task<IReadOnlyList<ContentChunk>>

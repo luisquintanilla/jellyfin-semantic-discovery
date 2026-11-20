@@ -8,6 +8,7 @@
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting.Dotnet" Version="17.0.0" />
     <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="17.0.0-beta.1052" />
+    <PackageVersion Include="CommunityToolkit.Aspire.OllamaSharp" Version="17.0.0-beta.1052" />
     <PackageVersion Include="CommunityToolkit.DocumentExtraction.PdfPig" Version="1.0.0-preview" />
     <PackageVersion Include="CommunityToolkit.DocumentExtraction.VisionLanguageModel" Version="1.0.0-preview" />
     <PackageVersion Include="CommunityToolkit.VectorData.InMemory" Version="1.0.1" />
@@ -18,7 +19,6 @@
     <PackageVersion Include="Markdig.Signed" Version="0.43.0" />
     <PackageVersion Include="MessagePack" Version="2.5.307" />
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.AI" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DataIngestion" Version="11.0.0-preview.1.26560.3" />
     <PackageVersion Include="Microsoft.Extensions.DataIngestion.Abstractions" Version="11.0.0-preview.1.26560.3" />
@@ -29,6 +29,7 @@
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <PackageVersion Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="2.0.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageVersion Include="OllamaSharp" Version="5.5.2" />
     <PackageVersion Include="System.Numerics.Tensors" Version="11.0.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />

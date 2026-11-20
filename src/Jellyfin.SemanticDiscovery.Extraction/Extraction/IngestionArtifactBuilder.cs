@@ -1,12 +1,18 @@
+using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Core.Embedding;
 using Jellyfin.SemanticDiscovery.Core.Ingestion;
 using Jellyfin.SemanticDiscovery.Extraction.Contracts;
 using Microsoft.Extensions.DataIngestion;
+using Microsoft.Extensions.DataIngestion.Chunkers;
+using Microsoft.ML.Tokenizers;
 
 namespace Jellyfin.SemanticDiscovery.Extraction.Extraction;
 
 public static class IngestionArtifactBuilder
 {
+    private static readonly Tokenizer ChunkTokenizer =
+        TiktokenTokenizer.CreateForModel(ApplicationChunkTokenizer.Model);
+
     public static async ValueTask<ExtractionArtifactBundle> BuildAsync(
         ExtractionJob job,
         IReadOnlyList<ExtractedPage> pages,
@@ -17,51 +23,54 @@ public static class IngestionArtifactBuilder
         ArgumentNullException.ThrowIfNull(pages);
         ArgumentNullException.ThrowIfNull(tokenizer);
 
-        IngestionDocument document = CreateDocument(job, pages);
-        HeadingAwareChunker chunker = new(tokenizer);
+        IReadOnlyList<IngestionDocument> documents = CreatePageDocuments(job, pages);
+        HeaderChunker chunker = new(new IngestionChunkerOptions(ChunkTokenizer)
+        {
+            MaxTokensPerChunk = SemanticConstants.MaximumChunkTokens,
+        });
+        ElementProvenanceChunkProcessor provenance = new();
         List<IngestionChunk<string>> ingestionChunks = [];
         List<ExtractionArtifactChunk> artifactChunks = [];
         int sourceOffset = 0;
-        await foreach (IngestionChunk<string> chunk in chunker
-                           .ProcessAsync(document, cancellationToken)
-                           .WithCancellation(cancellationToken)
+        await foreach (IngestionChunk<string> chunk in provenance
+                           .ProcessAsync(
+                               ChunkAllAsync(chunker, documents, cancellationToken),
+                               cancellationToken)
                            .ConfigureAwait(false))
         {
-            int tokenCount = GetRequiredInt(
-                chunk.Metadata,
-                IngestionMetadata.TokenCount);
-            if (tokenCount > HeadingAwareChunker.MaximumTokens)
+            // The built-in chunker joins elements with Environment.NewLine;
+            // normalize so artifacts are identical on every OS.
+            string text = chunk.Content
+                .Replace("\r\n", "\n", StringComparison.Ordinal);
+            int tokenCount = tokenizer.CountTokens(text);
+            if (tokenCount > SemanticConstants.MaximumChunkTokens)
             {
                 throw new InvalidDataException(
                     $"Chunk {artifactChunks.Count} contains {tokenCount} " +
-                    $"tokens, above the {HeadingAwareChunker.MaximumTokens}-token limit.");
+                    $"tokens, above the {SemanticConstants.MaximumChunkTokens}-token limit.");
             }
 
-            string text = chunk.Content;
+            chunk.Metadata[IngestionMetadata.TokenCount] = tokenCount;
             int start = sourceOffset;
             int end = checked(start + text.Length);
-            int? pageNumber = GetPageNumbers(chunk.Metadata)
-                .Order()
-                .Cast<int?>()
-                .FirstOrDefault();
-            string[] provenance = GetStrings(
-                    chunk.Metadata,
-                    "provenance")
-                .Distinct(StringComparer.Ordinal)
-                .Order(StringComparer.Ordinal)
-                .ToArray();
             ingestionChunks.Add(chunk);
             artifactChunks.Add(new ExtractionArtifactChunk(
                 artifactChunks.Count,
                 text,
-                string.IsNullOrWhiteSpace(chunk.Context)
-                    ? null
-                    : chunk.Context,
+                chunk.Metadata.TryGetValue(
+                    ElementProvenanceChunkProcessor.HeadingKey,
+                    out object? heading)
+                    ? heading as string
+                    : null,
                 start,
                 end,
-                pageNumber,
+                chunk.Metadata.TryGetValue(
+                    ElementProvenanceChunkProcessor.PageNumberKey,
+                    out object? page)
+                    ? page as int?
+                    : null,
                 tokenCount,
-                provenance));
+                (string[])chunk.Metadata[ElementProvenanceChunkProcessor.ProvenanceKey]));
             sourceOffset = checked(end + 2);
         }
 
@@ -72,38 +81,65 @@ public static class IngestionArtifactBuilder
             job.ExtractionProfile,
             job.Model,
             ApplicationChunkTokenizer.IdentityHash,
-            HeadingAwareChunker.Identity,
+            SemanticConstants.DocumentChunkingIdentity,
             artifactChunks);
         return new ExtractionArtifactBundle(
             artifact,
-            document,
+            documents,
             ingestionChunks);
     }
 
-    private static IngestionDocument CreateDocument(
+    private static async IAsyncEnumerable<IngestionChunk<string>> ChunkAllAsync(
+        IngestionChunker<string> chunker,
+        IReadOnlyList<IngestionDocument> documents,
+        [System.Runtime.CompilerServices.EnumeratorCancellation]
+        CancellationToken cancellationToken)
+    {
+        foreach (IngestionDocument document in documents)
+        {
+            await foreach (IngestionChunk<string> chunk in chunker
+                               .ProcessAsync(document, cancellationToken)
+                               .ConfigureAwait(false))
+            {
+                yield return chunk;
+            }
+        }
+    }
+
+    // One document per page keeps every chunk on a single page. The heading in
+    // effect at the end of a page is repeated at the start of the next page so
+    // continuation text keeps its section context.
+    private static List<IngestionDocument> CreatePageDocuments(
         ExtractionJob job,
         IReadOnlyList<ExtractedPage> pages)
     {
-        IngestionDocument document = new(job.ManifestItemId);
+        List<IngestionDocument> documents = [];
+        string? heading = null;
         foreach (ExtractedPage page in pages.OrderBy(
                      static candidate => candidate.PageNumber))
         {
-            IngestionDocumentSection section = new();
+            IngestionDocument document = new(
+                $"{job.ManifestItemId}#page={page.PageNumber}");
+            IngestionDocumentSection section = new() { PageNumber = page.PageNumber };
             document.Sections.Add(section);
+            if (heading is not null &&
+                (page.Fragments.Count == 0 ||
+                 string.IsNullOrWhiteSpace(page.Fragments[0].Heading)))
+            {
+                section.Elements.Add(CreateHeader(heading, page.PageNumber));
+            }
+
             foreach (ExtractedFragment fragment in page.Fragments)
             {
                 if (!string.IsNullOrWhiteSpace(fragment.Heading))
                 {
-                    IngestionDocumentHeader header = new(
-                        $"# {fragment.Heading}")
+                    if (!string.Equals(fragment.Heading, heading, StringComparison.Ordinal) ||
+                        section.Elements.Count == 0)
                     {
-                        Level = 1,
-                        Text = fragment.Heading,
-                        PageNumber = page.PageNumber,
-                    };
-                    header.Metadata["provenance"] =
-                        fragment.Provenance.ToArray();
-                    section.Elements.Add(header);
+                        section.Elements.Add(CreateHeader(fragment.Heading, page.PageNumber));
+                    }
+
+                    heading = fragment.Heading;
                     if (string.Equals(
                             fragment.Text,
                             fragment.Heading,
@@ -118,44 +154,27 @@ public static class IngestionArtifactBuilder
                     Text = fragment.Text,
                     PageNumber = page.PageNumber,
                 };
-                paragraph.Metadata["provenance"] =
+                paragraph.Metadata[ElementProvenanceChunkProcessor.ProvenanceKey] =
                     fragment.Provenance.ToArray();
+                if (heading is not null)
+                {
+                    paragraph.Metadata[ElementProvenanceChunkProcessor.HeadingKey] = heading;
+                }
+
                 section.Elements.Add(paragraph);
             }
+
+            documents.Add(document);
         }
 
-        return document;
+        return documents;
     }
 
-    private static int GetRequiredInt(
-        IDictionary<string, object> metadata,
-        string key) =>
-        metadata.TryGetValue(key, out object? value) &&
-        value is int result
-            ? result
-            : throw new InvalidDataException(
-                $"Chunk metadata '{key}' is missing.");
-
-    private static IEnumerable<int> GetPageNumbers(
-        IDictionary<string, object> metadata) =>
-        metadata.TryGetValue("pageNumbers", out object? value)
-            ? value switch
-            {
-                int page => [page],
-                IEnumerable<int> pages => pages,
-                _ => [],
-            }
-            : [];
-
-    private static IEnumerable<string> GetStrings(
-        IDictionary<string, object> metadata,
-        string key) =>
-        metadata.TryGetValue(key, out object? value)
-            ? value switch
-            {
-                string text => [text],
-                IEnumerable<string> values => values,
-                _ => [],
-            }
-            : [];
+    private static IngestionDocumentHeader CreateHeader(string heading, int pageNumber) =>
+        new($"# {heading}")
+        {
+            Level = 1,
+            Text = heading,
+            PageNumber = pageNumber,
+        };
 }
