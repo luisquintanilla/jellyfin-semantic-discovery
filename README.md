@@ -62,6 +62,25 @@ Set `SEMANTIC_DISCOVERY_HARDWARE_PROFILE` before starting Aspire. There is no
 silent model fallback: startup or extraction fails if the exact configured
 model is unavailable.
 
+### GPU acceleration
+
+The Ollama container runs on CPU by default, so the app starts on machines
+without a GPU container runtime. On CPU, a single 8B Qwen3-VL page request can
+exceed the 10-minute extraction request timeout. To pass a GPU through to the
+Ollama container, set `SEMANTIC_DISCOVERY_OLLAMA_GPU` before starting Aspire:
+
+| Value | Effect |
+| --- | --- |
+| `none` | Default; CPU inference |
+| `nvidia` | `WithGPUSupport(OllamaGpuVendor.Nvidia)`; requires the NVIDIA Container Toolkit (`docker run --gpus all`) |
+| `amd` | `WithGPUSupport(OllamaGpuVendor.AMD)`; requires a ROCm-capable Docker host |
+
+```powershell
+$env:SEMANTIC_DISCOVERY_OLLAMA_GPU = "nvidia"
+```
+
+`scripts/Test-EndToEnd.ps1` accepts the same choice as `-OllamaGpu nvidia`.
+
 `embeddinggemma` is always required for semantic indexing. The application
 chunk tokenizer is separately pinned to
 `Microsoft.ML.Tokenizers`/O200k `2.0.0`; it is not presented as Ollama's model
