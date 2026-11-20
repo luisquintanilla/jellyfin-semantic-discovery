@@ -409,7 +409,7 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
         PluginConfiguration configuration =
             Plugin.Instance?.ReadSettings().ToConfiguration()
             ?? new PluginConfiguration();
-        OllamaEmbeddingGenerator? generator = null;
+        ValidatingEmbeddingGenerator? generator = null;
         RuntimeState? state = null;
         try
         {
@@ -422,7 +422,7 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
                 SemanticDiscoveryPaths.GetExtractionModel(configuration);
             string extractionMode =
                 SemanticDiscoveryPaths.GetExtractionMode(configuration);
-            generator = await OllamaEmbeddingGenerator.CreateAsync(
+            generator = await ValidatingEmbeddingGenerator.CreateOllamaAsync(
                 new OllamaEmbeddingOptions
                 {
                     Endpoint = SemanticDiscoveryPaths.GetOllamaEndpoint(
@@ -852,7 +852,7 @@ public sealed partial class SemanticDiscoveryRuntime : IDisposable
         string status);
 
     private sealed class RuntimeState(
-        OllamaEmbeddingGenerator generator,
+        ValidatingEmbeddingGenerator generator,
         SemanticIndexBuilder builder,
         SemanticDiscoveryService discovery,
         float recommendationFloor,

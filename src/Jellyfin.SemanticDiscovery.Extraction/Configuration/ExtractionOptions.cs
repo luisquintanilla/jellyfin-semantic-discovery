@@ -32,17 +32,3 @@ public sealed class ExtractionOptions
 
     public string PdfRasterExecutable { get; set; } = "pdftoppm";
 }
-
-public sealed class OllamaOptions
-{
-    public const string SectionName = "Ollama";
-
-    [Required]
-    public Uri Endpoint { get; set; } = new("http://localhost:11434");
-
-    [Required]
-    public string Model { get; set; } = string.Empty;
-
-    [Range(1, 60)]
-    public int RequestTimeoutMinutes { get; set; } = 10;
-}

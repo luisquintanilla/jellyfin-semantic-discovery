@@ -97,44 +97,6 @@ public sealed class ApplicationTokenBudgetTests
         Assert.True(counter.CallCount < 5_000);
     }
 
-    [Fact]
-    public void SplitMarkdownPreservesLineStructureWhenLinesFit()
-    {
-        ApplicationTokenBudget budget = new(Counter, maximumTokens: 5);
-
-        IReadOnlyList<string> parts = budget.SplitMarkdown(
-            "- one two\n- three four\n- five six",
-            context: string.Empty);
-
-        Assert.Equal(
-            "- one two\n- three four\n- five six",
-            string.Join('\n', parts));
-        Assert.All(
-            ["- one two", "- three four", "- five six"],
-            line => Assert.Contains(
-                line,
-                string.Join('\n', parts),
-                StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public void SplitMarkdownUsesFullBudgetForNormalWhitespaceSeparatedText()
-    {
-        string input = string.Join(
-            ' ',
-            Enumerable.Range(0, 200).Select(index => $"word{index}"));
-
-        IReadOnlyList<string> parts =
-            new ApplicationTokenBudget(Counter, maximumTokens: 50)
-                .SplitMarkdown(input, context: string.Empty);
-
-        Assert.Equal(4, parts.Count);
-        Assert.Equal(input, string.Concat(parts));
-        Assert.All(
-            parts,
-            part => Assert.True(Counter.CountTokens(part) <= 50));
-    }
-
     private sealed class FixedTokenCounter(int tokensPerCall) : ITokenCounter
     {
         public int CountTokens(string text) => tokensPerCall;

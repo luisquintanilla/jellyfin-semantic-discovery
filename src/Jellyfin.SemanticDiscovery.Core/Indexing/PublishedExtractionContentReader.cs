@@ -110,7 +110,7 @@ public sealed class PublishedExtractionContentReader(
                 StringComparison.Ordinal) ||
             !string.Equals(
                 artifact.ChunkingIdentity,
-                HeadingAwareChunker.Identity,
+                SemanticConstants.DocumentChunkingIdentity,
                 StringComparison.Ordinal))
         {
             throw new InvalidDataException(

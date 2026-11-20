@@ -7,7 +7,9 @@ param(
     [string] $NuGetConfig = "",
     [ValidateSet("ci", "demo")]
     [string] $Profile = "ci",
-    [string] $SeedExtractionRoot = ""
+    [string] $SeedExtractionRoot = "",
+    [ValidateSet("none", "nvidia", "amd")]
+    [string] $OllamaGpu = "none"
 )
 
 $ErrorActionPreference = "Stop"
@@ -468,6 +470,7 @@ try {
     $env:SEMANTIC_DISCOVERY_PROFILE = $Profile
     $env:SEMANTIC_DISCOVERY_HARDWARE_PROFILE =
         if ($Profile -eq "ci") { "lower-memory" } else { "standard" }
+    $env:SEMANTIC_DISCOVERY_OLLAMA_GPU = $OllamaGpu
     $env:JELLYFIN_E2E_PROFILE = $Profile
 
     dotnet restore Jellyfin.SemanticDiscovery.slnx `
@@ -568,6 +571,7 @@ try {
     Remove-Item Env:SEMANTIC_DISCOVERY_CONFIGURATION -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_PROFILE -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_HARDWARE_PROFILE -ErrorAction SilentlyContinue
+    Remove-Item Env:SEMANTIC_DISCOVERY_OLLAMA_GPU -ErrorAction SilentlyContinue
     Remove-Item Env:JELLYFIN_E2E_PROFILE -ErrorAction SilentlyContinue
     Remove-Item Env:SEMANTIC_DISCOVERY_CONTAINER_USER -ErrorAction SilentlyContinue
     $stopConfirmed = $false

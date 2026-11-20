@@ -119,7 +119,7 @@ public sealed class PublishedExtractionContentReaderTests : IDisposable
                 model = payloadModel,
                 tokenizerIdentity =
                     ApplicationChunkTokenizer.IdentityHash,
-                chunkingIdentity = HeadingAwareChunker.Identity,
+                chunkingIdentity = SemanticConstants.DocumentChunkingIdentity,
                 chunks = new[]
                 {
                     new

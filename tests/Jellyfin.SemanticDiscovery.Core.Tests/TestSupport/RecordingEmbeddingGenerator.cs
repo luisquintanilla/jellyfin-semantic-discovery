@@ -1,3 +1,4 @@
+using System.Numerics.Tensors;
 using System.Security.Cryptography;
 using System.Text;
 using Jellyfin.SemanticDiscovery.Core.Domain;
@@ -35,7 +36,7 @@ public sealed class RecordingEmbeddingGenerator : IEmbeddingGenerator<string, Em
             vector[index] = (((seed >> 11) & 0xFFFFFF) / (float)0xFFFFFF) - 0.5F;
         }
 
-        VectorMath.Normalize(vector);
+        TensorPrimitives.Divide(vector, TensorPrimitives.Norm(vector), vector);
         return vector;
     }
 

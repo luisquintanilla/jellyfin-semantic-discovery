@@ -34,6 +34,17 @@ string visionModel = hardwareProfile switch
         "'standard' or 'lower-memory'."),
 };
 
+OllamaGpuVendor? ollamaGpu = (
+    Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_OLLAMA_GPU")
+    ?? "none").ToLowerInvariant() switch
+{
+    "none" or "" => null,
+    "nvidia" => OllamaGpuVendor.Nvidia,
+    "amd" => OllamaGpuVendor.AMD,
+    _ => throw new InvalidOperationException(
+        "SEMANTIC_DISCOVERY_OLLAMA_GPU must be 'none', 'nvidia', or 'amd'."),
+};
+
 string manifestPath = profile == "demo"
     ? Path.Combine(repositoryRoot, "assets", "demo", "manifest.json")
     : Path.Combine(
@@ -103,6 +114,11 @@ IResourceBuilder<ParameterResource> adminPassword = builder.AddParameter(
 IResourceBuilder<OllamaResource> ollama = builder
     .AddOllama("ollama")
     .WithDataVolume("jellyfin-semantic-discovery-ollama");
+if (ollamaGpu is { } gpuVendor)
+{
+    ollama.WithGPUSupport(gpuVendor);
+}
+
 IResourceBuilder<OllamaModelResource> embeddingModel =
     ollama.AddModel("embedding-model", "embeddinggemma:latest");
 IResourceBuilder<OllamaModelResource> extractionModel =
@@ -171,7 +187,6 @@ IResourceBuilder<DotnetProjectResource> extraction = builder
     .WithEnvironment(
         "Extraction__PdfRasterExecutable",
         pdfRasterExecutable)
-    .WithEnvironment("Ollama__Model", visionModel)
     .WaitFor(extractionModel);
 if (fixtureSetup is not null)
 {

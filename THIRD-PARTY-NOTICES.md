@@ -9,7 +9,8 @@ authoritative.
 | Jellyfin server and packages | 12.0.0 | <https://github.com/jellyfin/jellyfin/tree/v12.0> |
 | Jellyfin linux/amd64 image | `sha256:97150310f89f908abbf6fa9640ccc36f9bfa9e5e987775db310b3b70c2d11602` | <https://hub.docker.com/r/jellyfin/jellyfin> |
 | Aspire hosting | 17.0.0 | <https://github.com/microsoft/aspire> |
-| CommunityToolkit Aspire Ollama integration | 17.0.0-beta.1052 | <https://github.com/CommunityToolkit/Aspire> |
+| CommunityToolkit Aspire Ollama hosting and OllamaSharp client integrations | 17.0.0-beta.1052 | <https://github.com/CommunityToolkit/Aspire> |
+| OllamaSharp | 5.5.2 | <https://github.com/awaescher/OllamaSharp> |
 | Microsoft.Extensions.AI / VectorData | 11.0.0 | <https://github.com/dotnet/extensions> |
 | Microsoft.Extensions.DataIngestion / DocumentExtraction | 11.0.0-preview.1.26560.3 | <https://github.com/dotnet/extensions> |
 | CommunityToolkit DocumentExtraction PdfPig / VisionLanguageModel | 1.0.0-preview | <https://github.com/CommunityToolkit/AI> |

@@ -24,7 +24,7 @@ public sealed record ExtractedPage(
 
 public sealed record ExtractionArtifactBundle(
     ExtractionArtifact Artifact,
-    IngestionDocument Document,
+    IReadOnlyList<IngestionDocument> Documents,
     IReadOnlyList<IngestionChunk<string>> Chunks);
 
 public interface IVisionPageExtractor

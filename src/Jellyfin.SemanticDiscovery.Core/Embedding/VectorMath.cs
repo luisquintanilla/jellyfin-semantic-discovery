@@ -4,22 +4,6 @@ namespace Jellyfin.SemanticDiscovery.Core.Embedding;
 
 public static class VectorMath
 {
-    public static void Normalize(Span<float> vector)
-    {
-        if (vector.IsEmpty)
-        {
-            throw new ArgumentException("A vector cannot be empty.", nameof(vector));
-        }
-
-        float norm = TensorPrimitives.Norm(vector);
-        if (!float.IsFinite(norm) || norm <= 0F)
-        {
-            throw new InvalidDataException("Cannot normalize a non-finite or zero vector.");
-        }
-
-        TensorPrimitives.Divide(vector, norm, vector);
-    }
-
     public static float CosineSimilarity(
         ReadOnlySpan<float> left,
         ReadOnlySpan<float> right)

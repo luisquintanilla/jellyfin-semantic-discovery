@@ -1,12 +1,12 @@
 using System.Text;
+using Jellyfin.SemanticDiscovery.Core.Domain;
 using Jellyfin.SemanticDiscovery.Core.Projection;
 
 namespace Jellyfin.SemanticDiscovery.Core.Ingestion;
 
 internal sealed class ApplicationTokenBudget
 {
-    internal const int MaximumInputTokens = 384;
-    internal const int DefaultOverlapTokens = 32;
+    internal const int MaximumInputTokens = SemanticConstants.MaximumChunkTokens;
     internal const int MaximumScalarsPerUnbrokenSegment = 100;
 
     private readonly ITokenCounter _tokenCounter;
@@ -136,131 +136,6 @@ internal sealed class ApplicationTokenBudget
         return parts;
     }
 
-    public IReadOnlyList<string> SplitMarkdown(
-        string markdown,
-        string context,
-        int overlapTokens = 0)
-    {
-        ArgumentNullException.ThrowIfNull(markdown);
-        ArgumentNullException.ThrowIfNull(context);
-
-        string normalized = markdown
-            .Replace("\r\n", "\n", StringComparison.Ordinal)
-            .Replace('\r', '\n')
-            .Trim();
-        if (normalized.Length == 0)
-        {
-            return [];
-        }
-
-        if (Fits(Combine(context, normalized)))
-        {
-            return [normalized];
-        }
-
-        string[] lines = normalized.Split('\n');
-        List<string> parts = [];
-        List<string> pending = [];
-        foreach (string line in lines)
-        {
-            string candidate = string.Join('\n', pending.Append(line));
-            if (pending.Count > 0 && !Fits(Combine(context, candidate)))
-            {
-                parts.Add(string.Join('\n', pending).Trim());
-                pending.Clear();
-            }
-
-            if (Fits(Combine(context, line)))
-            {
-                pending.Add(line);
-                continue;
-            }
-
-            foreach (string fragment in SplitWithContext(line, context))
-            {
-                if (pending.Count > 0)
-                {
-                    parts.Add(string.Join('\n', pending).Trim());
-                    pending.Clear();
-                }
-
-                parts.Add(fragment);
-            }
-        }
-
-        if (pending.Count > 0)
-        {
-            parts.Add(string.Join('\n', pending).Trim());
-        }
-
-        string[] boundedParts = parts
-            .Where(static part => !string.IsNullOrWhiteSpace(part))
-            .ToArray();
-        return overlapTokens <= 0
-            ? boundedParts
-            : AddDeterministicOverlap(
-                boundedParts,
-                context,
-                overlapTokens);
-    }
-
-    public static string Combine(string context, string content) =>
-        context.Length == 0 ? content : $"{context}\n{content}";
-
-    private List<string> SplitWithContext(
-        string text,
-        string context)
-    {
-        List<int> boundaries = [0];
-        int offset = 0;
-        foreach (Rune rune in text.EnumerateRunes())
-        {
-            offset += rune.Utf16SequenceLength;
-            boundaries.Add(offset);
-        }
-
-        List<string> parts = [];
-        int start = 0;
-        while (start < boundaries.Count - 1)
-        {
-            int low = start + 1;
-            int high = boundaries.Count - 1;
-            int best = start;
-            while (low <= high)
-            {
-                int middle = low + ((high - low) / 2);
-                string candidate = text[
-                    boundaries[start]..boundaries[middle]];
-                if (!ContainsOversizedSegment(candidate) &&
-                    Fits(Combine(context, candidate)))
-                {
-                    best = middle;
-                    low = middle + 1;
-                }
-                else
-                {
-                    high = middle - 1;
-                }
-            }
-
-            if (best == start)
-            {
-                throw new TokenBudgetExceededException(
-                    "The model budget cannot hold one Unicode scalar with its context.");
-            }
-
-            int split = FindPreferredSplitBoundary(
-                text,
-                boundaries,
-                start,
-                best);
-            parts.Add(text[boundaries[start]..boundaries[split]]);
-            start = split;
-        }
-
-        return parts;
-    }
-
     private List<string> SplitOversizedSegment(
         string segment,
         int maximumTokens)
@@ -309,73 +184,6 @@ internal sealed class ApplicationTokenBudget
         }
 
         return parts;
-    }
-
-    private IReadOnlyList<string> AddDeterministicOverlap(
-        string[] parts,
-        string context,
-        int overlapTokens)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(overlapTokens);
-        if (parts.Length < 2 || overlapTokens == 0)
-        {
-            return parts;
-        }
-
-        List<string> overlapped = [parts[0]];
-        for (int index = 1; index < parts.Length; index++)
-        {
-            string[] previousWords = parts[index - 1].Split(
-                ' ',
-                StringSplitOptions.RemoveEmptyEntries);
-            string prefix = string.Empty;
-            for (int start = previousWords.Length - 1; start >= 0; start--)
-            {
-                string candidate = string.Join(
-                    ' ',
-                    previousWords[start..]);
-                if (CountTokens(candidate) > overlapTokens)
-                {
-                    break;
-                }
-
-                if (Fits(Combine(
-                        context,
-                        $"{candidate}\n{parts[index]}")))
-                {
-                    prefix = candidate;
-                }
-            }
-
-            overlapped.Add(prefix.Length == 0
-                ? parts[index]
-                : $"{prefix}\n{parts[index]}");
-        }
-
-        return overlapped;
-    }
-
-    private static int FindPreferredSplitBoundary(
-        string text,
-        List<int> boundaries,
-        int start,
-        int best)
-    {
-        if (best == boundaries.Count - 1)
-        {
-            return best;
-        }
-
-        for (int boundary = best; boundary > start; boundary--)
-        {
-            Rune rune = Rune.GetRuneAt(text, boundaries[boundary - 1]);
-            if (Rune.IsWhiteSpace(rune))
-            {
-                return boundary;
-            }
-        }
-
-        return best;
     }
 
     private static bool ContainsOversizedSegment(string value)

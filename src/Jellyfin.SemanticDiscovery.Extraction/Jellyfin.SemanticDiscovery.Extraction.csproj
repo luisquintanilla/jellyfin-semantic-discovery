@@ -11,9 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" />
     <PackageReference Include="CommunityToolkit.DocumentExtraction.VisionLanguageModel" />
     <PackageReference Include="CommunityToolkit.DocumentExtraction.PdfPig" />
-    <PackageReference Include="Microsoft.Extensions.AI" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.DataIngestion" />
     <PackageReference Include="Microsoft.Extensions.DocumentExtraction" />

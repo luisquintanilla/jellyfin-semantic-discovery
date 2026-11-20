@@ -243,6 +243,9 @@ public static class IndexSnapshotValidator
                 $"{description} contains a non-finite vector value.");
         }
 
+        // embeddinggemma already emits unit-norm vectors, so nothing is
+        // normalized client-side; this check rejects a snapshot from a model
+        // that breaks that contract instead of silently rescaling it.
         float norm = TensorPrimitives.Norm(vector);
         if (!float.IsFinite(norm) ||
             norm <= 1e-12F ||
