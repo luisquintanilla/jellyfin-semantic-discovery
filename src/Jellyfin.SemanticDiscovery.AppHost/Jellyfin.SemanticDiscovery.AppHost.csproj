@@ -10,7 +10,14 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.Dotnet" />
+    <PackageReference Include="Aspire.Hosting.Qdrant" />
     <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Build the plugin with the AppHost so AppHost.cs can copy it into Jellyfin's plugin folder. -->
+    <ProjectReference Include="..\Jellyfin.SemanticDiscovery.Plugin\Jellyfin.SemanticDiscovery.Plugin.csproj"
+                      ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

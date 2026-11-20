@@ -1,286 +1,100 @@
-using System.Globalization;
-using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Dotnet;
 using CommunityToolkit.Aspire.Hosting.Ollama;
+using Microsoft.Extensions.Configuration;
 
-IDistributedApplicationBuilder builder =
-    DistributedApplication.CreateBuilder(args);
+IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
-string repositoryRoot = Path.GetFullPath(
-    Path.Combine(builder.AppHostDirectory, "..", ".."));
-string dataRoot = Path.GetFullPath(
-    Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_DATA")
-    ?? Path.Combine(repositoryRoot, ".data"));
-string profile = (
-    Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_PROFILE")
-    ?? "demo").ToLowerInvariant();
-if (profile is not ("demo" or "ci"))
+// ci: text layer only, no chat models. demo: also reads the scanned book with a vision model.
+string profile = Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_PROFILE")?.ToLowerInvariant() ?? "demo";
+string root = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", ".."));
+string data = Path.GetFullPath(Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_DATA") ?? Path.Combine(root, ".data"));
+string library = Path.Combine(root, "assets", "demo", "library");
+string manifest = Path.Combine(root, "assets", "demo", "manifest.json");
+
+// --- AI building blocks -------------------------------------------------------------------
+
+// Vector store: Qdrant in a container.
+IResourceBuilder<QdrantServerResource> qdrant = builder.AddQdrant("qdrant");
+if (profile == "demo")
 {
-    throw new InvalidOperationException(
-        "SEMANTIC_DISCOVERY_PROFILE must be 'demo' or 'ci'.");
+    qdrant.WithDataVolume("jellyfin-semantic-discovery-qdrant");
 }
 
-string hardwareProfile = (
-    Environment.GetEnvironmentVariable(
-        "SEMANTIC_DISCOVERY_HARDWARE_PROFILE")
-    ?? "standard").ToLowerInvariant();
-string visionModel = hardwareProfile switch
+// Embeddings: Ollama in a container (add SEMANTIC_DISCOVERY_OLLAMA_GPU=nvidia|amd to use a GPU).
+IResourceBuilder<OllamaResource> ollama = builder.AddOllama("ollama").WithDataVolume("jellyfin-semantic-discovery-ollama");
+switch (Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_OLLAMA_GPU")?.ToLowerInvariant())
 {
-    "standard" => "qwen3-vl:8b-instruct",
-    "lower-memory" => "qwen3-vl:4b-instruct",
-    _ => throw new InvalidOperationException(
-        "SEMANTIC_DISCOVERY_HARDWARE_PROFILE must be " +
-        "'standard' or 'lower-memory'."),
-};
-
-OllamaGpuVendor? ollamaGpu = (
-    Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_OLLAMA_GPU")
-    ?? "none").ToLowerInvariant() switch
-{
-    "none" or "" => null,
-    "nvidia" => OllamaGpuVendor.Nvidia,
-    "amd" => OllamaGpuVendor.AMD,
-    _ => throw new InvalidOperationException(
-        "SEMANTIC_DISCOVERY_OLLAMA_GPU must be 'none', 'nvidia', or 'amd'."),
-};
-
-string manifestPath = profile == "demo"
-    ? Path.Combine(repositoryRoot, "assets", "demo", "manifest.json")
-    : Path.Combine(
-        repositoryRoot,
-        "assets",
-        "fixtures",
-        "extraction-manifest.json");
-string fixtureOutput = Path.Combine(dataRoot, "fixtures");
-string? containerUser = Environment.GetEnvironmentVariable(
-    "SEMANTIC_DISCOVERY_CONTAINER_USER");
-string mediaDirectory = profile == "demo"
-    ? Path.Combine(repositoryRoot, "assets", "demo", "library")
-    : Path.Combine(fixtureOutput, "library");
-string extractionState = Path.Combine(dataRoot, "extractions");
-string extractionPublished = Path.Combine(
-    extractionState,
-    "published");
-string pdfRasterExecutable =
-    Environment.GetEnvironmentVariable(
-        "SEMANTIC_DISCOVERY_PDF_RASTER_EXECUTABLE")
-    ?? "pdftoppm";
-string jellyfinConfigDirectory = Path.Combine(
-    dataRoot,
-    "jellyfin",
-    "config");
-string jellyfinCacheDirectory = Path.Combine(
-    dataRoot,
-    "jellyfin",
-    "cache");
-string pluginDirectory = Path.Combine(
-    dataRoot,
-    "plugin",
-    "Semantic Discovery_0.1.0.0");
-string buildConfiguration =
-    Environment.GetEnvironmentVariable(
-        "SEMANTIC_DISCOVERY_CONFIGURATION")
-    ?? "Debug";
-if (buildConfiguration is not ("Debug" or "Release"))
-{
-    throw new InvalidOperationException(
-        "SEMANTIC_DISCOVERY_CONFIGURATION must be Debug or Release.");
+    case "nvidia": ollama.WithGPUSupport(OllamaGpuVendor.Nvidia); break;
+    case "amd": ollama.WithGPUSupport(OllamaGpuVendor.AMD); break;
 }
 
-Directory.CreateDirectory(dataRoot);
-Directory.CreateDirectory(extractionState);
-Directory.CreateDirectory(extractionPublished);
-Directory.CreateDirectory(jellyfinConfigDirectory);
-Directory.CreateDirectory(jellyfinCacheDirectory);
-Directory.CreateDirectory(pluginDirectory);
+IResourceBuilder<OllamaModelResource> embeddings = ollama.AddModel("embedding-model", "embeddinggemma:latest");
 
-IResourceBuilder<ParameterResource> adminPassword = builder.AddParameter(
-    "jellyfin-admin-password",
-    new GenerateParameterDefault
+// --- The semantic service -----------------------------------------------------------------
+
+IResourceBuilder<DotnetProjectResource> semanticService = builder
+    .AddDotnetProject("semantic-service", "../Jellyfin.SemanticDiscovery.SemanticService/Jellyfin.SemanticDiscovery.SemanticService.csproj")
+    .WithHttpEndpoint(name: "http")
+    .WithHttpHealthCheck("/health")
+    .WithReference(qdrant).WaitFor(qdrant)
+    .WithReference(embeddings).WaitFor(embeddings);
+
+if (profile == "demo")
+{
+    // Chat route 1: an Azure OpenAI vision model you already have, e.g.
+    //   dotnet user-secrets set ConnectionStrings:page-reader "Endpoint=https://<resource>.openai.azure.com/;Deployment=<model>"
+    // Auth is Microsoft Entra ID (your `az login`), so there's no key.
+    if (builder.Configuration.GetConnectionString("page-reader") is { Length: > 0 })
     {
-        MinLength = 24,
-        Lower = true,
-        Upper = true,
-        Numeric = true,
-        Special = false,
-        MinLower = 4,
-        MinUpper = 4,
-        MinNumeric = 4,
-    },
-    secret: true,
-    persist: true);
-
-IResourceBuilder<OllamaResource> ollama = builder
-    .AddOllama("ollama")
-    .WithDataVolume("jellyfin-semantic-discovery-ollama");
-if (ollamaGpu is { } gpuVendor)
-{
-    ollama.WithGPUSupport(gpuVendor);
-}
-
-IResourceBuilder<OllamaModelResource> embeddingModel =
-    ollama.AddModel("embedding-model", "embeddinggemma:latest");
-IResourceBuilder<OllamaModelResource> extractionModel =
-    ollama.AddModel("vision-model", visionModel);
-
-IResourceBuilder<ContainerResource>? fixtureSetup = null;
-if (profile == "ci")
-{
-    IResourceBuilder<ContainerResource> fixture = builder
-        .AddDockerfile(
-            "fixture-setup",
-            repositoryRoot,
-            Path.Combine(
-                "containers",
-                "fixture-generator",
-                "Dockerfile"))
-        .WithBindMount(fixtureOutput, "/output")
-        .WithArgs(
-            "-ManifestPath",
-            "/opt/fixture-generator/manifest.json",
-            "-OutputRoot",
-            "/output",
-            "-Mode",
-            "Generate")
-        .ExcludeFromManifest();
-    if (!string.IsNullOrWhiteSpace(containerUser))
-    {
-        fixture.WithContainerRuntimeArgs("--user", containerUser);
+        semanticService.WithReference(builder.AddConnectionString("page-reader"));
     }
 
-    fixtureSetup = fixture;
+    // Chat route 2: a local vision model. Opt in, it's a 6 GB download and slow without a GPU.
+    if (Environment.GetEnvironmentVariable("SEMANTIC_DISCOVERY_LOCAL_VISION") == "true")
+    {
+        IResourceBuilder<OllamaModelResource> vision = ollama.AddModel("vision-model", "qwen3-vl:8b-instruct");
+        semanticService.WithReference(vision).WaitFor(vision);
+    }
 }
 
-string pluginOutput = Path.Combine(
-    repositoryRoot,
-    "src",
-    "Jellyfin.SemanticDiscovery.Plugin",
-    "bin",
-    buildConfiguration,
-    "net10.0");
-IResourceBuilder<DotnetProjectResource> pluginSetup = builder
-    .AddDotnetProject(
-        "plugin-setup",
-        "../Jellyfin.SemanticDiscovery.Setup/" +
-        "Jellyfin.SemanticDiscovery.Setup.csproj")
-    .WithArgs(
-        "plugin",
-        "--source",
-        pluginOutput,
-        "--destination",
-        pluginDirectory)
-    .ExcludeFromManifest();
+// --- Jellyfin, with the plugin ------------------------------------------------------------
 
-IResourceBuilder<DotnetProjectResource> extraction = builder
-    .AddDotnetProject(
-        "document-extraction",
-        "../Jellyfin.SemanticDiscovery.Extraction/" +
-        "Jellyfin.SemanticDiscovery.Extraction.csproj")
-    .WithHttpEndpoint(name: "http")
-    .WithHttpHealthCheck("/health/ready")
-    .WithReference(extractionModel)
-    .WithEnvironment("Extraction__ManifestPath", manifestPath)
-    .WithEnvironment("Extraction__StateRoot", extractionState)
-    .WithEnvironment("Extraction__ArtifactRoot", extractionPublished)
-    .WithEnvironment("Extraction__Concurrency", "1")
-    .WithEnvironment(
-        "Extraction__PdfRasterExecutable",
-        pdfRasterExecutable)
-    .WaitFor(extractionModel);
-if (fixtureSetup is not null)
+#if DEBUG
+const string configuration = "Debug";
+#else
+const string configuration = "Release";
+#endif
+string plugin = Path.Combine(data, "plugin", "Semantic Discovery_0.1.0.0");
+Directory.CreateDirectory(plugin);
+foreach (string file in new[] { "Jellyfin.SemanticDiscovery.Plugin.dll", "meta.json" })
 {
-    extraction.WaitForCompletion(fixtureSetup);
+    File.Copy(Path.Combine(root, "src", "Jellyfin.SemanticDiscovery.Plugin", "bin", configuration, "net10.0", file), Path.Combine(plugin, file), overwrite: true);
 }
-
-IResourceBuilder<DotnetProjectResource> extractionSetup = builder
-    .AddDotnetProject(
-        "extraction-setup",
-        "../Jellyfin.SemanticDiscovery.Setup/" +
-        "Jellyfin.SemanticDiscovery.Setup.csproj")
-    .WithArgs(
-        "extract",
-        "--manifest",
-        manifestPath,
-        "--profile",
-        profile == "ci" ? "Text" : "Hybrid")
-    .WithEnvironment(
-        "EXTRACTION_ENDPOINT",
-        extraction.GetEndpoint("http"))
-    .WaitFor(extraction)
-    .ExcludeFromManifest();
 
 IResourceBuilder<ContainerResource> jellyfin = builder
-    .AddContainer(
-        "jellyfin",
-        "jellyfin/jellyfin",
-        "12.0.20260908-012347")
-    .WithImageSHA256(
-        "97150310f89f908abbf6fa9640ccc36f9bfa9e5e987775db310b3b70c2d11602")
+    .AddContainer("jellyfin", "jellyfin/jellyfin", "12.0.20260908-012347")
+    .WithImageSHA256("97150310f89f908abbf6fa9640ccc36f9bfa9e5e987775db310b3b70c2d11602")
     .WithHttpEndpoint(targetPort: 8096, name: "http")
     .WithHttpHealthCheck("/System/Ping")
-    .WithBindMount(jellyfinConfigDirectory, "/config")
-    .WithBindMount(jellyfinCacheDirectory, "/cache")
-    .WithBindMount(
-        pluginDirectory,
-        "/config/plugins/Semantic Discovery_0.1.0.0",
-        isReadOnly: false)
-    .WithBindMount(mediaDirectory, "/media", isReadOnly: true)
-    .WithBindMount(
-        extractionPublished,
-        "/semantic-extractions",
-        isReadOnly: true)
-    .WithEnvironment(
-        "SEMANTIC_DISCOVERY_OLLAMA_ENDPOINT",
-        "http://ollama:11434")
-    .WithEnvironment(
-        "SEMANTIC_DISCOVERY_EMBEDDING_MODEL",
-        "embeddinggemma:latest")
-    .WithEnvironment(
-        "SEMANTIC_DISCOVERY_EXTRACTION_MODEL",
-        visionModel)
-    .WithEnvironment(
-        "SEMANTIC_DISCOVERY_EXTRACTION_MODE",
-        profile == "ci" ? "Text" : "Hybrid")
-    .WithEnvironment(
-        "SEMANTIC_DISCOVERY_EXTRACTION_ARTIFACT_ROOT",
-        "/semantic-extractions")
-    .WithEnvironment(
-        "SEMANTIC_DISCOVERY_RECOMMENDATION_FLOOR",
-        "0.50")
-    .WithEnvironment(
-        "SEMANTIC_DISCOVERY_INGEST_BATCH_SIZE",
-        "8")
-    .WaitFor(embeddingModel)
-    .WaitForCompletion(extractionSetup)
-    .WaitForCompletion(pluginSetup);
-if (fixtureSetup is not null)
-{
-    jellyfin.WaitForCompletion(fixtureSetup);
-}
+    .WithBindMount(Path.Combine(data, "jellyfin", "config"), "/config")
+    .WithBindMount(Path.Combine(data, "jellyfin", "cache"), "/cache")
+    .WithBindMount(plugin, "/config/plugins/Semantic Discovery_0.1.0.0")
+    .WithBindMount(library, "/media", isReadOnly: true)
+    // The plugin calls the service at services__semantic-service__http__0.
+    .WithReference(semanticService.GetEndpoint("http"))
+    .WaitFor(semanticService);
 
-string credentialsPath = Path.Combine(
-    dataRoot,
-    "jellyfin-login.json");
-IResourceBuilder<DotnetProjectResource> bootstrap = builder
-    .AddDotnetProject(
-        "jellyfin-bootstrap",
-        "../Jellyfin.SemanticDiscovery.Setup/" +
-        "Jellyfin.SemanticDiscovery.Setup.csproj")
-    .WithArgs("jellyfin")
+// --- One-time setup: libraries, scan, and the first sync ----------------------------------
+
+IResourceBuilder<ParameterResource> adminPassword = builder.AddParameter(
+    "jellyfin-admin-password", new GenerateParameterDefault { MinLength = 24, Special = false }, secret: true, persist: true);
+
+builder.AddDotnetProject("jellyfin-setup", "../Jellyfin.SemanticDiscovery.Setup/Jellyfin.SemanticDiscovery.Setup.csproj")
     .WithEnvironment("JELLYFIN_URL", jellyfin.GetEndpoint("http"))
     .WithEnvironment("JELLYFIN_ADMIN_PASSWORD", adminPassword)
-    .WithEnvironment("JELLYFIN_CREDENTIALS_PATH", credentialsPath)
-    .WithEnvironment(
-        "JELLYFIN_LIBRARY_MANIFEST",
-        manifestPath)
-    .WithEnvironment(
-        "JELLYFIN_READY_TIMEOUT_SECONDS",
-        profile == "demo"
-            ? 600.ToString(CultureInfo.InvariantCulture)
-            : 180.ToString(CultureInfo.InvariantCulture))
+    .WithEnvironment("JELLYFIN_LIBRARY_MANIFEST", manifest)
+    .WithEnvironment("JELLYFIN_CREDENTIALS_PATH", Path.Combine(data, "jellyfin-login.json"))
     .WaitFor(jellyfin)
-    .WaitFor(extraction)
     .ExcludeFromManifest();
 
 builder.Build().Run();
