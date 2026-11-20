@@ -69,10 +69,10 @@
       "artworkSha256": "56ae097afa8e5a6927d18406e13039e3439d26a51114d093fc8c48b125c881d3",
       "backdrop": null,
       "backdropSha256": null,
-      "sha256": "20d594d06f16d1b738f7abb3bc6aa46396497e0ec5aeed28cb8b413f9e24c8fa",
+      "sha256": "79e128d607466da409a64a081785f47d1e908e7d5b3b1f0eb6e17320339525d9",
       "transcriptSha256": "6462b298c4c37b774fbc62cce009feb5ee99bc1365c8198b75170283083b5b3c",
       "metadataSha256": "9d8a6181db4be64637a35f8e9c4351359a98c813156ab2f2fabba5ad8b4754ad",
-      "bytes": 1652752,
+      "bytes": 1739220,
       "authorship": "Original Jellyfin demo media authored for The .NET AI Stack; copyright 2026 Luis Quintanilla; narration synthesized with Azure Speech",
       "license": "CC BY 4.0"
     },
@@ -87,10 +87,10 @@
       "artworkSha256": "0cd64057ce82cd8b804c3e308f8aa07670af75a6e47ca11476fb2093ddaf9d49",
       "backdrop": null,
       "backdropSha256": null,
-      "sha256": "91c3a4a89e0cf47ed0a125ac98ec116ad18f3b54f3fc39981a466bafa9a11536",
+      "sha256": "ff3182387489a4ccbb50e64487a12f6fa32585204dc91cd7a32ba9bfb6085db8",
       "transcriptSha256": "a482b42b73f7a2fad7926ae6f264b443c84daa035dbca047fd45641f2556f375",
       "metadataSha256": "f5db6bb720426968f7d6a6431fa179201bd928c29feb251eb4048c8850a25c8e",
-      "bytes": 1381851,
+      "bytes": 1459475,
       "authorship": "Original Jellyfin demo media authored for The .NET AI Stack; copyright 2026 Luis Quintanilla; narration synthesized with Azure Speech",
       "license": "CC BY 4.0"
     },
@@ -105,10 +105,10 @@
       "artworkSha256": "87528edfd61be7e624e9695b414144b2f50e9d3e67438e70695c99d31627e8ea",
       "backdrop": null,
       "backdropSha256": null,
-      "sha256": "0db7b5f183dbb0245f4a15f8458eb81e414d7757e9def7af8731edd852550462",
+      "sha256": "0dd401c6ac3be97f29c8b77fb39033a67416a7834e5146e54cd12121816bc5d8",
       "transcriptSha256": "eda33ab2a11e7ff26e7cdbbe7ba3f26ceb661faac639da5948e638908876b2dc",
       "metadataSha256": "6f22e11c0cc80e4c728f2202a9d5eab94e47c9e43f52699bc7c912960ed2c92f",
-      "bytes": 1334187,
+      "bytes": 1421186,
       "authorship": "Original Jellyfin demo media authored for The .NET AI Stack; copyright 2026 Luis Quintanilla; narration synthesized with Azure Speech",
       "license": "CC BY 4.0"
     },
@@ -162,29 +162,23 @@
       "pageCount": 8,
       "authorship": "\"Jellyfin Semantic Discovery PDF Corpus\" (2026); original writing and deterministic vector artwork, with AI-assisted drafting and critique",
       "license": "CC BY 4.0"
-    }
-  ],
-  "items": [
-    {
-      "id": "tokenizers-field-guide",
-      "sourcePath": "library/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf",
-      "sourceSha256": "5121b1caaafe837048b50714bf606f2cc832f3099f1c53281d1720a30c3bafb1",
-      "sourceSizeBytes": 392959,
-      "pageCount": 8
     },
     {
-      "id": "tensors-for-embeddings",
-      "sourcePath": "library/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf",
-      "sourceSha256": "723d96ff116d41fad6f3f8b15290f2d008249bf530aca97c632f1752a7133261",
-      "sourceSizeBytes": 415503,
-      "pageCount": 8
-    },
-    {
-      "id": "verifiable-ai-systems",
-      "sourcePath": "library/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf",
-      "sourceSha256": "08bd2c03b19783468dafad82737972bd64d5a0052c403d119a0cbda878811f96",
-      "sourceSizeBytes": 383140,
-      "pageCount": 8
+      "id": "retrieval-field-notes",
+      "mediaKind": "Book",
+      "title": "Retrieval Field Notes",
+      "media": "library/Books/Retrieval Field Notes (2026)/retrieval-field-notes.pdf",
+      "transcript": null,
+      "metadata": "library/Books/Retrieval Field Notes (2026)/metadata.opf",
+      "artwork": "library/Books/Retrieval Field Notes (2026)/retrieval-field-notes.jpg",
+      "artworkSha256": "fadc88f3f6b90aae5223ed5216e00f048974a8ce221dba7eb1dd0f072f5203a2",
+      "backdrop": null,
+      "backdropSha256": null,
+      "sha256": "2864367480465cc0473d1cf6df6084e2aa0b1428d070ecff24828e361aa8ce9a",
+      "bytes": 353706,
+      "pageCount": 5,
+      "authorship": "\"Jellyfin Semantic Discovery PDF Corpus\" (2026); original writing, rendered to page images by scripts/New-ScannedBook.cs so the PDF has no text layer",
+      "license": "CC BY 4.0"
     }
   ],
   "libraries": [
@@ -218,7 +212,8 @@
       "items": [
         { "title": "Tokenizers Field Guide", "type": "Book", "path": "/media/Books/Tokenizers - A Field Guide (2026)/tokenizers-field-guide.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
         { "title": "Tensors for Embeddings", "type": "Book", "path": "/media/Books/Tensors for Embeddings (2026)/tensors-for-embeddings.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
-        { "title": "Verifiable AI Systems", "type": "Book", "path": "/media/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null }
+        { "title": "Verifiable AI Systems", "type": "Book", "path": "/media/Books/Verifiable AI Systems (2026)/verifiable-ai-systems.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null },
+        { "title": "Retrieval Field Notes", "type": "Book", "path": "/media/Books/Retrieval Field Notes (2026)/retrieval-field-notes.pdf", "overview": null, "genres": [], "tags": [], "studios": [], "officialRating": null }
       ]
     }
   ]
