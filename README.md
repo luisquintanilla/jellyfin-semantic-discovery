@@ -1,259 +1,99 @@
 # Jellyfin Semantic Discovery
 
-Local semantic search and similar-item recommendations for an unchanged
-Jellyfin 12 server.
+Search a Jellyfin library by meaning ("a book about reading scanned pages with a
+vision model") instead of by title, and get "More Like This" picks that understand
+what an item is about. Jellyfin itself is unchanged: a small plugin forwards
+search to a .NET service built from off-the-shelf .NET AI building blocks.
 
-The in-process plugin and every assembly Jellyfin loads target `net10.0`.
-Aspire, setup tools, the extraction service, and tests target `net11.0`.
-Aspire 17 starts Jellyfin, Ollama, the required models, document extraction,
-fixture setup, plugin installation, and Jellyfin bootstrap.
+This is a sample. It's meant to show **how little code it takes to compose the
+.NET AI stack into an existing app**, not to be a product.
 
-## Five-minute start
+![Jellyfin search for "documents into context for a model" returns a song and three books ranked by meaning](artifacts/ui/semantic-search.png)
 
-Prerequisites:
+![The Context Pipelines song with semantic "More Like This" picks](artifacts/ui/context-pipelines.png)
 
-- .NET SDK `11.0.100`;
-- Docker Desktop or another Linux-container Docker host;
-- PowerShell 7;
-- `pdftoppm` (Poppler) on `PATH` for local PDF page rasterization; and
-- the final nine demo assets delivered according to
-  `assets/demo/manifest.json`.
+## Run it
 
-All three PDF books, three Movies, and three Audio items are checked in and
-hash-sealed. Startup validates every declared media file and fails closed on a
-missing file, size mismatch, hash mismatch, or incomplete license record.
+You need the .NET SDK 11.0.100, Docker, and PowerShell 7.
 
 ```powershell
-dotnet tool restore --configfile .\NuGet.Config
-dotnet restore .\Jellyfin.SemanticDiscovery.slnx `
-  --configfile .\NuGet.Config --locked-mode
-dotnet build .\Jellyfin.SemanticDiscovery.slnx --no-restore
-
-$env:SEMANTIC_DISCOVERY_PROFILE = "demo"
-$env:SEMANTIC_DISCOVERY_HARDWARE_PROFILE = "standard"
-dotnet tool run aspire -- start `
-  --apphost .\src\Jellyfin.SemanticDiscovery.AppHost\Jellyfin.SemanticDiscovery.AppHost.csproj `
-  --non-interactive --nologo
+dotnet tool restore
+dotnet build Jellyfin.SemanticDiscovery.slnx
+dotnet tool run aspire -- run --apphost src/Jellyfin.SemanticDiscovery.AppHost/Jellyfin.SemanticDiscovery.AppHost.csproj
 ```
 
-Aspire persists Ollama models in its Docker volume. The first run pulls
-`embeddinggemma` and the selected Qwen3-VL model. Wait for
-`jellyfin-bootstrap` to finish, then read:
+Aspire starts Qdrant, Ollama (it pulls `embeddinggemma` the first time), the
+semantic service, and Jellyfin with the plugin. `jellyfin-setup` then creates the
+libraries, scans them, indexes everything, and exits. Sign in with the
+credentials in `.data/jellyfin-login.json` and search from the Jellyfin search box.
 
-```powershell
-Get-Content .\.data\jellyfin-login.json
-```
+### Reading the scanned book
 
-The file contains the generated local administrator credentials and is ignored
-by Git.
+One of the demo books is a scan: no text layer, only page images. To read it, give
+the service a vision model. Either one works, and with both, the cloud model goes
+first and the local one is the fallback.
 
-If Poppler is installed outside `PATH`, set
-`SEMANTIC_DISCOVERY_PDF_RASTER_EXECUTABLE` to the absolute `pdftoppm`
-executable path before starting Aspire.
+| Option | How |
+| --- | --- |
+| An Azure OpenAI deployment you already have (fast) | `dotnet user-secrets --project src/Jellyfin.SemanticDiscovery.AppHost set ConnectionStrings:page-reader "Endpoint=https://<resource>.openai.azure.com/;Deployment=<vision-model>"`. Auth is your `az login` (Microsoft Entra ID); there are no keys. |
+| A local model in Ollama (private, slower) | `$env:SEMANTIC_DISCOVERY_LOCAL_VISION = "true"` pulls `qwen3-vl:8b-instruct`. |
 
-## Hardware profiles
+Without either, everything else still works; the scanned book is just not searchable
+by its contents.
 
-| Profile | Vision model | Use |
+### Switches
+
+| Variable | Values | Effect |
 | --- | --- | --- |
-| `standard` | `qwen3-vl:8b-instruct` | Default; bounded non-thinking 8B visual extraction |
-| `lower-memory` | `qwen3-vl:4b-instruct` | Explicit bounded non-thinking 4B option |
+| `SEMANTIC_DISCOVERY_PROFILE` | `demo` (default), `ci` | `ci` uses no chat models and gives Qdrant no volume, so each run starts empty. |
+| `SEMANTIC_DISCOVERY_OLLAMA_GPU` | `nvidia`, `amd` | Runs Ollama on your GPU. |
+| `SEMANTIC_DISCOVERY_LOCAL_VISION` | `true` | Adds the local vision model as a chat route (demo profile). |
+| `SEMANTIC_DISCOVERY_DATA` | a path | Where Jellyfin config and the login file go (default `.data`). |
 
-Set `SEMANTIC_DISCOVERY_HARDWARE_PROFILE` before starting Aspire. There is no
-silent model fallback: startup or extraction fails if the exact configured
-model is unavailable.
+## Where to look
 
-### GPU acceleration
+Each building block lives in one file.
 
-The Ollama container runs on CPU by default, so the app starts on machines
-without a GPU container runtime. On CPU, a single 8B Qwen3-VL page request can
-exceed the 10-minute extraction request timeout. To pass a GPU through to the
-Ollama container, set `SEMANTIC_DISCOVERY_OLLAMA_GPU` before starting Aspire:
+| Building block | What it does here | File |
+| --- | --- | --- |
+| Aspire | Starts Qdrant, Ollama, the service, Jellyfin, and setup | [AppHost.cs](src/Jellyfin.SemanticDiscovery.AppHost/AppHost.cs) |
+| `IEmbeddingGenerator` (Ollama) | Turns item text, book chunks, and queries into vectors | [Program.cs](src/Jellyfin.SemanticDiscovery.SemanticService/Program.cs) |
+| `VectorStore` (Qdrant) | Stores and searches those vectors | [Search/MediaIndex.cs](src/Jellyfin.SemanticDiscovery.SemanticService/Search/MediaIndex.cs), [Search/SemanticSearch.cs](src/Jellyfin.SemanticDiscovery.SemanticService/Search/SemanticSearch.cs) |
+| `DocumentExtractionClient` + middleware | Reads PDFs: PdfPig for text, a vision model for scans | [Reading/PageReading.cs](src/Jellyfin.SemanticDiscovery.SemanticService/Reading/PageReading.cs) |
+| `IChatClient` + `OrderedFailoverChatClient` | Azure OpenAI first, local Ollama second | [Reading/PageReading.cs](src/Jellyfin.SemanticDiscovery.SemanticService/Reading/PageReading.cs) |
+| `IngestionPipeline` (DataIngestion) | Reader → `HeaderChunker` → `VectorStoreWriter` | [Ingestion/BookIngestion.cs](src/Jellyfin.SemanticDiscovery.SemanticService/Ingestion/BookIngestion.cs) |
+| Extraction → ingestion bridge | Maps extracted headings, tables, and figures to ingestion elements | [Ingestion/ExtractionReader.cs](src/Jellyfin.SemanticDiscovery.SemanticService/Ingestion/ExtractionReader.cs) |
+| Jellyfin plugin | Search box, More Like This, and the sync task | [SemanticSearchProvider.cs](src/Jellyfin.SemanticDiscovery.Plugin/SemanticSearchProvider.cs), [SyncTask.cs](src/Jellyfin.SemanticDiscovery.Plugin/SyncTask.cs) |
 
-| Value | Effect |
+[docs/architecture.md](docs/architecture.md) has the diagrams and the request flows.
+For more extraction patterns (keyed clients, middleware, routing, ingestion), see
+[dotnet-document-extraction-samples](https://github.com/luisquintanilla/dotnet-document-extraction-samples).
+
+## Layout
+
+| Folder | |
 | --- | --- |
-| `none` | Default; CPU inference |
-| `nvidia` | `WithGPUSupport(OllamaGpuVendor.Nvidia)`; requires the NVIDIA Container Toolkit (`docker run --gpus all`) |
-| `amd` | `WithGPUSupport(OllamaGpuVendor.AMD)`; requires a ROCm-capable Docker host |
+| [src/Jellyfin.SemanticDiscovery.AppHost](src/Jellyfin.SemanticDiscovery.AppHost) | Aspire orchestration |
+| [src/Jellyfin.SemanticDiscovery.SemanticService](src/Jellyfin.SemanticDiscovery.SemanticService) | The AI part: reading, ingestion, search (minimal API) |
+| [src/Jellyfin.SemanticDiscovery.Plugin](src/Jellyfin.SemanticDiscovery.Plugin) | Thin Jellyfin plugin (`net10.0`, Jellyfin's runtime) |
+| [src/Jellyfin.SemanticDiscovery.Setup](src/Jellyfin.SemanticDiscovery.Setup) | One-shot Jellyfin setup for the demo |
+| [src/Jellyfin.SemanticDiscovery.ServiceDefaults](src/Jellyfin.SemanticDiscovery.ServiceDefaults) | Aspire service defaults |
+| [assets/demo](assets/demo) | The demo library: 3 movies, 3 songs, 4 books, with artwork |
+| [tests](tests) | Unit tests and end-to-end tests against a real Jellyfin |
+
+## Tests
 
 ```powershell
-$env:SEMANTIC_DISCOVERY_OLLAMA_GPU = "nvidia"
+dotnet test tests/Jellyfin.SemanticDiscovery.Tests
+./scripts/Test-EndToEnd.ps1                              # ci profile: text-layer books only
+./scripts/Test-EndToEnd.ps1 -Profile demo -OllamaGpu nvidia  # also reads the scanned book
 ```
 
-`scripts/Test-EndToEnd.ps1` accepts the same choice as `-OllamaGpu nvidia`.
+The end-to-end script starts the AppHost, waits for setup, searches Jellyfin over
+its HTTP API, and stops everything.
 
-`embeddinggemma` is always required for semantic indexing. The application
-chunk tokenizer is separately pinned to
-`Microsoft.ML.Tokenizers`/O200k `2.0.0`; it is not presented as Ollama's model
-tokenizer.
+## License
 
-## What is indexed
-
-- Movie metadata plus SRT/WebVTT subtitles;
-- Audio metadata plus SRT/WebVTT transcripts;
-- Series metadata plus episode subtitle ownership aggregated to the Series;
-- Book metadata plus completed PDF extraction artifacts.
-
-Metadata and content remain separate vector representations. Content chunks
-retain owner, source, heading, page, source offsets, and text/visual
-provenance. Query-time access checks run before vector results are returned.
-Excluded IDs and source IDs are enforced for similar-item queries. Exact
-lexical title matches keep precedence because the plugin remains an
-`IInternalSearchProvider` and maps semantic scores into a capped lower band.
-This is also required by Jellyfin 12: if an external search provider returns
-results, Jellyfin discards internal-provider results.
-
-The index identity includes the exact Ollama model digest, extraction profile,
-application tokenizer identity, projection contract, and chunking pipeline.
-Snapshots are published atomically and reused after restart only when that
-identity and every persisted vector validate.
-
-## Document extraction control plane
-
-`Jellyfin.SemanticDiscovery.Extraction` is a `net11.0` Minimal API service.
-
-| Endpoint | Contract |
-| --- | --- |
-| `POST /extractions` | Accepts only manifest item ID, expected source SHA-256, and `Text`, `Vision`, or `Hybrid`; returns `202` and a status URI |
-| `GET /extractions/{jobId}` | Returns persisted job state and completed artifact location |
-| `DELETE /extractions/{jobId}` | Requests cancellation and returns `202` |
-| `GET /health/live` | Process liveness |
-| `GET /health/ready` | Startup reconciliation readiness |
-
-The bounded `Channel<T>` queue is in-memory and is **not durable**. Job state
-and completed artifacts are persisted atomically. On restart, the
-`BackgroundService` reconciles persisted pending/running work back into the
-queue. Default concurrency is one.
-
-Before processing, the service validates manifest-root containment, reparse
-points, `.pdf` extension, expected SHA-256, exact size, configured size limit,
-declared page count, and configured page limit. PdfPig reads the deterministic
-text layer. Poppler rasterizes pages locally. Only rendered page images—not raw
-PDF files—are sent to
-`CommunityToolkit.DocumentExtraction.VisionLanguageModel` through the local
-Ollama Qwen3-VL endpoint. Text and visual results are merged with provenance,
-converted into DataIngestion documents/chunks, and atomically published under
-an identity derived from source SHA-256, extraction mode, and exact model for
-indexing.
-
-## Token and tensor techniques
-
-- Book pages are chunked by the built-in `Microsoft.Extensions.DataIngestion`
-  `HeaderChunker` with the pinned application tokenizer as its token budget.
-  Each chunk stays within one page and carries its heading as context; a small
-  chunk processor records page number and text/visual provenance in
-  `IngestionChunk.Metadata`.
-- Subtitle and transcript chunking keeps cue timestamps and source offsets.
-  Unicode-scalar whitespace normalization retains normalized-to-source offsets.
-- Token counts and budgets come from the pinned application tokenizer.
-- Embeddings come from OllamaSharp's `IEmbeddingGenerator` and are
-  dimension-checked and finite-checked by a thin `DelegatingEmbeddingGenerator`.
-  Ollama `embeddinggemma` already returns unit-length vectors, so no client
-  normalization is applied; snapshot validation still rejects non-unit vectors,
-  and similarity uses `TensorPrimitives` cosine similarity.
-- Similar-item candidates use a deterministic two-dimensional `Tensor<float>`
-  recommendation matrix; hot loops use spans over its backing storage.
-
-## Native Jellyfin limits
-
-Search returns Jellyfin items, not passages. The sample does not add chat,
-seek-to-timestamp, snippets, a replacement UI, injected JavaScript, or Media
-Studio changes.
-
-The server plugin provides typed semantic search and local similar-item
-providers for Movie, Audio, Series, and Book. The stock Jellyfin web client is
-verified to render native similar-item rows for Movie, Audio, and Series. The
-unchanged web client does not render a Book row; Book similar results remain
-available through:
-
-```text
-GET /Items/{itemId}/Similar
-```
-
-The API does not identify which local similar-item provider produced a result,
-and Jellyfin can continue to built-in providers when this provider returns no
-eligible semantic result.
-
-## Privacy and network boundary
-
-Media, rendered pages, metadata, chunks, vectors, and queries remain on the
-local machine and are sent only among Jellyfin, the extraction service, and
-Ollama. Initial NuGet, container, and model pulls require network access.
-
-Aspire service references and local endpoints define the intended boundary,
-but the default Docker bridge is not a cryptographic no-egress sandbox. Host
-Docker policy, firewall policy, and proxy configuration remain responsible for
-enforcing stronger network isolation.
-
-## Storage and reset
-
-Repository-owned state is under `.data`:
-
-- Jellyfin config/cache and generated credentials;
-- atomic extraction job state and published artifacts; and
-- semantic index snapshots.
-
-Stop Aspire before deleting `.data`:
-
-```powershell
-dotnet tool run aspire -- stop `
-  --apphost .\src\Jellyfin.SemanticDiscovery.AppHost\Jellyfin.SemanticDiscovery.AppHost.csproj `
-  --non-interactive --nologo
-Remove-Item -LiteralPath .\.data -Recurse -Force
-```
-
-This does not remove the Aspire-managed
-`jellyfin-semantic-discovery-ollama` Docker volume. Keep that volume to avoid
-downloading models again. To reset models, stop Aspire and remove only that
-named volume; do not delete unrelated Docker volumes.
-
-## Final asset delivery
-
-`assets/demo/manifest.json` contains exactly three Movie, three Audio, and
-three Book slots. The Book corpus is delivered as three original eight-page
-CC BY 4.0 PDFs, with hashes and authorship in
-`assets/demo/LICENSE-AUTHORSHIP.txt`. Its deterministic 8B/4B extraction and
-retrieval checks are declared in `assets/demo/extraction-benchmark.json`, with
-measured hardware, timing, memory, chunk, heading, provenance, and anchor
-results in `assets/demo/extraction-benchmark-results.json`.
-
-The approved Movie/Audio release is retained byte-for-byte with MP4/FLAC, VTT,
-and NFO sidecars. The approved Book release is retained byte-for-byte with
-PDFs and OPF metadata. No prompts, storyboards, editable sources, generators,
-download caches, rights-refresh workflow, or production receipts are included.
-
-Approved artwork uses Jellyfin 12's verified local conventions:
-
-- Movie: `poster.jpg` and optional `backdrop.jpg` beside the MP4.
-- Audio: square `folder.jpg` beside the FLAC. Jellyfin 12 intentionally
-  excludes regular `Audio` items from `LocalImageProvider`, so bootstrap
-  uploads this local sidecar as the track's Primary image without modifying
-  the FLAC; the same file also decorates the one-track album folder.
-- Book: `<pdf-stem>.jpg` beside the PDF, which Jellyfin selects before generic
-  `poster`, `folder`, or `cover` names.
-
-`assets/demo/manifest.json` keeps SHA-256 fields for Primary artwork and
-optional Movie backdrops. Startup validates every supplied image. When
-`artworkStatus` changes to `ready`, all nine Primary images become mandatory
-and live E2E requires `ImageTags.Primary` for every item.
-
-The library options disable remote image fetchers and do not enable embedded
-title metadata. Jellyfin's local image provider remains active. Audio artwork
-uses the explicit local bootstrap upload above because preserving the released
-FLAC bytes rules out embedding cover art.
-
-Tiny synthetic CI/security fixtures remain under `assets/fixtures`, including
-Series coverage. They are test fixtures, not public demo media.
-
-## Validation
-
-```powershell
-dotnet test .\tests\Jellyfin.SemanticDiscovery.Core.Tests --no-restore
-dotnet test .\tests\Jellyfin.SemanticDiscovery.Extraction.Tests --no-restore
-dotnet test .\tests\Jellyfin.SemanticDiscovery.IntegrationTests --no-restore
-pwsh -NoProfile -File .\scripts\Smoke-Plugin.ps1
-pwsh -NoProfile -File .\scripts\Test-EndToEnd.ps1
-```
-
-`Test-EndToEnd.ps1` uses the tiny `ci` profile and a separate `.data\e2e`
-tree. It does not publish benchmark, accuracy, production, or final-asset
-claims.
+Code is [MIT](LICENSE). The demo media is CC BY 4.0; see
+[assets/demo](assets/demo/README.md). Third-party notices are in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

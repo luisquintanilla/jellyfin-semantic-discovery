@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <!--
+      MEAI001: OrderedFailoverChatClient (chat routing) is experimental.
+      MEDE0001 / EXTEXP0019 / CTDE0001: Document extraction and data ingestion are previews.
+      CA1416: PDFtoImage is annotated for Windows, Linux, and macOS only.
+    -->
+    <NoWarn>$(NoWarn);MEAI001;MEDE0001;EXTEXP0019;CTDE0001;CA1416</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Azure.AI.OpenAI" />
+    <PackageReference Include="Aspire.Qdrant.Client" />
+    <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" />
+    <PackageReference Include="CommunityToolkit.DocumentExtraction.PdfPig" />
+    <PackageReference Include="CommunityToolkit.DocumentExtraction.VisionLanguageModel" />
+    <PackageReference Include="CommunityToolkit.VectorData.Qdrant" />
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Microsoft.Extensions.DataIngestion" />
+    <PackageReference Include="Microsoft.Extensions.DocumentExtraction" />
+    <PackageReference Include="Microsoft.ML.Tokenizers.Data.O200kBase" />
+    <PackageReference Include="PDFtoImage" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jellyfin.SemanticDiscovery.ServiceDefaults\Jellyfin.SemanticDiscovery.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Jellyfin.SemanticDiscovery.Tests" />
+  </ItemGroup>
+
+</Project>

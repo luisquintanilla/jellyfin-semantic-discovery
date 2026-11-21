@@ -1,10 +1,10 @@
 {
   "category": "General",
-  "changelog": "Initial local semantic discovery demo.",
-  "description": "Local semantic metadata, subtitle, transcript, and extracted PDF discovery with content-based recommendations.",
+  "changelog": "Calls the semantic service for search, More Like This, and indexing.",
+  "description": "Semantic search and More Like This for Jellyfin, backed by the sample's semantic service.",
   "guid": "de965148-5789-4e8c-9774-6d1409ef3478",
   "name": "Semantic Discovery",
-  "overview": "Native local semantic discovery for Jellyfin 12.",
+  "overview": "Semantic search and recommendations for Jellyfin 12.",
   "owner": "luisquintanilla",
   "targetAbi": "12.0.0.0",
   "timestamp": "2026-09-08T00:00:00.0000000Z",
@@ -12,18 +12,6 @@
   "status": "Active",
   "autoUpdate": false,
   "assemblies": [
-    "Jellyfin.SemanticDiscovery.Plugin.dll",
-    "Jellyfin.SemanticDiscovery.Core.dll",
-    "CommunityToolkit.VectorData.InMemory.dll",
-    "Google.Protobuf.dll",
-    "Markdig.Signed.dll",
-    "Microsoft.Extensions.AI.Abstractions.dll",
-    "Microsoft.Extensions.DataIngestion.Abstractions.dll",
-    "Microsoft.Extensions.DataIngestion.Markdig.dll",
-    "Microsoft.Extensions.VectorData.Abstractions.dll",
-    "Microsoft.ML.Tokenizers.dll",
-    "Microsoft.ML.Tokenizers.Data.O200kBase.dll",
-    "OllamaSharp.dll",
-    "System.Numerics.Tensors.dll"
+    "Jellyfin.SemanticDiscovery.Plugin.dll"
   ]
 }

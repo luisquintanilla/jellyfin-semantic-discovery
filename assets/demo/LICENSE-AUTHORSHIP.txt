@@ -1,8 +1,9 @@
 Jellyfin Semantic Discovery PDF Corpus
 
 Authorship
-These three books contain original writing and original deterministic vector artwork created for
-the Jellyfin semantic-discovery demonstration. Drafting and critique were AI-assisted; layout,
+These four books contain original writing and original deterministic vector artwork created for
+the Jellyfin semantic-discovery demonstration. Retrieval Field Notes is a scanned edition: its pages
+were rendered to images by scripts/New-ScannedBook.cs, so the PDF deliberately has no text layer. Drafting and critique were AI-assisted; layout,
 code validation, mechanical checks, and release preparation were deterministic local steps. The
 technical source repositories are linked in each book and informed the subject matter; their text,
 illustrations, and layouts were not copied wholesale.

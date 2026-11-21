@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <!-- The same preview/experimental APIs the semantic service uses. -->
+    <NoWarn>$(NoWarn);MEAI001;MEDE0001;EXTEXP0019;CA1707</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Jellyfin.Controller" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The image-only demo book, so CI renders real pages with PDFtoImage on Linux. -->
+    <None Include="..\..\assets\demo\library\Books\Retrieval Field Notes (2026)\retrieval-field-notes.pdf"
+          Link="retrieval-field-notes.pdf"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Jellyfin.SemanticDiscovery.Plugin\Jellyfin.SemanticDiscovery.Plugin.csproj" />
+    <ProjectReference Include="..\..\src\Jellyfin.SemanticDiscovery.SemanticService\Jellyfin.SemanticDiscovery.SemanticService.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -6,16 +6,6 @@ namespace Jellyfin.SemanticDiscovery.Plugin;
 
 public sealed class ServiceRegistrator : IPluginServiceRegistrator
 {
-    public void RegisterServices(
-        IServiceCollection serviceCollection,
-        IServerApplicationHost applicationHost)
-    {
-        ArgumentNullException.ThrowIfNull(serviceCollection);
-        ArgumentNullException.ThrowIfNull(applicationHost);
-
-        serviceCollection.AddSingleton<SemanticDiscoveryPaths>();
-        serviceCollection.AddSingleton<JellyfinIndexSource>();
-        serviceCollection.AddSingleton<JellyfinMediaAccessPolicy>();
-        serviceCollection.AddSingleton<SemanticDiscoveryRuntime>();
-    }
+    public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost) =>
+        serviceCollection.AddSingleton<SemanticServiceClient>();
 }
