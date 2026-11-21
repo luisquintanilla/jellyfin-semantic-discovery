@@ -19,6 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The image-only demo book, so CI renders real pages with PDFtoImage on Linux. -->
+    <None Include="..\..\assets\demo\library\Books\Retrieval Field Notes (2026)\retrieval-field-notes.pdf"
+          Link="retrieval-field-notes.pdf"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Jellyfin.SemanticDiscovery.Plugin\Jellyfin.SemanticDiscovery.Plugin.csproj" />
     <ProjectReference Include="..\..\src\Jellyfin.SemanticDiscovery.SemanticService\Jellyfin.SemanticDiscovery.SemanticService.csproj" />
   </ItemGroup>

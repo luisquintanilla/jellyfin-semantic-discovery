@@ -92,6 +92,23 @@ public sealed class ReadingTests
     }
 
     [Fact]
+    public async Task PdfPageRasterizer_sends_each_page_of_the_scanned_book_as_a_png_and_adds_page_numbers()
+    {
+        PageRecorder pages = new();
+        await using FileStream pdf = File.OpenRead("retrieval-field-notes.pdf");
+
+        ExtractionDocument result = await new PdfPageRasterizer(pages).ExtractAsync(pdf, "scan.pdf", "application/pdf");
+
+        Assert.True(pages.Inputs.Count > 1);
+        Assert.All(pages.Inputs, input =>
+        {
+            Assert.Equal("image/png", input.MediaType);
+            Assert.Equal([0x89, (byte)'P', (byte)'N', (byte)'G'], input.Header);
+        });
+        Assert.Equal(Enumerable.Range(1, pages.Inputs.Count), result.Sections.Select(s => s.Sources[0].Page.PageNumber ?? 0));
+    }
+
+    [Fact]
     public async Task OrderedFailoverChatClient_moves_to_the_next_route_when_the_first_fails()
     {
         FakeChat cloud = new(_ => throw new HttpRequestException("429 Too Many Requests"));
@@ -179,6 +196,24 @@ public sealed class ReadingTests
             using StreamReader reader = new(stream, leaveOpen: true);
             LastInput = await reader.ReadToEndAsync(cancellationToken);
             return Result;
+        }
+    }
+
+    private sealed class PageRecorder : DocumentExtractionClient
+    {
+        public List<(string MediaType, byte[] Header)> Inputs { get; } = [];
+
+        public override async Task<ExtractionDocument> ExtractAsync(
+            Stream stream, string identifier, string mediaType,
+            DocumentExtractionOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            byte[] header = new byte[4];
+            await stream.ReadExactlyAsync(header, cancellationToken);
+            Inputs.Add((mediaType, header));
+
+            ExtractionDocument page = new(identifier, new TextContent("page text"));
+            page.Sections.Add(new ExtractionDocumentSection(new TextContent("page text")));
+            return page;
         }
     }
 
