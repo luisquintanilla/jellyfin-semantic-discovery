@@ -8,7 +8,9 @@ search to a .NET service built from off-the-shelf .NET AI building blocks.
 This is a sample. It's meant to show **how little code it takes to compose the
 .NET AI stack into an existing app**, not to be a product.
 
-![Jellyfin semantic search](artifacts/ui/context-pipelines.png)
+![Jellyfin search for "documents into context for a model" returns a song and three books ranked by meaning](artifacts/ui/semantic-search.png)
+
+![The Context Pipelines song with semantic "More Like This" picks](artifacts/ui/context-pipelines.png)
 
 ## Run it
 
