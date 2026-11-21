@@ -73,7 +73,7 @@ try {
     Write-Host ("Setup finished after {0:n0} s." -f $watch.Elapsed.TotalSeconds)
     # How long each book took, and which ones the vision model had to read.
     dotnet tool run aspire -- logs semantic-service --apphost $appHost --non-interactive --nologo 2>&1 |
-        Select-String "Ingested book|Reading .* with the vision model|Vision model read" | ForEach-Object { $_.Line }
+        Select-String "Ingested book|Reading .* with the vision model|Vision model read|GetResponseAsync failed" | ForEach-Object { $_.Line }
 
     $env:JELLYFIN_E2E_CREDENTIALS_PATH = $credentialsPath
     $env:JELLYFIN_E2E_PROFILE = $Profile

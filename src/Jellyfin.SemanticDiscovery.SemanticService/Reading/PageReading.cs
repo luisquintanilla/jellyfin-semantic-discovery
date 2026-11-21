@@ -23,13 +23,14 @@ public static class PageReading
         // Route 1: a cloud model (Azure OpenAI, Entra ID auth, no keys). Fast.
         if (builder.Configuration.GetConnectionString("page-reader") is { Length: > 0 })
         {
-            builder.AddAzureOpenAIClient("page-reader").AddKeyedChatClient("page-reader");
+            builder.AddAzureOpenAIClient("page-reader").AddKeyedChatClient("page-reader").UseLogging();
         }
 
         // Route 2: a local vision model in Ollama. Private and free, but slower.
         if (builder.Configuration.GetConnectionString("vision-model") is { Length: > 0 })
         {
             builder.AddOllamaApiClient("vision-model").AddKeyedChatClient("vision-model")
+                .UseLogging()
                 .ConfigureOptions(options =>
                 {
                     // Qwen models "think" by default; turning that off keeps a page to seconds.
@@ -44,7 +45,8 @@ public static class PageReading
         string[] routes = ChatRoutes.Where(name => builder.Configuration.GetConnectionString(name) is { Length: > 0 }).ToArray();
         if (routes.Length > 0)
         {
-            // One IChatClient for the app. It tries each route in order and moves on when one fails.
+            // One IChatClient for the app. It tries each route in order and moves on when one fails
+            // (each route's UseLogging() records the failure).
             builder.Services.AddChatClient(sp => new OrderedFailoverChatClient(
                     routes.Select(route => sp.GetRequiredKeyedService<IChatClient>(route)).ToList(),
                     leaveOpen: true))

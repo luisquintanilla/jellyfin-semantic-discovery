@@ -31,6 +31,9 @@ the configured routes and tries them in order:
 A route is registered only if its connection string exists. With no routes, there's
 no vision reader, and PdfPig handles everything.
 
+Each route has its own `UseLogging()`, so when route 1 fails the service logs
+`GetResponseAsync failed.` with the error, and the page goes to route 2.
+
 ## Swapping things
 
 - **A different text reader**: replace `PdfPigDocumentExtractionClient` with any
