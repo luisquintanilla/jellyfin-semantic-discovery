@@ -32,6 +32,8 @@
     <PackageVersion Include="Microsoft.Extensions.DataIngestion" Version="11.0.0-preview.1.26560.3" />
     <PackageVersion Include="Microsoft.Extensions.DocumentExtraction" Version="11.0.0-preview.1.26560.3" />
     <PackageVersion Include="Microsoft.Extensions.VectorData.Abstractions" Version="11.0.0" />
+    <!-- Transitive via Microsoft.ML.Tokenizers.Data.O200kBase; 9.0.4 has GHSA-73j8-2gch-69rq. -->
+    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.9" />
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <PackageVersion Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="2.0.0" />
     <PackageVersion Include="OllamaSharp" Version="5.5.2" />
